@@ -1,0 +1,7 @@
+parent-class {
+	show: True;
+	bg-color: 100 155 25 100;
+	font-size: 50;
+	font-color: 0x000000;
+	border-color: 0xFFFFFF;
+}

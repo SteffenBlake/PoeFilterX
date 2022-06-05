@@ -1,0 +1,7 @@
+some-class {
+	show: True;
+	bg-color: 245 255 4 255;
+	font-size: 100;
+	font-color: 0xFFFFFF;
+	border-color: 0x000000;
+}

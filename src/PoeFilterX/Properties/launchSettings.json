@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "PoeFilterX": {
+      "commandName": "Project",
+      "commandLineArgs": "build --p=TestFiles/Test.filterx",
+      "environmentVariables": {
+        "POEFILTERX_TestVariable": "Test"
+      }
+    }
+  }
+}

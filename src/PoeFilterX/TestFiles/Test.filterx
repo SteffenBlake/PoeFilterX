@@ -1,0 +1,13 @@
+using "Parent/Test Parent.filterx";
+using Test.fss;
+
+{
+	HasInfluence Crusader Elder;
+	Rarity Rare;
+	Identified False;
+	ItemLevel >= 50;
+	Class "Helmets";
+	Sockets < 6;
+	LinkedSockets < 5;
+	Style some-class;
+}
