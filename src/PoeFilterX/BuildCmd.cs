@@ -17,9 +17,10 @@ namespace PoeFilterX
     {
         internal static string HelpText =
 @"Compiles a Filter file from a .filterx file.
-    Usage: PoeFilterX build [--p|--path=<path>] [--o|--output=<path>]
-    [--p|--path] - Path to the input .filterx file. Default: "".filterx""
-    [--o|--output] - Path to the output .filter file. Default: ""<sourceFileName>.filter""
+    Usage: PoeFilterX build [--p|--path=<path>] [--o|--output=<path>] [--var=val]
+    [--p|--path=<path>] - Path to the input .filterx file. Default: "".filterx""
+    [--o|--output=<path>] - Path to the output .filter file. Default: ""<sourceFileName>.filter""
+    [--VarName=someValue] - Any additional Environmental variables you wish to pass in to consume via %VarName% or etc 
 ";
 
         internal static async Task Run(string[] args)

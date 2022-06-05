@@ -10,9 +10,11 @@ namespace PoeFilterX
     {
         static string HelpText =
 @"Utility for compiling .filterx projects into Path of Exile .filter files
+Type PoeFilterX Help <CommandName> for more details for a given command.
 ==Commands==
     PoeFilterX build - Builds a .filterx project into a filter file.
-    PoeFilterX version - Prints the version info of PoeFilterX.";
+    PoeFilterX version - Prints the version info of PoeFilterX.
+    PoeFilterX update - Updates PoeFilterX";
 
         internal static Task Run(string[] args)
         {
@@ -21,6 +23,7 @@ namespace PoeFilterX
                 { "", HelpCmd.HelpText },
                 { "build", BuildCmd.HelpText },
                 { "version", VersionCmd.HelpText },
+                { "update", UpdateCmd.HelpText },
             };
 
             var helpKey = string.Join(' ', args);

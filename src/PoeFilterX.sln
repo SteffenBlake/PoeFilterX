@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32505.173
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX", ".\PoeFilterX\PoeFilterX.csproj", "{4BA0B926-7BB2-4857-8373-C23B6FBEB5DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX", "PoeFilterX\PoeFilterX.csproj", "{4BA0B926-7BB2-4857-8373-C23B6FBEB5DE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{249B3E6B-275A-4381-8BD5-9565ADEE2C59} = {249B3E6B-275A-4381-8BD5-9565ADEE2C59}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.Business", ".\PoeFilterX.Business\PoeFilterX.Business.csproj", "{249B3E6B-275A-4381-8BD5-9565ADEE2C59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.Business", "PoeFilterX.Business\PoeFilterX.Business.csproj", "{249B3E6B-275A-4381-8BD5-9565ADEE2C59}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.Tests", ".\PoeFilterX.Tests\PoeFilterX.Tests.csproj", "{8AA5DB7A-42EA-4302-AB3B-5654503B37C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.Tests", "PoeFilterX.Tests\PoeFilterX.Tests.csproj", "{8AA5DB7A-42EA-4302-AB3B-5654503B37C2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{249B3E6B-275A-4381-8BD5-9565ADEE2C59} = {249B3E6B-275A-4381-8BD5-9565ADEE2C59}
 	EndProjectSection
@@ -18,8 +18,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8B45AAA0-EAC7-41B7-88D1-D676C25999E0}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Release.ps1 = Release.ps1
 		bin\Debug\net6.0\Test.filter = bin\Debug\net6.0\Test.filter
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoeFilterX.Update", "PoeFilterX.Update\PoeFilterX.Update.csproj", "{92608140-442D-41B2-A874-FF62F87A301F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +42,10 @@ Global
 		{8AA5DB7A-42EA-4302-AB3B-5654503B37C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AA5DB7A-42EA-4302-AB3B-5654503B37C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AA5DB7A-42EA-4302-AB3B-5654503B37C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92608140-442D-41B2-A874-FF62F87A301F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92608140-442D-41B2-A874-FF62F87A301F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92608140-442D-41B2-A874-FF62F87A301F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92608140-442D-41B2-A874-FF62F87A301F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

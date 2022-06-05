@@ -8,9 +8,13 @@ namespace PoeFilterX
     {
         private static Dictionary<string, Func<string[], Task>> Commands = new()
         {
+            { "--help", HelpCmd.Run },
             { "help", HelpCmd.Run },
             { "build", BuildCmd.Run },
-            { "version", VersionCmd.Run }
+            { "-v", VersionCmd.Run },
+            { "--version", VersionCmd.Run },
+            { "version", VersionCmd.Run },
+            { "update", UpdateCmd.Run }
         };
 
         static async Task Main(string[] args)
