@@ -33,7 +33,9 @@ namespace PoeFilterX.WindowsInstaller
 
             var version = SystemHelper.GetAssemblyVersionStr();
             if (version == null)
+            {
                 return;
+            }
 
             var platform = SystemHelper.GetSystemPlatform();
 
@@ -55,7 +57,7 @@ namespace PoeFilterX.WindowsInstaller
             var installFolder = config["p"] ?? config["path"] ?? "C:\\Program Files\\PoeFilterX\\";
             if (!Directory.Exists(installFolder))
             {
-                Directory.CreateDirectory(installFolder);
+                _ = Directory.CreateDirectory(installFolder);
             }
 
             var executingPath = Process.GetCurrentProcess().MainModule?.FileName;
@@ -68,7 +70,9 @@ namespace PoeFilterX.WindowsInstaller
 
             var repoData = await GithubHelper.PullData(author, repo, version);
             if (repoData == null)
+            {
                 return;
+            }
 
             var targetFileName = $"PoeFilterX-{target}.zip";
 

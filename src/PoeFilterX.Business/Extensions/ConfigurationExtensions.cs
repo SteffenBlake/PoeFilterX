@@ -23,10 +23,12 @@ namespace PoeFilterX.Business.Extensions
                 {
                     var match = enviroRegex.Matches(arg)[0];
                     var key = arg.Substring(match.Index, match.Length);
-                    var keyInner = key.Substring(1, key.Length - 2);
+                    var keyInner = key[1..^1];
                     var value = config[keyInner];
                     if (value == null)
+                    {
                         throw new ParserException($"Unrecognized environment variable '{keyInner}'");
+                    }
 
                     arg = arg.Replace(key, value);
                 }
@@ -35,6 +37,5 @@ namespace PoeFilterX.Business.Extensions
 
             }
         }
-
     }
 }

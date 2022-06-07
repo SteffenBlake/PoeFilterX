@@ -1,14 +1,12 @@
-﻿using System.Text;
-
-namespace PoeFilterX.Business.Models
+﻿namespace PoeFilterX.Business.Models
 {
     public class Filter
     {
         private IList<FilterBlock> FilterBlocks { get; } = new List<FilterBlock>();
 
-        private readonly IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> Styles = new Dictionary<string, IList<(int, Action<FilterBlock>)>>();
+        private readonly IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> _styles = new Dictionary<string, IList<(int, Action<FilterBlock>)>>();
 
-        private int StyleCount;
+        private int _styleCount;
 
         public void AddFilterBlock(FilterBlock block)
         {
@@ -17,21 +15,23 @@ namespace PoeFilterX.Business.Models
 
         public void AddStyle(string name, Action<FilterBlock> command)
         {
-            if (!Styles.ContainsKey(name))
+            if (!_styles.ContainsKey(name))
             {
-                Styles[name] = new List<(int, Action<FilterBlock>)>();
+                _styles[name] = new List<(int, Action<FilterBlock>)>();
             }
 
-            Styles[name].Add((StyleCount++, command));
+            _styles[name].Add((_styleCount++, command));
         }
 
         public async Task WriteAsync(TextWriter writer)
         {
             for (var n = FilterBlocks.Count -1; n >=0; n--)
             {
-                var filterText = FilterBlocks[n].Compile(Styles).Trim();
+                var filterText = FilterBlocks[n].Compile(_styles).Trim();
                 if (string.IsNullOrWhiteSpace(filterText))
+                {
                     continue;
+                }
 
                 await writer.WriteLineAsync(filterText);
                 await writer.WriteLineAsync();

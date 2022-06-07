@@ -11,7 +11,9 @@ namespace PoeFilterX.Tests.Mocks
         public Action<FilterBlock>? Parse(string runningArgs)
         {
             if (!Calls.ContainsKey(runningArgs))
+            {
                 Calls[runningArgs] = 0;
+            }
 
             Calls[runningArgs]++;
 

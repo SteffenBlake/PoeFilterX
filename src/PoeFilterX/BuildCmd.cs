@@ -37,13 +37,15 @@ a directory with a single .filterx file present, path does not need to be provid
 
             // If no path specified, check if we only have one .filterx file in launch dir
             if (usedPath == null)
+            {
                 return;
+            }
 
             Console.WriteLine($"Building from {usedPath}");
 
             var services = new ServiceCollection();
             // Register IConfiguration for fetching of Enviro Variables in parsing
-            services.AddSingleton<IConfiguration>(config);
+            _ = services.AddSingleton<IConfiguration>(config);
             ConfigureServices(config, services);
 
             var serviceProvider = services.BuildServiceProvider();
@@ -64,11 +66,21 @@ a directory with a single .filterx file present, path does not need to be provid
             var outputPath = filterXConfig.OutputPath();
             Console.WriteLine($"Publishing to {outputPath}");
             if (File.Exists(outputPath))
+            {
                 File.Delete(outputPath);
+            }
 
             await using var writer = File.OpenWrite(outputPath);
             await using var stream = new StreamWriter(writer);
-            await filter.WriteAsync(stream);
+            try
+            {
+                await filter.WriteAsync(stream);
+            }
+            catch (ParserException ex)
+            {
+                await Console.Error.WriteLineAsync(ex.Message);
+                Environment.Exit(1);
+            }
 
             await stream.FlushAsync();
             writer.Flush();
@@ -76,21 +88,24 @@ a directory with a single .filterx file present, path does not need to be provid
 
         private static void ConfigureServices(IConfiguration config, IServiceCollection services)
         {
-            services.AddSingleton(config);
-            services.AddSingleton(new ExecutingContext());
+            _ = services.AddSingleton(config);
+            _ = services.AddSingleton(new ExecutingContext());
 
-            services.AddLazySingleton<IFileParser, FileParser>();
-            services.AddLazySingleton<IStreamFetcher, FileStreamFetcher>();
+            _ = services
+                .AddLazySingleton<IFileParser, FileParser>()
+                .AddLazySingleton<IStreamFetcher, FileStreamFetcher>();
 
-            services.AddLazySingleton<ISectionParser, FilterParser>();
-            services.AddLazySingleton<IFilterBlockParser, FilterBlockParser>();
-            services.AddLazySingleton<IFilterCommandParser, FilterCommandParser>();
+            _ = services
+                .AddLazySingleton<ISectionParser, FilterParser>()
+                .AddLazySingleton<IFilterBlockParser, FilterBlockParser>()
+                .AddLazySingleton<IFilterCommandParser, FilterCommandParser>();
 
-            services.AddLazySingleton<ISectionParser, StyleSheetParser>();
-            services.AddLazySingleton<IStyleBlockParser, StyleBlockParser>();
-            services.AddLazySingleton<IStyleCommandParser, StyleCommandParser>();
+            _ = services
+                .AddLazySingleton<ISectionParser, StyleSheetParser>()
+                .AddLazySingleton<IStyleBlockParser, StyleBlockParser>()
+                .AddLazySingleton<IStyleCommandParser, StyleCommandParser>();
 
-            services.AddLazySingleton<ArgParser>();
+            _ = services.AddLazySingleton<ArgParser>();
         }
     }
 }

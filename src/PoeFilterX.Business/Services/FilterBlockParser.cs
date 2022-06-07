@@ -40,7 +40,10 @@ namespace PoeFilterX.Business.Services
                 else if (next == '}' && !isComment)
                 {
                     if (parent == null)
+                    {
                         throw ParserException.UnexpectedCharacter('}', ' ');
+                    }
+
                     break;
                 }
                 else if (next == '\n')
@@ -55,10 +58,14 @@ namespace PoeFilterX.Business.Services
                     if (args[0].ToLower() == "using")
                     {
                         if (parent != null)
+                        {
                             throw ParserException.UnrecognizedCommand(args[0]);
+                        }
 
                         if (args.Length != 2)
+                        {
                             throw ParserException.UnexpectedArgCount(args.Length - 1, 1);
+                        }
 
                         var filePath = args[1].Trim();
 
@@ -66,7 +73,9 @@ namespace PoeFilterX.Business.Services
                         var relativeFile = Path.Combine(directory, filePath);
 
                         if (!Context.TryAddUsing(reader.Path, relativeFile))
+                        {
                             throw ParserException.CircularDependency();
+                        }
 
                         await FileParserFactory().ParseAsync(filter, relativeFile);
                     } 
@@ -74,7 +83,9 @@ namespace PoeFilterX.Business.Services
                     {
                         var cmd = CommandParser.Parse(args);
                         if (cmd != null)
+                        {
                             filterBlock.AddCommand(cmd);
+                        }
                     }
 
                     runningString = "";

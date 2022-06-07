@@ -41,7 +41,7 @@ namespace PoeFilterX.Tests
             stream.Position = 0;
 
             // Assert
-            Assert.Throws<ParserException>(() => BlockParser.Parse(trackingStream));
+            _ = Assert.Throws<ParserException>(() => BlockParser.Parse(trackingStream));
             Assert.That(CommandParser.Calls, Is.Empty);
         }
 
@@ -99,7 +99,7 @@ namespace PoeFilterX.Tests
             stream.Position = 0;
 
             // Act
-            BlockParser.Parse(trackingStream);
+            _ = BlockParser.Parse(trackingStream);
 
             // Assert
             var calls = CommandParser.Calls.Select(c => (object)new object[] {c.Key, c.Value }).ToArray();

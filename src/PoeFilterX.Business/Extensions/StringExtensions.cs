@@ -33,10 +33,14 @@
                     else if (runningArg.Length > 0)
                     {
                         if (!isString)
+                        {
                             runningArg = runningArg.Trim();
+                        }
 
                         if (!string.IsNullOrEmpty(runningArg))
+                        {
                             args.Add(runningArg);
+                        }
 
                         runningArg = "";
                     }
@@ -44,10 +48,15 @@
                 else if (c == '\\')
                 {
                     if (!isString)
+                    {
                         throw ParserException.UnexpectedCharacter('\\', ' ');
+                    }
+
                     n++;
                     if (n == trimmedCmd.Length)
+                    {
                         throw ParserException.UnexpectedCharacter('\\', ' ');
+                    }
 
                     _ = trimmedCmd[n] switch
                     {
@@ -73,17 +82,19 @@
                 {
                     runningArg += c;
                 }
-
             }
 
             if (isString)
+            {
                 throw ParserException.UnexpectedCharacter(' ', '\"');
+            }
 
             if (runningArg.Length > 0)
+            {
                 args.Add(runningArg);
+            }
 
             return args.ToArray();
         }
-
     }
 }

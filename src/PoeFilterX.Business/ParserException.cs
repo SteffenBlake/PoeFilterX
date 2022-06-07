@@ -20,7 +20,9 @@
         {
             var msg = $"Unexpected command '{cmd}'";
             if (expected != null)
+            {
                 msg += $", expected {expected}";
+            }
 
             return new ParserException(msg);
         }

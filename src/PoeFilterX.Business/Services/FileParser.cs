@@ -18,14 +18,18 @@ namespace PoeFilterX.Business.Services
         {
             path = path.Trim();
             if (string.IsNullOrEmpty(path))
+            {
                 throw new ParserException("Missing Path for using statement.");
+            }
 
             var fileExtension = Path.GetExtension(path);
 
             var parser = SectionParsers.SingleOrDefault(p => p.FileExtension == fileExtension);
 
             if (parser == null)
+            {
                 throw new ParserException($"Unrecognized file extension for path '{path}'");
+            }
 
             using var reader = StreamFetcher.Fetch(path);
 

@@ -39,14 +39,12 @@ namespace PoeFilterX.Business
             Component = new StreamReader(path, encoding);
         }
 
-
         /// <inheritdoc cref="StreamReader"/>
         public TrackingStreamReader(string path, Encoding encoding, bool detectEncodingFromByteOrderMarks)
         {
             Path = path;
             Component = new StreamReader(path, encoding, detectEncodingFromByteOrderMarks);
         }
-
 
         /// <inheritdoc cref="StreamReader"/>
         public TrackingStreamReader(string path, Encoding encoding, bool detectEncodingFromByteOrderMarks, int bufferSize)

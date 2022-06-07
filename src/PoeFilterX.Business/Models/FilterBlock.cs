@@ -8,6 +8,9 @@ namespace PoeFilterX.Business.Models
 {
     public class FilterBlock
     {
+        // TODO: "bubble up" line for each command
+        // So we can still log what line caused the failure
+
         private readonly List<Action<FilterBlock>> _commands = new();
         public IReadOnlyList<Action<FilterBlock>> Commands => 
             Parent == null ? 
@@ -116,7 +119,7 @@ namespace PoeFilterX.Business.Models
         public IList<string>? Styles { get; set; }
 
         public IList<string> CompiledStyles =>
-            Parent?.CompiledStyles.Concat(Styles ?? new List<string>()).ToList() ?? (Styles ?? new List<string>());
+            Parent?.CompiledStyles.Concat(Styles ?? new List<string>()).ToList() ?? Styles ?? new List<string>();
 
         public string Compile(IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> stylesTable)
         {
@@ -125,23 +128,33 @@ namespace PoeFilterX.Business.Models
                 command(this);
             }
 
-            var styles = CompiledStyles
-                .Distinct()
-                .SelectMany(s => stylesTable[s])
+            var styles = CompiledStyles.Distinct();
+
+            var styleCmds = styles
+                .SelectMany(s =>
+                {
+                    if (!stylesTable.ContainsKey(s))
+                    {
+                        throw new ParserException($"Filter block referenced undeclared style '{s}'");
+                    }
+                    return stylesTable[s];
+                })
                 .OrderBy(s => s.Rank)
                 .ToList();
 
-            if (!styles.Any())
-                return "";
-
-            foreach(var style in styles)
+            if (!styleCmds.Any())
             {
-                style.Command(this);
+                return "";
+            }
+
+            foreach(var (_, command) in styleCmds)
+            {
+                command(this);
             }
 
             var builder = new StringBuilder();
 
-            builder.AppendLine(Show ? "Show" : "Hide");
+            _ = builder.AppendLine(Show ? "Show" : "Hide");
 
             Compile(builder, AreaLevel);
             Compile(builder, ItemLevel);
@@ -182,22 +195,32 @@ namespace PoeFilterX.Business.Models
             Compile(builder, SetTextColor);
             Compile(builder, SetBackgroundColor);
             Compile(builder, SetFontSize);
-            if (PlayAlertSound?.Enabled ?? false) 
+            if (PlayAlertSound?.Enabled ?? false)
+            {
                 Compile(builder, PlayAlertSound);
+            }
 
-            if (PlayAlertSoundPositional?.Enabled ?? false) 
+            if (PlayAlertSoundPositional?.Enabled ?? false)
+            {
                 Compile(builder, PlayAlertSoundPositional);
+            }
 
             if (DropSound.HasValue)
-                builder.AppendLine(DropSound.Value ? "\tEnableDropSound" : "\tDisableDropSound");
+            {
+                _ = builder.AppendLine(DropSound.Value ? "\tEnableDropSound" : "\tDisableDropSound");
+            }
 
             Compile(builder, CustomAlertSound);
 
             if (MinimapIcon?.Enabled ?? false)
+            {
                 Compile(builder, MinimapIcon);
+            }
 
             if (PlayEffect?.Enabled ?? false)
+            {
                 Compile(builder, PlayEffect);
+            }
 
             return builder.ToString();
         }
@@ -205,14 +228,16 @@ namespace PoeFilterX.Business.Models
         private static void Compile<T>(StringBuilder builder, T? value, [CallerArgumentExpression("value")] string? valueName = null)
         {
             if (value != null)
-                builder.AppendLine($"\t{valueName} {value}");
+            {
+                _ = builder.AppendLine($"\t{valueName} {value}");
+            }
         }
 
         private static void Compile<T>(StringBuilder builder, IList<OperatorArg<T>> value, [CallerArgumentExpression("value")] string? valueName = null)
         {
             foreach (var operatorArg in value)
             {
-                builder.AppendLine($"\t{valueName} {operatorArg.Operator.GetDisplayName()} {operatorArg.Value}");
+                _ =builder.AppendLine($"\t{valueName} {operatorArg.Operator.GetDisplayName()} {operatorArg.Value}");
             }
         }
 
@@ -224,23 +249,27 @@ namespace PoeFilterX.Business.Models
                 var operater = group.Key.GetDisplayName();
                 var values = group.SelectMany(g => g.Value);
                 var encapsulted = values.Select(v => $"\"{v}\"");
-                builder.AppendLine($"\t{valueName} {operater} {string.Join(' ', encapsulted)}");
+                _ = builder.AppendLine($"\t{valueName} {operater} {string.Join(' ', encapsulted)}");
             }
         }
 
         private static void Compile<T>(StringBuilder builder, IList<T> value, [CallerArgumentExpression("value")] string? valueName = null)
         {
-            if (!value.Any()) 
+            if (!value.Any())
+            {
                 return;
+            }
 
             var encapsulted = value.Distinct().Select(v => $"\"{v}\"");
-            builder.AppendLine($"\t{valueName} {string.Join(' ', encapsulted)}");
+            _ = builder.AppendLine($"\t{valueName} {string.Join(' ', encapsulted)}");
         }
 
         private static void Compile(StringBuilder builder, Color? value, [CallerArgumentExpression("value")] string? valueName = null)
         {
             if (value != null)
-                builder.AppendLine($"\t{valueName} {value.Value.R} {value.Value.G} {value.Value.B} {value.Value.A}");
+            {
+                _ = builder.AppendLine($"\t{valueName} {value.Value.R} {value.Value.G} {value.Value.B} {value.Value.A}");
+            }
         }
     }
 }

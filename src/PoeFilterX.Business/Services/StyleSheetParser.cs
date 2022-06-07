@@ -31,7 +31,9 @@ namespace PoeFilterX.Business.Services
                 if (comment)
                 {
                     if (next == '*' && (char)reader.Read() == '/')
+                    {
                         comment = false;
+                    }
 
                     continue;
                 }
@@ -39,7 +41,7 @@ namespace PoeFilterX.Business.Services
                 if (next == '/' && reader.Peek() > 0 && (char)reader.Peek() == '*')
                 {
                     comment = true;
-                    reader.Read();
+                    _ = reader.Read();
                     continue;
                 }
 
@@ -47,7 +49,9 @@ namespace PoeFilterX.Business.Services
                 {
                     var trimmedName = runningArg.Trim();
                     if (trimmedName.Any(char.IsWhiteSpace))
+                    {
                         throw ParserException.UnexpectedCharacter(' ', '{');
+                    }
 
                     var commands = BlockParser.Parse(reader);
 
@@ -64,18 +68,24 @@ namespace PoeFilterX.Business.Services
                     if (args[0].ToLower() == "using")
                     {
                         if (args.Length != 2)
+                        {
                             throw ParserException.UnexpectedArgCount(args.Length - 1, 2);
+                        }
 
                         var filePath = args[1];
                         var extension = Path.GetExtension(filePath);
                         if (extension != FileExtension)
+                        {
                             throw new ParserException($"Unrecognized file extension for StyleSheet using statement: '{extension}'");
+                        }
 
                         var directory = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
                         var relativeFile = Path.Combine(directory, filePath);
 
                         if (!Context.TryAddUsing(reader.Path, relativeFile))
+                        {
                             throw ParserException.CircularDependency();
+                        }
 
                         await FileParserFactory().ParseAsync(filter, relativeFile);
                     }
