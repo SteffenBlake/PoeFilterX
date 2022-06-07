@@ -3,7 +3,7 @@ Advanced Loot Filter Transpiler for Path of Exile that allows for numerous power
 
 # Cut to the chase, where do I start?
 
-Head over to the [[Installation Guide|https://github.com/SteffenBlake/PoeFilterX/wiki/Installation]] and then check out the [[Your first Project|https://github.com/SteffenBlake/PoeFilterX/wiki/Your-First-Project]] guide!
+Head over to the [Installation Guide](https://github.com/SteffenBlake/PoeFilterX/wiki/Installation) and then check out the [Your first Project](https://github.com/SteffenBlake/PoeFilterX/wiki/Your-First-Project) guide!
 
 # Features
 
