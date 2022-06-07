@@ -5,8 +5,8 @@ Advanced Loot Filter Transpiler for Path of Exile that allows for numerous power
 
 Head over to the [Installation Guide](https://github.com/SteffenBlake/PoeFilterX/wiki/Installation) and then check out the [Your first Project](https://github.com/SteffenBlake/PoeFilterX/wiki/Your-First-Project) guide!
 
-# Come join us on the Discord community!
-Invitation link: https://discord.gg/z72vPMjK
+# Come join us on the community! 
+### <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" width="20" height="20" /> Discord: https://discord.gg/z72vPMjK
 
 # Features
 
