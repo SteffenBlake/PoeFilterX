@@ -29,16 +29,16 @@ Lower duplicate code by nesting Filter blocks in order to re-use patterns!
 # Planned Feature Roadmap
 Here's a list of features I plan to implement in the future as well, all are a Work in Progress
 
-[ ] - Package Management, to simplify importing of existing filter packages via `poefilterx install <packagename>`
-[ ] - `new` command to speed up the bootstrapping process of making a new filter project via `poefilterx new <projectName>`
-[ ] - Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program
-[ ] - Advanced "Range" int variable for Operator Filter Commands, combining the `>=` + `<=` operators into one, IE `Quality 10~20;`
-[ ] - Visual Studio Extension for code highlighting, code completion, and comment/uncomment hotkey
+* [ ] - Package Management, to simplify importing of existing filter packages via `poefilterx install <packagename>`
+* [ ] - `new` command to speed up the bootstrapping process of making a new filter project via `poefilterx new <projectName>`
+* [ ] - Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program
+* [ ] - Advanced "Range" int variable for Operator Filter Commands, combining the `>=` + `<=` operators into one, IE `Quality 10~20;`
+* [ ] - Visual Studio Extension for code highlighting, code completion, and comment/uncomment hotkey
 
 # Investigating Features Triage
 This is a list of features I am investigating, but currently have not conclude effort / viability.
 
-[ ] - Setup live monitoring of PathOfExile log file, letting users trigger commands via in game calls
-[ ] - Advanced Style Variables, letting you manipulate styles based on Filter Selectors via math. (IE: `font-size: (%MapTier% * 6);`)
-[ ] - Variable injection into Style Sheets as well. Currently doesn't seem necessary but perhaps might be worth adding to simplify workflows.
+* [ ] - Setup live monitoring of PathOfExile log file, letting users trigger commands via in game calls
+* [ ] - Advanced Style Variables, letting you manipulate styles based on Filter Selectors via math. (IE: `font-size: (%MapTier% * 6);`)
+* [ ] - Variable injection into Style Sheets as well. Currently doesn't seem necessary but perhaps might be worth adding to simplify workflows.
 
