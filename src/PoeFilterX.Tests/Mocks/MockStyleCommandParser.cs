@@ -15,7 +15,7 @@ namespace PoeFilterX.Tests.Mocks
 
             Calls[runningArgs]++;
 
-            return Actions != null && Actions.ContainsKey(runningArgs) ? Actions[runningArgs] : null;
+            return Actions.ContainsKey(runningArgs) ? Actions[runningArgs] : null;
 
         }
     }

@@ -48,17 +48,20 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] Icon_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.MinimapIcon = new MiniMapIcon
+            var filterblock = new FilterBlock
             {
-                Size = size,
-                Color = color,
-                Shape = shape,
-                Enabled = enabled
+                MinimapIcon = new MiniMapIcon
+                {
+                    Size = size,
+                    Color = color,
+                    Shape = shape,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -102,17 +105,20 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] IconSize_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.MinimapIcon = new MiniMapIcon
+            var filterblock = new FilterBlock
             {
-                Size = size,
-                Color = color,
-                Shape = shape,
-                Enabled = enabled
+                MinimapIcon = new MiniMapIcon
+                {
+                    Size = size,
+                    Color = color,
+                    Shape = shape,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -155,17 +161,20 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] IconColor_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.MinimapIcon = new MiniMapIcon
+            var filterblock = new FilterBlock
             {
-                Size = size,
-                Color = color,
-                Shape = shape,
-                Enabled = enabled
+                MinimapIcon = new MiniMapIcon
+                {
+                    Size = size,
+                    Color = color,
+                    Shape = shape,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -208,17 +217,20 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] IconShape_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.MinimapIcon = new MiniMapIcon
+            var filterblock = new FilterBlock
             {
-                Size = size,
-                Color = color,
-                Shape = shape,
-                Enabled = enabled
+                MinimapIcon = new MiniMapIcon
+                {
+                    Size = size,
+                    Color = color,
+                    Shape = shape,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert

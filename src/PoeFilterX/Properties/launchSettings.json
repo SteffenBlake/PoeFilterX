@@ -2,7 +2,7 @@
   "profiles": {
     "PoeFilterX": {
       "commandName": "Project",
-      "commandLineArgs": "update",
+      "commandLineArgs": "build",
       "environmentVariables": {
         "POEFILTERX_TestVariable": "Test"
       }

@@ -51,15 +51,15 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.That(filterblock.AlertSound.Positional, Is.EqualTo(false));
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
+            Assert.That(filterblock.AlertSound?.Positional, Is.EqualTo(false));
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume
             };
         }
 
@@ -74,15 +74,15 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.That(filterblock.AlertSound.Positional, Is.EqualTo(false));
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
+            Assert.That(filterblock.AlertSound?.Positional, Is.EqualTo(false));
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume
             };
         }
 
@@ -97,15 +97,15 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.That(filterblock.AlertSound.Positional, Is.EqualTo(true));
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
+            Assert.That(filterblock.AlertSound?.Positional, Is.EqualTo(true));
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume
             };
         }
 
@@ -143,7 +143,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}-id: 1", ExpectedResult = 1)]
         [TestCase($"{COMMAND}-id: 10", ExpectedResult = 10)]
         [TestCase($"{COMMAND}-id: 16", ExpectedResult = 16)]
-        public int AlertId_Values_NoPreExisting(string args)
+        public int? AlertId_Values_NoPreExisting(string args)
         {
             // Arrange
             var filterblock = new FilterBlock();
@@ -151,13 +151,13 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.That(filterblock.AlertSound.Positional, Is.EqualTo(false));
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
-            return filterblock.AlertSound.Id;
+            Assert.That(filterblock.AlertSound?.Positional, Is.EqualTo(false));
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
+            return filterblock.AlertSound?.Id;
         }
 
         [TestCase($"{COMMAND}-id: 10", null, false, false, ExpectedResult = new object?[] { 10, null, false, false })]
@@ -171,28 +171,30 @@ namespace PoeFilterX.Tests.StyleCommands
         public object?[] AlertId_Values_PreExisting(string args, int? volume, bool positional, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.AlertSound = new AlertSound
+            var filterblock = new FilterBlock
             {
-                Volume = volume,
-                Positional = positional,
-                Enabled = enabled,
-                Id = 1
+                AlertSound = new AlertSound
+                {
+                    Volume = volume,
+                    Positional = positional,
+                    Enabled = enabled,
+                    Id = 1
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
 
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume,
-                filterblock.AlertSound.Positional,
-                filterblock.AlertSound.Enabled
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume,
+                filterblock.AlertSound?.Positional,
+                filterblock.AlertSound?.Enabled
 
             };
         }
@@ -230,7 +232,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}-volume: 0", ExpectedResult = 0)]
         [TestCase($"{COMMAND}-volume: 150", ExpectedResult = 150)]
         [TestCase($"{COMMAND}-volume: 300", ExpectedResult = 300)]
-        public int AlertVolume_Values_NoPreExisting(string args)
+        public int? AlertVolume_Values_NoPreExisting(string args)
         {
             // Arrange
             var filterblock = new FilterBlock();
@@ -238,14 +240,14 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.IsNotNull(filterblock.AlertSound.Volume);
-            Assert.That(filterblock.AlertSound.Positional, Is.EqualTo(false));
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
-            return filterblock.AlertSound.Volume.Value;
+            Assert.IsNotNull(filterblock.AlertSound?.Volume);
+            Assert.That(filterblock.AlertSound?.Positional, Is.EqualTo(false));
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
+            return filterblock.AlertSound?.Volume;
         }
 
         [TestCase($"{COMMAND}-volume: 100", 1, null, false, false, ExpectedResult = new object?[] { 1, 100, false, false })]
@@ -259,29 +261,30 @@ namespace PoeFilterX.Tests.StyleCommands
         public object?[] AlertVolume_Values_PreExisting(string args, int id, int? volume, bool positional, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.AlertSound = new AlertSound
+            var filterblock = new FilterBlock
             {
-                Volume = volume,
-                Positional = positional,
-                Enabled = enabled,
-                Id = id
+                AlertSound = new AlertSound
+                {
+                    Volume = volume,
+                    Positional = positional,
+                    Enabled = enabled,
+                    Id = id
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
 
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume,
-                filterblock.AlertSound.Positional,
-                filterblock.AlertSound.Enabled
-
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume,
+                filterblock.AlertSound?.Positional,
+                filterblock.AlertSound?.Enabled
             };
         }
 
@@ -317,7 +320,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
         [TestCase($"{COMMAND}-style: global", ExpectedResult = false)]
         [TestCase($"{COMMAND}-style: positional", ExpectedResult = true)]
-        public bool AlertStyle_Values_NoPreExisting(string args)
+        public bool? AlertStyle_Values_NoPreExisting(string args)
         {
             // Arrange
             var filterblock = new FilterBlock();
@@ -325,13 +328,13 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
-            Assert.IsNotNull(filterblock.AlertSound.Positional);
-            Assert.That(filterblock.AlertSound.Enabled, Is.EqualTo(true));
-            return filterblock.AlertSound.Positional;
+            Assert.IsNotNull(filterblock.AlertSound?.Positional);
+            Assert.That(filterblock.AlertSound?.Enabled, Is.EqualTo(true));
+            return filterblock.AlertSound?.Positional;
         }
 
         [TestCase($"{COMMAND}-style: global", 1, null, false, false, ExpectedResult = new object?[] { 1, null, false, false })]
@@ -353,28 +356,30 @@ namespace PoeFilterX.Tests.StyleCommands
         public object?[] AlertStyle_Values_PreExisting(string args, int id, int? volume, bool positional, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.AlertSound = new AlertSound
+            var filterblock = new FilterBlock
             {
-                Volume = volume,
-                Positional = positional,
-                Enabled = enabled,
-                Id = id
+                AlertSound = new AlertSound
+                {
+                    Volume = volume,
+                    Positional = positional,
+                    Enabled = enabled,
+                    Id = id
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
 
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume,
-                filterblock.AlertSound.Positional,
-                filterblock.AlertSound.Enabled
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume,
+                filterblock.AlertSound?.Positional,
+                filterblock.AlertSound?.Enabled
             };
         }
 
@@ -397,28 +402,30 @@ namespace PoeFilterX.Tests.StyleCommands
         public object?[] AlertToggled_Values_PreExisting(string args, int id, int? volume, bool positional, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.AlertSound = new AlertSound
+            var filterblock = new FilterBlock
             {
-                Volume = volume,
-                Positional = positional,
-                Enabled = enabled,
-                Id = id
+                AlertSound = new AlertSound
+                {
+                    Volume = volume,
+                    Positional = positional,
+                    Enabled = enabled,
+                    Id = id
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.AlertSound);
 
             return new object?[] {
-                filterblock.AlertSound.Id,
-                filterblock.AlertSound.Volume,
-                filterblock.AlertSound.Positional,
-                filterblock.AlertSound.Enabled
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume,
+                filterblock.AlertSound?.Positional,
+                filterblock.AlertSound?.Enabled
             };
         }
 
@@ -436,7 +443,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase(@$"{COMMAND}-path: test", ExpectedResult = "test")]
         [TestCase(@$"{COMMAND}-path: ""test""", ExpectedResult = "test")]
         [TestCase(@$"{COMMAND}-path: ""test test""", ExpectedResult = "test test")]
-        public string AlertPath_Values_GlobalExplicit(string args)
+        public string? AlertPath_Values_GlobalExplicit(string args)
         {
             // Arrange
             var filterblock = new FilterBlock();
@@ -444,7 +451,7 @@ namespace PoeFilterX.Tests.StyleCommands
             // Act
             var style = Parser.Parse(args);
             Assert.IsNotNull(style);
-            style(filterblock);
+            style?.Invoke(filterblock);
 
             // Assert
             Assert.IsNotNull(filterblock.CustomAlertSound);

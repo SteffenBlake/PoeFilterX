@@ -1,4 +1,3 @@
-using PoeFilterX.Business;
 using PoeFilterX.Business.Extensions;
 using System.ComponentModel.DataAnnotations;
 

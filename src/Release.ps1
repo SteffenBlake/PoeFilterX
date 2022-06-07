@@ -1,8 +1,16 @@
-param ([switch]$f=$false, [switch]$force=$false)
+param ([switch]$f=$false, [switch]$force=$false, [string]$v, [string]$version)
 
 $FORCE = ($f -or $force)
 
-$VERSION = git describe --tags --abbrev=0
+$VERSION = "";
+
+if ($version.Length -gt 0) {
+    $VERSION = $version;
+} elseif ($v.Length -gt 0) {
+    $VERSION = $v;
+} else {
+    $VERSION = git describe --tags --abbrev=0
+}
 
 $Releases = "./Releases"
 
@@ -11,14 +19,14 @@ if (-Not (Test-Path $Releases))
     New-Item $Releases -ItemType Directory
 }
 
-$runtimes = "win-x64", "linux-x64", "osx-x64", "linux-arm64", "win-arm64"
+$runtimes = "win-x64"
 
 foreach ($runtime in $runtimes) 
 {
     $RuntimePath = Join-Path -Path $Releases -ChildPath $runtime
     $VersionPath = Join-Path -Path $RuntimePath -ChildPath $VERSION
     $fullVersion = "$VERSION-$runtime"
-    $ArchivePath = "$Releases/$fullVersion.zip"
+    $ArchivePath = "$Releases/PoeFilterX-$fullVersion.zip"
 
     if ((Test-Path $VersionPath) -and $FORCE) {
         Remove-Item -Recurse -Force $VersionPath
@@ -35,9 +43,20 @@ foreach ($runtime in $runtimes)
     {
         dotnet publish "./PoeFilterX/PoeFilterX.csproj" -c Release -r $runtime -o $VersionPath /property:Version=$fullVersion /p:DebugType=None /p:DebugSymbols=false --self-contained true -p:PublishSingleFile=true
 
-        dotnet publish "./PoeFilterX.Update/PoeFilterX.Update.csproj" -c Release -r $runtime -o $VersionPath /property:Version=$fullVersion /p:DebugType=None /p:DebugSymbols=false --self-contained true -p:PublishSingleFile=true
-
         Compress-Archive -Path "$VersionPath/*" -DestinationPath $ArchivePath -CompressionLevel "Optimal"
     }
+}
+
+$msInstallerFrom = Join-Path -Path $Releases -ChildPath "PoeFilterX.WindowsInstaller.exe"
+$msInstallerTo = "PoeFilterX.WindowsInstaller-$VERSION.exe"
+$msInstallerToPath = Join-Path -Path $Releases -ChildPath "PoeFilterX.WindowsInstaller-$VERSION.exe"
+
+if ((Test-Path $msInstallerToPath) -and $FORCE) {
+    Remove-Item -Force $msInstallerToPath
+}
+
+if (-Not (Test-Path $msInstallerTo)) {
+    dotnet publish "./PoeFilterX.WindowsInstaller/PoeFilterX.WindowsInstaller.csproj" -c Release -r "win-x64" -o $Releases /property:Version=$fullVersion /p:DebugType=None /p:DebugSymbols=false --self-contained true -p:PublishSingleFile=true
+    Rename-Item -Path $msInstallerFrom -NewName $msInstallerTo
 }
 

@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
 
 namespace PoeFilterX.Extensions
 {
@@ -56,6 +53,7 @@ namespace PoeFilterX.Extensions
 
             return services;
         }
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         public static IServiceCollection AddLazyTransient<T>(this IServiceCollection services)
             where T : class

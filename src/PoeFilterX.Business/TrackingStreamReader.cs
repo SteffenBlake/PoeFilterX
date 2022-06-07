@@ -73,7 +73,7 @@ namespace PoeFilterX.Business
         /// <inheritdoc cref="StreamReader.Peek"/>
         public int Peek() => Component.Peek();
 
-        /// <inheritdoc cref="StreamReader.Read"/>
+        /// <inheritdoc cref="StreamReader.Read()"/>
         public int Read()
         {
             var character = Component.Read();
@@ -84,7 +84,7 @@ namespace PoeFilterX.Business
             return character;
         }
 
-        /// <inheritdoc cref="StreamReader.Read"/>
+        /// <inheritdoc cref="StreamReader.Read(char[], int, int)"/>
         public int Read(char[] buffer, int index, int count)
         {
             var output = Component.Read(buffer, index, count);
@@ -111,7 +111,7 @@ namespace PoeFilterX.Business
         /// <inheritdoc cref="StreamReader.Dispose"/>
         public void Dispose()
         {
-            Component?.Dispose();
+            Component.Dispose();
         }
     }
 }

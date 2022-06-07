@@ -35,7 +35,7 @@ namespace PoeFilterX.Business.Services
             }
             catch (ParserException ex)
             {
-                Console.Error.WriteLine($"Error in file '{path}', line #{reader.Line}:\n\t {ex.Message}");
+                await Console.Error.WriteLineAsync($"Error in file '{path}', line #{reader.Line}:\n\t {ex.Message}");
                 Environment.Exit(1);
             }
         }

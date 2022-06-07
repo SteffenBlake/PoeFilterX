@@ -1,4 +1,4 @@
-﻿namespace PoeFilterX.Business.Services
+﻿namespace PoeFilterX.Business.Services.Abstractions
 {
     public interface IStreamFetcher
     {

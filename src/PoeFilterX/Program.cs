@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using PoeFilterX.Business.Models;
-using System.Reflection;
-
-namespace PoeFilterX
+﻿namespace PoeFilterX
 {
     internal class Program
     {
-        private static Dictionary<string, Func<string[], Task>> Commands = new()
+        private static readonly Dictionary<string, Func<string[], Task>> Commands = new()
         {
             { "--help", HelpCmd.Run },
             { "help", HelpCmd.Run },
@@ -17,7 +13,7 @@ namespace PoeFilterX
             { "update", UpdateCmd.Run }
         };
 
-        static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args.Length == 0)
             {
@@ -25,7 +21,7 @@ namespace PoeFilterX
                 Environment.Exit(1);
             }
 
-            var command = args[0].ToLower().Trim();
+            string command = args[0].ToLower().Trim();
 
             if (!Commands.ContainsKey(command))
             {
@@ -35,7 +31,13 @@ namespace PoeFilterX
 
             args = args.Skip(1).ToArray();
 
-            await Commands[command](args);
+            Task cmdTask = Commands[command](args);
+            cmdTask.Wait();
+
+            if (cmdTask.IsFaulted)
+            {
+                Console.Error.WriteLine(cmdTask.Exception);
+            }
         }
     }
 }

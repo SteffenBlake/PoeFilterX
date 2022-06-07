@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using PoeFilterX.Business.Enums;
 using PoeFilterX.Business.Extensions;
 using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services.Abstractions;
@@ -59,9 +58,9 @@ namespace PoeFilterX.Business.Services
         }
 
 
-        public Action<FilterBlock>? Parse(string[] args)
+        public Action<FilterBlock>? Parse(IReadOnlyList<string> args)
         {
-            if (args.Length == 0)
+            if (args.Count == 0)
                 return null;
 
             var cmdName = args[0];
@@ -75,17 +74,17 @@ namespace PoeFilterX.Business.Services
             return Commands[cmdName](composedArguments);
         }
 
-        private Action<FilterBlock> SetBool(Expression<Func<FilterBlock, bool?>> selector, string[] args)
+        private Action<FilterBlock> SetBool(Expression<Func<FilterBlock, bool?>> selector, IReadOnlyList<string> args)
         {
-            if (args.Length > 1)
-                throw ParserException.UnexpectedArgCount(args.Length, 1);
+            if (args.Count > 1)
+                throw ParserException.UnexpectedArgCount(args.Count, 1);
 
             ArgParser.ThrowIfNotBoolean(args[0], out var value);
 
             return (b) => b.SetPropertyValue(selector, value);
         }
 
-        private Action<FilterBlock> AddStrings(Expression<Func<FilterBlock, IList<string>?>> selector, string[] args)
+        private static Action<FilterBlock> AddStrings(Expression<Func<FilterBlock, IList<string>?>> selector, IReadOnlyList<string> args)
         {
             var method = selector.Compile();
             return (b) =>
@@ -98,7 +97,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddEnums<TEnum>(Expression<Func<FilterBlock, IList<TEnum>?>> selector, string[] args)
+        private Action<FilterBlock> AddEnums<TEnum>(Expression<Func<FilterBlock, IEnumerable<TEnum>?>> selector, IEnumerable<string> args)
             where TEnum : struct, Enum
         {
             var method = selector.Compile();
@@ -118,13 +117,13 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>>> selector, string[] args, int min, int max)
+        private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min, int max)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
                 args = args.Skip(1).ToArray();
 
-            if (args.Length > 1)
-                throw ParserException.UnexpectedArgCount(args.Length, 1);
+            if (args.Count > 1)
+                throw ParserException.UnexpectedArgCount(args.Count, 1);
 
 
             ArgParser.ThrowIfIntOutOfRange(args[0], min, max, out var value, selector.GetName());
@@ -133,7 +132,7 @@ namespace PoeFilterX.Business.Services
             return AddOperator(selector, addition);
         }
 
-        private Action<FilterBlock> AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>>> selector, string[] args)
+        private Action<FilterBlock> AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>?>> selector, IReadOnlyList<string> args)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
                 args = args.Skip(1).ToArray();
@@ -143,14 +142,14 @@ namespace PoeFilterX.Business.Services
             return AddOperator(selector, addition);
         }
 
-        private Action<FilterBlock> AddOperatorEnum<TEnum>(Expression<Func<FilterBlock, IList<OperatorArg<TEnum>>>> selector, string[] args)
+        private Action<FilterBlock> AddOperatorEnum<TEnum>(Expression<Func<FilterBlock, IList<OperatorArg<TEnum>>?>> selector, IReadOnlyList<string> args)
             where TEnum : struct, Enum
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
                 args = args.Skip(1).ToArray();
 
-            if (args.Length > 1)
-                throw ParserException.UnexpectedArgCount(args.Length, 1);
+            if (args.Count > 1)
+                throw ParserException.UnexpectedArgCount(args.Count, 1);
 
             ArgParser.ThrowIfNotEnum<TEnum>(args[0], out var value);
 
@@ -159,24 +158,7 @@ namespace PoeFilterX.Business.Services
             return AddOperator(selector, addition);
         }
 
-        private Action<FilterBlock> AddOperatorEnums<TEnum>(Expression<Func<FilterBlock, IList<OperatorArg<IList<TEnum>>>>> selector, string[] args)
-            where TEnum : struct, Enum
-        {
-            if (ArgParser.TryParseOperator(args[0], out var filterOperator))
-                args = args.Skip(1).ToArray();
-
-            var values = args.Select(a =>
-            {
-                ArgParser.ThrowIfNotEnum<TEnum>(a, out var value);
-                return value;
-            }).ToList();
-
-            var addition = new OperatorArg<IList<TEnum>>(values, filterOperator);
-
-            return AddOperator(selector, addition);
-        }
-
-        private Action<FilterBlock> EnsureOperator<T>(Expression<Func<FilterBlock, IList<OperatorArg<T>>>> selector)
+        private static Action<FilterBlock> EnsureOperator<T>(Expression<Func<FilterBlock, IList<OperatorArg<T>>?>> selector)
         {
             var method = selector.Compile();
             return (b) =>
@@ -186,7 +168,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddOperator<T>(Expression<Func<FilterBlock, IList<OperatorArg<T>>>> selector, OperatorArg<T> addition)
+        private static Action<FilterBlock> AddOperator<T>(Expression<Func<FilterBlock, IList<OperatorArg<T>>?>> selector, OperatorArg<T> addition)
         {
             var method = selector.Compile();
 
@@ -195,10 +177,7 @@ namespace PoeFilterX.Business.Services
                 ((b) =>
                 {
                     var operatorList = method(b);
-                    operatorList.Add(addition);
-                    // TODO: Check if this line here is even needed...
-                    // Maybe safe to leave it as a safeguard in case 
-                    // of weird pointer stuff?
+                    operatorList?.Add(addition);
                     b.SetPropertyValue(selector, operatorList);
                 });
         }

@@ -24,5 +24,10 @@
 
             return new ParserException(msg);
         }
+
+        internal static ParserException CircularDependency()
+        {
+            return new ParserException("Circular Dependency detected!");
+        }
     }
 }

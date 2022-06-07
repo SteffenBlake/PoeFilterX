@@ -4,7 +4,7 @@ namespace PoeFilterX.Business.Services.Abstractions
 {
     public interface IFilterCommandParser
     {
-        Action<FilterBlock>? Parse(string[] args);
+        Action<FilterBlock>? Parse(IReadOnlyList<string> args);
     }
 
 }

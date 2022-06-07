@@ -1,5 +1,5 @@
-using "Parent/Test Parent.filterx";
-using Test.fss;
+using "TestFiles/Parent/Test Parent.filterx";
+using TestFiles/Test.fss;
 
 {
 	HasInfluence Crusader Elder;

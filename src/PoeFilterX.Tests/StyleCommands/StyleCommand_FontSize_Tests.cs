@@ -44,6 +44,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert

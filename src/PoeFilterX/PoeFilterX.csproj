@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PoeFilterX.Business\PoeFilterX.Business.csproj" />
+    <ProjectReference Include="..\PoeFilterX.Common\PoeFilterX.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +35,7 @@
     <None Update="TestFiles\Test.fss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestFiles\Test.filterx">
+    <None Update="Test.filterx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

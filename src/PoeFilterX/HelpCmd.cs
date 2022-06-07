@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PoeFilterX
+﻿namespace PoeFilterX
 {
     internal static class HelpCmd
     {
-        static string HelpText =
-@"Utility for compiling .filterx projects into Path of Exile .filter files
-Type PoeFilterX Help <CommandName> for more details for a given command.
+        private const string HelpText = @"Utility for compiling .filterx projects into Path of Exile .filter files
+Type poefilterx help <command> for more details for a given command.
 ==Commands==
-    PoeFilterX build - Builds a .filterx project into a filter file.
-    PoeFilterX version - Prints the version info of PoeFilterX.
-    PoeFilterX update - Updates PoeFilterX";
+    poefilterx build - Builds a .filterx project into a filter file.
+    poefilterx version - Prints the version info of PoeFilterX.
+    poefilterx update - Updates PoeFilterX";
 
         internal static Task Run(string[] args)
         {

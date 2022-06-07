@@ -6,9 +6,9 @@ namespace PoeFilterX.Business.Models
     {
         private IList<FilterBlock> FilterBlocks { get; } = new List<FilterBlock>();
 
-        private IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> Styles = new Dictionary<string, IList<(int, Action<FilterBlock>)>>();
+        private readonly IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> Styles = new Dictionary<string, IList<(int, Action<FilterBlock>)>>();
 
-        private int StyleCount = 0;
+        private int StyleCount;
 
         public void AddFilterBlock(FilterBlock block)
         {
@@ -27,8 +27,6 @@ namespace PoeFilterX.Business.Models
 
         public async Task WriteAsync(TextWriter writer)
         {
-            var builder = new StringBuilder();
-
             for (var n = FilterBlocks.Count -1; n >=0; n--)
             {
                 var filterText = FilterBlocks[n].Compile(Styles).Trim();

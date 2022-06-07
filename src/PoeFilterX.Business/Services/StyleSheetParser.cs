@@ -8,10 +8,13 @@ namespace PoeFilterX.Business.Services
     {
         private Func<IFileParser> FileParserFactory { get; }
         private IStyleBlockParser BlockParser { get; }
-        public StyleSheetParser(Func<IFileParser> fileParserFactory, IStyleBlockParser blockParser)
+        private ExecutingContext Context { get; }
+
+        public StyleSheetParser(Func<IFileParser> fileParserFactory, IStyleBlockParser blockParser, ExecutingContext context)
         {
             FileParserFactory = fileParserFactory ?? throw new ArgumentNullException(nameof(fileParserFactory));
             BlockParser = blockParser ?? throw new ArgumentNullException(nameof(blockParser));
+            Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public string FileExtension => ".fss";
@@ -43,7 +46,7 @@ namespace PoeFilterX.Business.Services
                 if (next == '{')
                 {
                     var trimmedName = runningArg.Trim();
-                    if (trimmedName.Any(c => char.IsWhiteSpace(c)))
+                    if (trimmedName.Any(char.IsWhiteSpace))
                         throw ParserException.UnexpectedCharacter(' ', '{');
 
                     var commands = BlockParser.Parse(reader);
@@ -68,7 +71,12 @@ namespace PoeFilterX.Business.Services
                         if (extension != FileExtension)
                             throw new ParserException($"Unrecognized file extension for StyleSheet using statement: '{extension}'");
 
-                        var relativeFile = Path.GetRelativePath(reader.Path, filePath);
+                        var directory = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
+                        var relativeFile = Path.Combine(directory, filePath);
+
+                        if (!Context.TryAddUsing(reader.Path, relativeFile))
+                            throw ParserException.CircularDependency();
+
                         await FileParserFactory().ParseAsync(filter, relativeFile);
                     }
                     else

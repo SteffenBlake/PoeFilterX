@@ -52,16 +52,19 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] Pillar_Values(string args, FilterColor color, bool temporary, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.PlayEffect = new PlayEffect
+            var filterblock = new FilterBlock
             {
-                Color = color,
-                Temporary = temporary,
-                Enabled = enabled
+                PlayEffect = new PlayEffect
+                {
+                    Color = color,
+                    Temporary = temporary,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -107,16 +110,19 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] PillarColor_Values(string args, FilterColor color, bool temporary, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.PlayEffect = new PlayEffect
+            var filterblock = new FilterBlock
             {
-                Color = color,
-                Temporary = temporary,
-                Enabled = enabled
+                PlayEffect = new PlayEffect
+                {
+                    Color = color,
+                    Temporary = temporary,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -162,16 +168,19 @@ namespace PoeFilterX.Tests.StyleCommands
         public object[] PillarDuration_Values(string args, FilterColor color, bool temporary, bool enabled)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.PlayEffect = new PlayEffect
+            var filterblock = new FilterBlock
             {
-                Color = color,
-                Temporary = temporary,
-                Enabled = enabled
+                PlayEffect = new PlayEffect
+                {
+                    Color = color,
+                    Temporary = temporary,
+                    Enabled = enabled
+                }
             };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert

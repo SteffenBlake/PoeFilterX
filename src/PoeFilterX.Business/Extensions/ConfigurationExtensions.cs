@@ -8,15 +8,15 @@ namespace PoeFilterX.Business.Extensions
     /// </summary>
     public static class ConfigurationExtensions
     {
-        public static string[] InjectEnvironment(this IConfiguration config, string[] args)
+        public static string[] InjectEnvironment(this IConfiguration config, IReadOnlyList<string> args)
         {
             return InjectEnvironmentInternal(config, args).ToArray();
         }
 
-        private static IEnumerable<string> InjectEnvironmentInternal(this IConfiguration config, string[] args)
+        private static IEnumerable<string> InjectEnvironmentInternal(this IConfiguration config, IReadOnlyList<string> args)
         {
             var enviroRegex = new Regex("%\\w+%");
-            for (var n = 0; n < args.Length; n++)
+            for (var n = 0; n < args.Count; n++)
             {
                 var arg = args[n];
                 while (enviroRegex.IsMatch(arg))

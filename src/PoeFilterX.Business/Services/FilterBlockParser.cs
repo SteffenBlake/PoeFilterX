@@ -8,10 +8,13 @@ namespace PoeFilterX.Business.Services
     {
         private Func<IFileParser> FileParserFactory { get; }
         private IFilterCommandParser CommandParser { get; }
-        public FilterBlockParser(Func<IFileParser> fileParserFactory, IFilterCommandParser commandParser)
+        private ExecutingContext Context { get; }
+
+        public FilterBlockParser(Func<IFileParser> fileParserFactory, IFilterCommandParser commandParser, ExecutingContext context)
         {
             FileParserFactory = fileParserFactory ?? throw new ArgumentNullException(nameof(fileParserFactory));
             CommandParser = commandParser ?? throw new ArgumentNullException(nameof(commandParser));
+            Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
@@ -61,6 +64,10 @@ namespace PoeFilterX.Business.Services
 
                         var directory = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
                         var relativeFile = Path.Combine(directory, filePath);
+
+                        if (!Context.TryAddUsing(reader.Path, relativeFile))
+                            throw ParserException.CircularDependency();
+
                         await FileParserFactory().ParseAsync(filter, relativeFile);
                     } 
                     else

@@ -49,6 +49,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -80,6 +81,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -121,11 +123,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BorderColorAlpha_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBorderColor = Color.FromArgb(50, 100, 100, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBorderColor = Color.FromArgb(50, 100, 100, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -167,11 +172,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BorderColorRed_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBorderColor = Color.FromArgb(100, 50, 100, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBorderColor = Color.FromArgb(100, 50, 100, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -213,11 +221,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BorderColorGreen_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBorderColor = Color.FromArgb(100, 100, 50, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBorderColor = Color.FromArgb(100, 100, 50, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -259,11 +270,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BorderColorBlue_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBorderColor = Color.FromArgb(100, 100, 100, 50);
+            var filterblock = new FilterBlock
+            {
+                SetBorderColor = Color.FromArgb(100, 100, 100, 50)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert

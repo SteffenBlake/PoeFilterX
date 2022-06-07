@@ -5,32 +5,41 @@ using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services;
 using PoeFilterX.Business.Services.Abstractions;
 using PoeFilterX.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PoeFilterX
 {
     internal static class BuildCmd
     {
         internal static string HelpText =
-@"Compiles a Filter file from a .filterx file.
-    Usage: PoeFilterX build [--p|--path=<path>] [--o|--output=<path>] [--var=val]
-    [--p|--path=<path>] - Path to the input .filterx file. Default: "".filterx""
-    [--o|--output=<path>] - Path to the output .filter file. Default: ""<sourceFileName>.filter""
-    [--VarName=someValue] - Any additional Environmental variables you wish to pass in to consume via %VarName% or etc 
+@"Compiles a Filter file from a .filterx file. If executed from within 
+a directory with a single .filterx file present, path does not need to be provided
+    Usage: poefilterx build [--p|--path=<path>] [--o|--output=<path>] [--var=val]
+    [--p|--path ""path""] - Path to the input .filterx file. If not specified will search for one in executing dir.
+    [--o|--output ""path""] - Path to the output .filter file. Default: ""<sourceFileName>.filter""
+    [--v|--verbose true] - Enables Verbose output, e.g. 'poefilterx build --v true'
+    [--VarName someValue] - Any additional Environmental variables you wish to pass in to consume via %VarName% or etc 
 ";
 
         internal static async Task Run(string[] args)
         {
+            Console.WriteLine("== PoeFilterX Build Commencing ==");
+            Console.WriteLine($"Executing from: '{Environment.CurrentDirectory}'");
+
             var config = new ConfigurationBuilder()
                 .AddEnvironmentVariables("POEFILTERX_")
                 .AddCommandLine(args)
                 .Build();
 
-            var filterXConfig = config.Get<FilterXConfiguration>();
+            Console.WriteLine("Building Configuration...");
+            var filterXConfig = config.Get<FilterXConfiguration>() ?? new FilterXConfiguration();
+            Console.WriteLine("Fetching files...");
+            var usedPath = filterXConfig.UsedPath();
+
+            // If no path specified, check if we only have one .filterx file in launch dir
+            if (usedPath == null)
+                return;
+
+            Console.WriteLine($"Building from {usedPath}");
 
             var services = new ServiceCollection();
             // Register IConfiguration for fetching of Enviro Variables in parsing
@@ -38,33 +47,37 @@ namespace PoeFilterX
             ConfigureServices(config, services);
 
             var serviceProvider = services.BuildServiceProvider();
+            Console.WriteLine("Setup complete, commencing build.");
 
             var parser = serviceProvider.GetRequiredService<IFileParser>();
 
             var filter = new Filter();
             try
             {
-                await parser.ParseAsync(filter, filterXConfig.UsedPath);
+                await parser.ParseAsync(filter, usedPath);
             } catch (ParserException ex)
             {
-                Console.Error.WriteLine(ex.Message);
+                await Console.Error.WriteLineAsync(ex.Message);
                 Environment.Exit(1);
             }
 
-            if (File.Exists(filterXConfig.OutputPath))
-                File.Delete(filterXConfig.OutputPath);
+            var outputPath = filterXConfig.OutputPath();
+            Console.WriteLine($"Publishing to {outputPath}");
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
 
-            using var writer = File.OpenWrite(filterXConfig.OutputPath);
-            using var stream = new StreamWriter(writer);
+            await using var writer = File.OpenWrite(outputPath);
+            await using var stream = new StreamWriter(writer);
             await filter.WriteAsync(stream);
 
-            stream.Flush();
+            await stream.FlushAsync();
             writer.Flush();
         }
 
         private static void ConfigureServices(IConfiguration config, IServiceCollection services)
         {
-            services.AddSingleton<IConfiguration>(config);
+            services.AddSingleton(config);
+            services.AddSingleton(new ExecutingContext());
 
             services.AddLazySingleton<IFileParser, FileParser>();
             services.AddLazySingleton<IStreamFetcher, FileStreamFetcher>();

@@ -26,9 +26,7 @@ namespace PoeFilterX.Business.Extensions
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="TValue"></typeparam>
-        /// <param name="target"></param>
         /// <param name="memberLamda"></param>
-        /// <param name="value"></param>
         /// <remarks>https://stackoverflow.com/a/9601914/7839602</remarks>
         public static string? GetName<T, TValue>(this Expression<Func<T, TValue>> memberLamda)
         {

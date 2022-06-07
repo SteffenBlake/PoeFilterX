@@ -1,6 +1,5 @@
 ﻿using PoeFilterX.Business;
 using PoeFilterX.Business.Services;
-using PoeFilterX.Business.Services.Abstractions;
 using PoeFilterX.Tests.Mocks;
 
 namespace PoeFilterX.Tests
@@ -12,6 +11,12 @@ namespace PoeFilterX.Tests
 
         [SetUp]
         public void Setup()
+        {
+            CommandParser = new MockStyleCommandParser();
+            BlockParser = new StyleBlockParser(CommandParser);
+        }
+
+        public StyleBlockParser_Tests()
         {
             CommandParser = new MockStyleCommandParser();
             BlockParser = new StyleBlockParser(CommandParser);
@@ -97,7 +102,7 @@ namespace PoeFilterX.Tests
             BlockParser.Parse(trackingStream);
 
             // Assert
-            var calls = CommandParser.Calls.Select(c => new object[] {c.Key, c.Value }).ToArray();
+            var calls = CommandParser.Calls.Select(c => (object)new object[] {c.Key, c.Value }).ToArray();
             return calls;
         }
     }

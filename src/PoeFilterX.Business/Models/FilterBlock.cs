@@ -8,13 +8,13 @@ namespace PoeFilterX.Business.Models
 {
     public class FilterBlock
     {
-        private List<Action<FilterBlock>> _commands = new List<Action<FilterBlock>>();
+        private readonly List<Action<FilterBlock>> _commands = new();
         public IReadOnlyList<Action<FilterBlock>> Commands => 
             Parent == null ? 
             _commands.AsReadOnly() : 
             Parent.Commands.Concat(_commands).ToList().AsReadOnly(); 
 
-        private FilterBlock? Parent { get; set; }
+        private FilterBlock? Parent { get; }
 
         public FilterBlock(FilterBlock? parent = null)
         {
@@ -99,9 +99,9 @@ namespace PoeFilterX.Business.Models
         public AlertSound? AlertSound { get; set; }
 
         public AlertSound? PlayAlertSound => 
-            AlertSound != null && !AlertSound.Positional ? AlertSound : null;
+            AlertSound is { Positional: false } ? AlertSound : null;
         public AlertSound? PlayAlertSoundPositional => 
-            AlertSound != null && AlertSound.Positional ? AlertSound : null;
+            AlertSound is { Positional: true } ? AlertSound : null;
 
         public bool? DropSound { get; set; }
 
@@ -116,8 +116,7 @@ namespace PoeFilterX.Business.Models
         public IList<string>? Styles { get; set; }
 
         public IList<string> CompiledStyles =>
-            Parent == null ? Styles ?? new List<string>() :
-            Parent.CompiledStyles.Concat(Styles ?? new List<string>()).ToList();
+            Parent?.CompiledStyles.Concat(Styles ?? new List<string>()).ToList() ?? (Styles ?? new List<string>());
 
         public string Compile(IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> stylesTable)
         {
@@ -129,7 +128,8 @@ namespace PoeFilterX.Business.Models
             var styles = CompiledStyles
                 .Distinct()
                 .SelectMany(s => stylesTable[s])
-                .OrderBy(s => s.Rank);
+                .OrderBy(s => s.Rank)
+                .ToList();
 
             if (!styles.Any())
                 return "";
@@ -230,12 +230,11 @@ namespace PoeFilterX.Business.Models
 
         private static void Compile<T>(StringBuilder builder, IList<T> value, [CallerArgumentExpression("value")] string? valueName = null)
         {
-            if (value.Any())
-            {
-                var encapsulted = value.Distinct().Select(v => $"\"{v}\"");
-                builder.AppendLine($"\t{valueName} {string.Join(' ', encapsulted)}");
+            if (!value.Any()) 
+                return;
 
-            }
+            var encapsulted = value.Distinct().Select(v => $"\"{v}\"");
+            builder.AppendLine($"\t{valueName} {string.Join(' ', encapsulted)}");
         }
 
         private static void Compile(StringBuilder builder, Color? value, [CallerArgumentExpression("value")] string? valueName = null)

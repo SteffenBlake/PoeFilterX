@@ -1,4 +1,6 @@
-﻿namespace PoeFilterX.Business.Services
+﻿using PoeFilterX.Business.Services.Abstractions;
+
+namespace PoeFilterX.Business.Services
 {
     public class FileStreamFetcher : IStreamFetcher
     {

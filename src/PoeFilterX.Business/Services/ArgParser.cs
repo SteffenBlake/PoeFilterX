@@ -30,12 +30,12 @@ namespace PoeFilterX.Business.Services
                 throw new ParserException($"Unexpected value for {resultName}, expected {min}-{max}, got '{arg}'");
         }
 
-        public void ThrowIfArgsWrong(string[] args, params int[] expected)
+        public void ThrowIfArgsWrong(IReadOnlyList<string> args, params int[] expected)
         {
-            if (expected.Any(c => args.Length == c))
+            if (expected.Any(c => args.Count == c))
                 return;
 
-            throw ParserException.UnexpectedArgCount(args.Length, expected);
+            throw ParserException.UnexpectedArgCount(args.Count, expected);
         }
 
         public void ThrowIfNotPositionalString(string arg, out bool result, [CallerArgumentExpression("result")] string? resultName = null)
@@ -61,10 +61,10 @@ namespace PoeFilterX.Business.Services
             if (int.TryParse(arg, out _))
                 throw ParserException.UnrecognizedCommand(arg, typeof(TEnum).Name);
 
-            if (!Enum.TryParse<TEnum>(arg, true, out result))
+            if (!Enum.TryParse(arg, true, out result))
                 throw ParserException.UnrecognizedCommand(arg, typeof(TEnum).Name);
 
-            if (!Enum.IsDefined<TEnum>(result))
+            if (!Enum.IsDefined(result))
                 throw ParserException.UnrecognizedCommand(arg, typeof(TEnum).Name);
         }
 

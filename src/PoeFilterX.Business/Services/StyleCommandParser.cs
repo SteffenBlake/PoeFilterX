@@ -14,7 +14,7 @@ namespace PoeFilterX.Business.Services
         private IDictionary<string, Func<string[], Action<FilterBlock>>> Commands { get; }
         public StyleCommandParser()
         {
-            Commands = new Dictionary<string, Func<string[], Action<FilterBlock>>>()
+            Commands = new Dictionary<string, Func<string[], Action<FilterBlock>>>
             {
                 { "show:",                  Show },
                 { "border-color:",          BorderColor },
@@ -62,7 +62,7 @@ namespace PoeFilterX.Business.Services
             return Commands[cmdName](args.Skip(1).ToArray());
         }
 
-        private Action<FilterBlock> Show(string[] args)
+        private Action<FilterBlock> Show(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             ArgParser.ThrowIfNotBoolean(args[0], out var show);
@@ -70,87 +70,84 @@ namespace PoeFilterX.Business.Services
             return (b) => b.Show = show;
         }
 
-        private Action<FilterBlock> BorderColor(string[] args) =>
+        private Action<FilterBlock> BorderColor(IReadOnlyList<string> args) =>
             SetColor((b) => b.SetBorderColor, args);
 
-        private Action<FilterBlock> BorderColorAlpha(string[] args) => 
+        private Action<FilterBlock> BorderColorAlpha(IReadOnlyList<string> args) => 
             SetColorAlpha((b) => b.SetBorderColor, args);
 
-        private Action<FilterBlock> BorderColorRed(string[] args) =>
+        private Action<FilterBlock> BorderColorRed(IReadOnlyList<string> args) =>
             SetColorRed((b) => b.SetBorderColor, args);
 
-        private Action<FilterBlock> BorderColorGreen(string[] args) =>
+        private Action<FilterBlock> BorderColorGreen(IReadOnlyList<string> args) =>
             SetColorGreen((b) => b.SetBorderColor, args);
 
-        private Action<FilterBlock> BorderColorBlue (string[] args) =>
+        private Action<FilterBlock> BorderColorBlue (IReadOnlyList<string> args) =>
             SetColorBlue((b) => b.SetBorderColor, args);
 
 
-        private Action<FilterBlock> FontColor(string[] args) =>
+        private Action<FilterBlock> FontColor(IReadOnlyList<string> args) =>
             SetColor((b) => b.SetTextColor, args);
 
-        private Action<FilterBlock> FontColorAlpha(string[] args) =>
+        private Action<FilterBlock> FontColorAlpha(IReadOnlyList<string> args) =>
             SetColorAlpha((b) => b.SetTextColor, args);
 
-        private Action<FilterBlock> FontColorRed(string[] args) =>
+        private Action<FilterBlock> FontColorRed(IReadOnlyList<string> args) =>
             SetColorRed((b) => b.SetTextColor, args);
 
-        private Action<FilterBlock> FontColorGreen(string[] args) =>
+        private Action<FilterBlock> FontColorGreen(IReadOnlyList<string> args) =>
             SetColorGreen((b) => b.SetTextColor, args);
 
-        private Action<FilterBlock> FontColorBlue(string[] args) =>
+        private Action<FilterBlock> FontColorBlue(IReadOnlyList<string> args) =>
             SetColorBlue((b) => b.SetTextColor, args);
 
 
-        private Action<FilterBlock> BackgroundColor(string[] args) =>
+        private Action<FilterBlock> BackgroundColor(IReadOnlyList<string> args) =>
             SetColor((b) => b.SetBackgroundColor, args);
 
-        private Action<FilterBlock> BackgroundColorAlpha(string[] args) =>
+        private Action<FilterBlock> BackgroundColorAlpha(IReadOnlyList<string> args) =>
             SetColorAlpha((b) => b.SetBackgroundColor, args);
 
-        private Action<FilterBlock> BackgroundColorRed(string[] args) =>
+        private Action<FilterBlock> BackgroundColorRed(IReadOnlyList<string> args) =>
             SetColorRed((b) => b.SetBackgroundColor, args);
 
-        private Action<FilterBlock> BackgroundColorGreen(string[] args) =>
+        private Action<FilterBlock> BackgroundColorGreen(IReadOnlyList<string> args) =>
             SetColorGreen((b) => b.SetBackgroundColor, args);
 
-        private Action<FilterBlock> BackgroundColorBlue(string[] args) =>
+        private Action<FilterBlock> BackgroundColorBlue(IReadOnlyList<string> args) =>
             SetColorBlue((b) => b.SetBackgroundColor, args);
 
-        private Action<FilterBlock> FontSize(string[] args) =>
+        private Action<FilterBlock> FontSize(IReadOnlyList<string> args) =>
             SetInt((b) => b.SetFontSize, args, 18, 100);
 
-        private Action<FilterBlock> Alert(string[] args)
+        private Action<FilterBlock> Alert(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
-            if (ArgParser.TryParseToggleString(args[0], out var toggle))
-            {
-                return SetSoundToggled((b) => b.AlertSound, toggle);
-            }
-
-            return SetSound((b) => b.AlertSound, args);
+            return ArgParser.TryParseToggleString(args[0], out var toggle) ? 
+                SetSoundToggled((b) => b.AlertSound, toggle) : 
+                SetSound((b) => b.AlertSound, args);
         }
 
-        private Action<FilterBlock> AlertId(string[] args)
+        private Action<FilterBlock> AlertId(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureSound((b) => b.AlertSound) + SetSoundId((b) => b.AlertSound, args[0]);
         }
 
-        private Action<FilterBlock> AlertVolume(string[] args)
+        private Action<FilterBlock> AlertVolume(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureSound((b) => b.AlertSound) + SetSoundVolume((b) => b.AlertSound, args[0]);
         }
 
-        private Action<FilterBlock> AlertStyle(string[] args)
+        private Action<FilterBlock> AlertStyle(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             ArgParser.ThrowIfNotPositionalString(args[0], out var positional);
             return EnsureSound((b) => b.AlertSound) + SetSoundPositional((b) => b.AlertSound, positional);
         }
 
-        private Action<FilterBlock> DropSound(string[] args)
+        private Action<FilterBlock> DropSound(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             if (ArgParser.TryParseToggleString(args[0], out var toggle))
@@ -160,12 +157,12 @@ namespace PoeFilterX.Business.Services
 
             throw ParserException.UnrecognizedCommand(args[0]);
         }
-        private Action<FilterBlock> AlertPath(string[] args)
+        private Action<FilterBlock> AlertPath(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             if (ArgParser.TryParseToggleString(args[0], out var toggle))
             {
-                return 
+                return
                     SetCustomSoundToggled(toggle) +
                     SetSoundToggled(b => b.AlertSound, !toggle);
             } 
@@ -176,93 +173,92 @@ namespace PoeFilterX.Business.Services
                     SetSoundToggled(b => b.AlertSound, false) +
                     SetCustomSound(args[0]);
             }
-            throw ParserException.UnrecognizedCommand(args[0]);
         }
 
-        private Action<FilterBlock> MiniMapIcon(string[] args)
+        private Action<FilterBlock> MiniMapIcon(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
 
-            if (ArgParser.TryParseToggleString(args[0], out var toggle))
-            {
-                if (args.Length > 1)
-                    throw ParserException.UnrecognizedCommand(args[1]);
+            if (!ArgParser.TryParseToggleString(args[0], out var toggle))
+                return SetMiniMapIcon(args);
 
-                return EnsureMiniMapIcon() + SetMiniMapIconToggle(toggle);
-            }
+            if (args.Count > 1)
+                throw ParserException.UnrecognizedCommand(args[1]);
 
-            return SetMiniMapIcon(args);
+            return EnsureMiniMapIcon() + SetMiniMapIconToggle(toggle);
+
         }
 
-        private Action<FilterBlock> MiniMapIconSize(string[] args)
+        private Action<FilterBlock> MiniMapIconSize(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureMiniMapIcon() + SetMiniMapIconSize(args[0]);
         }
 
-        private Action<FilterBlock> MiniMapIconColor(string[] args)
+        private Action<FilterBlock> MiniMapIconColor(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureMiniMapIcon() + SetMiniMapIconColor(args[0]);
         }
 
-        private Action<FilterBlock> MiniMapIconShape(string[] args)
+        private Action<FilterBlock> MiniMapIconShape(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureMiniMapIcon() + SetMiniMapIconShape(args[0]);
         }
 
-        private Action<FilterBlock> PlayEffect(string[] args)
+        private Action<FilterBlock> PlayEffect(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2);
 
-            if (ArgParser.TryParseToggleString(args[0], out var toggle))
-            {
-                if (args.Length > 1)
-                    throw ParserException.UnrecognizedCommand(args[1]);
+            if (!ArgParser.TryParseToggleString(args[0], out var toggle)) 
+                return SetPlayEffect(args);
 
-                return EnsurePlayEffect() + SetPlayEffectToggle(toggle);
-            }
+            if (args.Count > 1)
+                throw ParserException.UnrecognizedCommand(args[1]);
 
-            return SetPlayEffect(args);
+            return EnsurePlayEffect() + SetPlayEffectToggle(toggle);
+
         }
 
-        private Action<FilterBlock> PlayEffectColor(string[] args)
+        private Action<FilterBlock> PlayEffectColor(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return SetPlayEffectColor(args[0]);
         }
 
-        private Action<FilterBlock> PlayEffectDuration(string[] args)
+        private Action<FilterBlock> PlayEffectDuration(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return SetPlayEffectDuration(args[0]);
         }
 
-        private Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, string[] args)
+        private Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3, 4);
             var command = EnsureColor(selector);
 
             // Single Hexcode arg
             var colorRaw = args[0].ToLower();
-            if (args.Length == 1 && colorRaw.StartsWith("0x"))
+            if (args.Count == 1 && colorRaw.StartsWith("0x"))
             {
-                if ((colorRaw.Length != 8 && colorRaw.Length != 10))
+                if (colorRaw.Length != 8 && colorRaw.Length != 10)
                     throw new ParserException("Unexpected color code, expected '0xAARRGGBB' or '0xRRGGBB");
 
                 try
                 {
                     var colorInt = (int?)new System.ComponentModel.Int32Converter().ConvertFromString(colorRaw);
                     if (colorRaw.Length == 8)
-                    unchecked
                     {
-                        colorInt += (int)0xFF000000;
+                        unchecked
+                        {
+                            colorInt += (int)0xFF000000;
+                        }
                     }
 
                     if (colorInt.HasValue)
                     {
-                        return SetColor(selector, Color.FromArgb(colorInt.Value));
+                        command += SetColor(selector, Color.FromArgb(colorInt.Value));
                     }
                 } 
                 catch
@@ -271,31 +267,35 @@ namespace PoeFilterX.Business.Services
                 }
 
             }
+            else
+            {
+                // 1 to 4 ARGB color arguments
+                ArgParser.ThrowIfIntOutOfRange(args[0], 0, 255, out var red);
 
-            // 1 to 4 ARGB color arguments
-            ArgParser.ThrowIfIntOutOfRange(args[0], 0, 255, out var red);
+                var green = 0;
+                if (args.Count >= 2)
+                    ArgParser.ThrowIfIntOutOfRange(args[1], 0, 255, out green);
 
-            var green = 0;
-            if (args.Length >=2)
-                ArgParser.ThrowIfIntOutOfRange(args[1], 0, 255, out green);
+                var blue = 0;
+                if (args.Count >= 3)
+                    ArgParser.ThrowIfIntOutOfRange(args[2], 0, 255, out blue);
 
-            var blue = 0;
-            if (args.Length >=3)
-                ArgParser.ThrowIfIntOutOfRange(args[2], 0, 255, out blue);
+                var alpha = 255;
+                if (args.Count >= 4)
+                    ArgParser.ThrowIfIntOutOfRange(args[3], 0, 255, out alpha);
 
-            var alpha = 255;
-            if (args.Length >= 4)
-                ArgParser.ThrowIfIntOutOfRange(args[3], 0, 255, out alpha);
+                command += SetColor(selector, Color.FromArgb(alpha, red, green, blue));
+            }
 
-            return SetColor(selector, Color.FromArgb(alpha, red, green, blue));
+            return command;
         }
 
-        private Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, Color color)
+        private static Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, Color color)
         {
-            return (b => b.SetPropertyValue(selector, color));
+            return b => b.SetPropertyValue(selector, color);
         }
 
-        private Action<FilterBlock> EnsureColor(Expression<Func<FilterBlock, Color?>> selector)
+        private static Action<FilterBlock> EnsureColor(Expression<Func<FilterBlock, Color?>> selector)
         {
             var method = selector.Compile();
             return (block) =>
@@ -305,7 +305,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetColorAlpha(Expression<Func<FilterBlock, Color?>> selector, string[] args)
+        private Action<FilterBlock> SetColorAlpha(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureColor(selector) + SetColorAlpha(selector, args[0]);
@@ -329,7 +329,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetColorRed(Expression<Func<FilterBlock, Color?>> selector, string[] args)
+        private Action<FilterBlock> SetColorRed(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureColor(selector) + SetColorRed(selector, args[0]);
@@ -353,7 +353,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetColorGreen(Expression<Func<FilterBlock, Color?>> selector, string[] args)
+        private Action<FilterBlock> SetColorGreen(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureColor(selector) + SetColorGreen(selector, args[0]);
@@ -377,7 +377,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetColorBlue(Expression<Func<FilterBlock, Color?>> selector, string[] args)
+        private Action<FilterBlock> SetColorBlue(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             return EnsureColor(selector) + SetColorBlue(selector, args[0]);
@@ -401,17 +401,17 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetInt(Expression<Func<FilterBlock, int?>> selector, string[] args, int min, int max)
+        private Action<FilterBlock> SetInt(Expression<Func<FilterBlock, int?>> selector, IReadOnlyList<string> args, int min, int max)
         {
-            ParseInt(args, min, max, out int value);
+            ParseInt(args, min, max, out var value);
             return (block) => block.SetPropertyValue(selector, value);
         }
 
-        private Action<FilterBlock> SetSound(Expression<Func<FilterBlock, AlertSound?>> selector, string[] args)
+        private Action<FilterBlock> SetSound(Expression<Func<FilterBlock, AlertSound?>> selector, IReadOnlyList<string> args)
         {
             if (ArgParser.TryParseToggleString(args[0], out var toggle))
             {
-                if (args.Length > 1)
+                if (args.Count > 1)
                     throw ParserException.UnrecognizedCommand(args[1]);
 
                 return
@@ -421,10 +421,10 @@ namespace PoeFilterX.Business.Services
 
             var cmd = EnsureSound(selector) + SetSoundId(selector, args[0]);
 
-            if (args.Length >= 2)
+            if (args.Count >= 2)
                 cmd += SetSoundVolume(selector, args[1]);
 
-            if (args.Length >= 3)
+            if (args.Count >= 3)
             {
                 ArgParser.ThrowIfNotPositionalString(args[2], out var positional);
                 cmd += SetSoundPositional(selector, positional);
@@ -433,7 +433,7 @@ namespace PoeFilterX.Business.Services
             return cmd;
         }
 
-        private Action<FilterBlock> EnsureSound(Expression<Func<FilterBlock, AlertSound?>> selector) 
+        private static Action<FilterBlock> EnsureSound(Expression<Func<FilterBlock, AlertSound?>> selector) 
         {
             var method = selector.Compile();
             return (b) =>
@@ -473,7 +473,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetSoundPositional(Expression<Func<FilterBlock, AlertSound?>> selector, bool positional)
+        private static Action<FilterBlock> SetSoundPositional(Expression<Func<FilterBlock, AlertSound?>> selector, bool positional)
         {
             var method = selector.Compile();
             return (block) =>
@@ -486,7 +486,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetSoundToggled(Expression<Func<FilterBlock, AlertSound?>> selector, bool toggle)
+        private static Action<FilterBlock> SetSoundToggled(Expression<Func<FilterBlock, AlertSound?>> selector, bool toggle)
         {
             var method = selector.Compile();
             return (block) =>
@@ -502,104 +502,143 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> SetCustomSound(string path)
+        private static Action<FilterBlock> SetCustomSound(string path)
         {
             return SetCustomSoundToggled(true) + ((b) => b.CustomAlertSound = path);
         }
 
-        private Action<FilterBlock> SetCustomSoundToggled(bool toggle)
+        private static Action<FilterBlock> SetCustomSoundToggled(bool toggle)
         {
             return (b) => b.CustomAlertSoundEnabled = toggle;
         }
 
-        private void ParseInt(string[] args, int min, int max, out int result, [CallerArgumentExpression("result")] string? resultName = null)
+        private void ParseInt(IReadOnlyList<string> args, int min, int max, out int result, [CallerArgumentExpression("result")] string? resultName = null)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
 
             ArgParser.ThrowIfIntOutOfRange(args[0], min, max, out result, resultName);
         }
 
-        private Action<FilterBlock> SetMiniMapIcon(string[] args)
+        private Action<FilterBlock> SetMiniMapIcon(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
 
             var command = EnsureMiniMapIcon() + SetMiniMapIconSize(args[0]);
 
-            if (args.Length >= 2)
+            if (args.Count >= 2)
                 command += SetMiniMapIconColor(args[1]);
 
-            if (args.Length >= 3)
+            if (args.Count >= 3)
                 command += SetMiniMapIconShape(args[2]);
 
 
             return command;
         }
 
-        private Action<FilterBlock> EnsureMiniMapIcon() => (b) => b.MinimapIcon ??= new MiniMapIcon();
+        private static Action<FilterBlock> EnsureMiniMapIcon() => 
+            (b) => b.MinimapIcon ??= new MiniMapIcon();
 
         private Action<FilterBlock> SetMiniMapIconSize(string arg)
         {
             ArgParser.ThrowIfIntOutOfRange(arg, 0, 2, out var size);
 
-            return ((b) => b.MinimapIcon.Size = size);
+            return (b) => {
+                if (b.MinimapIcon == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+
+                b.MinimapIcon.Size = size;
+            };
         }
 
         private Action<FilterBlock> SetMiniMapIconColor(string arg)
         {
             ArgParser.ThrowIfNotEnum<FilterColor>(arg, out var color);
 
-            return ((b) => b.MinimapIcon.Color = color);
+            return (b) => {
+                if (b.MinimapIcon == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                b.MinimapIcon.Color = color;
+            };
         }
 
         private Action<FilterBlock> SetMiniMapIconShape(string arg)
         {
             ArgParser.ThrowIfNotEnum<MiniMapIconShape>(arg, out var shape);
 
-            return ((b) => b.MinimapIcon.Shape = shape);
+            return (b) => {
+                if (b.MinimapIcon == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                b.MinimapIcon.Shape = shape;
+            };
         }
 
-        private Action<FilterBlock> SetMiniMapIconToggle(bool toggle)
+        private static Action<FilterBlock> SetMiniMapIconToggle(bool toggle)
         {
-            return ((b) => b.MinimapIcon.Enabled = toggle);
+            return (b) =>
+            {
+                if (b.MinimapIcon == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                b.MinimapIcon.Enabled = toggle;
+            };
         }
 
-        private Action<FilterBlock> SetPlayEffect(string[] args)
+        private Action<FilterBlock> SetPlayEffect(IReadOnlyList<string> args)
         {
             var cmd = EnsurePlayEffect() + SetPlayEffectColor(args[0]);
 
-            if (args.Length >= 2)
+            if (args.Count >= 2)
                 cmd += SetPlayEffectDuration(args[1]);
 
             return cmd;
         }
 
-        private Action<FilterBlock> EnsurePlayEffect() => (b) => b.PlayEffect ??= new PlayEffect();
+        private static Action<FilterBlock> EnsurePlayEffect() => (b) => b.PlayEffect ??= new PlayEffect();
 
         private Action<FilterBlock> SetPlayEffectColor(string arg)
         {
             ArgParser.ThrowIfNotEnum<FilterColor>(arg, out var color);
 
-            return ((b) => b.PlayEffect.Color = color);
+            return (b) =>
+            {
+                if (b.PlayEffect == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                b.PlayEffect.Color = color;
+            };
         }
 
-        private Action<FilterBlock> SetPlayEffectDuration(string arg)
+        private static Action<FilterBlock> SetPlayEffectDuration(string arg)
         {
             var dur = arg.ToLower();
             if (dur == "permanent")
             {
-                return ((b) => b.PlayEffect.Temporary = false);
+                return (b) =>
+                {
+                    if (b.PlayEffect == null)
+                        throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                    b.PlayEffect.Temporary = false;
+                };
             }
             else if (dur == "temporary")
             {
-                return ((b) => b.PlayEffect.Temporary = true);
+                return (b) =>
+                {
+                    if (b.PlayEffect == null)
+                        throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                    b.PlayEffect.Temporary = true;
+                };
             }
 
             throw ParserException.UnrecognizedCommand(arg);
         }
 
-        private Action<FilterBlock> SetPlayEffectToggle(bool toggle)
+        private static Action<FilterBlock> SetPlayEffectToggle(bool toggle)
         {
-            return ((b) => b.PlayEffect.Enabled = toggle);
+            return (b) =>
+            {
+                if (b.PlayEffect == null)
+                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                b.PlayEffect.Enabled = toggle;
+            };
         }
 
     }

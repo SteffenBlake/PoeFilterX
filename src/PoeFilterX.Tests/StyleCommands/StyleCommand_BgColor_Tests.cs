@@ -49,6 +49,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -82,6 +83,7 @@ namespace PoeFilterX.Tests.StyleCommands
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -123,11 +125,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BgColorAlpha_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBackgroundColor = Color.FromArgb(50, 100, 100, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBackgroundColor = Color.FromArgb(50, 100, 100, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -169,11 +174,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BgColorRed_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBackgroundColor = Color.FromArgb(100, 50, 100, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBackgroundColor = Color.FromArgb(100, 50, 100, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -215,11 +223,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BgColorGreen_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBackgroundColor = Color.FromArgb(100, 100, 50, 100);
+            var filterblock = new FilterBlock
+            {
+                SetBackgroundColor = Color.FromArgb(100, 100, 50, 100)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
@@ -261,11 +272,14 @@ namespace PoeFilterX.Tests.StyleCommands
         public byte[] BgColorBlue_Values(string args)
         {
             // Arrange
-            var filterblock = new FilterBlock();
-            filterblock.SetBackgroundColor = Color.FromArgb(100, 100, 100, 50);
+            var filterblock = new FilterBlock
+            {
+                SetBackgroundColor = Color.FromArgb(100, 100, 100, 50)
+            };
 
             // Act
             var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
             style(filterblock);
 
             // Assert
