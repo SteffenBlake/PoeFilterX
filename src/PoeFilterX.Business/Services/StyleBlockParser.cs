@@ -23,54 +23,61 @@ namespace PoeFilterX.Business.Services
 
                 if (comment)
                 {
-                    if (next == '*' && (char)reader.Read() == '/')
+                    if (next is '*' && (char)reader.Read() is '/')
+                    {
                         comment = false;
+                    }
 
                     continue;
                 }
                 
-                if (next == '/' && reader.Peek() > 0 && (char)reader.Peek() == '*')
+                switch (next)
                 {
-                    comment = true;
-                    reader.Read();
-                    continue;
-                }
+                    case '/' when reader.Peek() > 0 && (char)reader.Peek() == '*':
+                        comment = true;
+                        _ = reader.Read();
+                        continue;
 
-                if (next == ';' && !stringed)
-                {
-                    var cmd = CommandParser.Parse(runningArgs.Trim());
-                    if (cmd != null)
-                        commands.Add(cmd);
+                    case ';' when !stringed:
+                        {
+                            var cmd = CommandParser.Parse(runningArgs.Trim());
+                            if (cmd != null)
+                            {
+                                commands.Add(cmd);
+                            }
 
-                    runningArgs = "";
-                }
-                else if (next == '}' && !stringed)
-                {
-                    return commands;
-                }
-                else if (next == '"')
-                {
-                    stringed = !stringed;
-                }
-                else if (next == '\\')
-                {
-                    if (!stringed)
-                        throw ParserException.UnexpectedCharacter('\\', '"');
+                            runningArgs = "";
+                            break;
+                        }
 
-                    var escaped = (char)reader.Read();
-                    if (escaped == '"' || escaped == '\\')
-                    {
-                        runningArgs += escaped;
-                    } 
-                    else
-                    {
-                        throw ParserException.UnexpectedCharacter(escaped, '"');
-                    }
-                }
-                else
-                {
-                    runningArgs += next;
+                    case '}' when !stringed:
+                        return commands;
 
+                    case '"':
+                        stringed = !stringed;
+                        break;
+
+                    case '\\':
+                        if (!stringed)
+                        {
+                            throw ParserException.UnexpectedCharacter('\\', '"');
+                        }
+
+                        var escaped = (char)reader.Read();
+                        if (escaped is '"' or '\\')
+                        {
+                            runningArgs += escaped;
+                        } 
+                        else
+                        {
+                            throw ParserException.UnexpectedCharacter(escaped, '"');
+                        }
+
+                        break;
+
+                    default:
+                        runningArgs += next;
+                        break;
                 }
             }
 

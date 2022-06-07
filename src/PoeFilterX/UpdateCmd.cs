@@ -17,7 +17,7 @@ Just because the executable is named PoeFilterX does NOT necessarily mean it's a
     [--v|--version ""version""] - Specific release ver to update/downgrade to. Defaults to 'latest'
     [--p|--platform ""platform""] - Executable Platform to pull. Defaults to win-x64
     !!! [--a|--author ""name""] - Github Repo Owner to pull from. Defaults to 'SteffenBlake (Me!)'
-    !!! [--r|--repo ""name"" - Github Repo Name to pull from. Defaults to 'PoeFilterX'
+    !!! [--r|--repo ""name""] - Github Repo Name to pull from. Defaults to 'PoeFilterX'
 ";
         internal static async Task Run(string[] args)
         {
@@ -50,7 +50,9 @@ Just because the executable is named PoeFilterX does NOT necessarily mean it's a
 
             var result = await GithubHelper.PullData(author, repo, version);
             if (result == null)
+            {
                 return;
+            }
 
             var appName = Assembly.GetExecutingAssembly().GetName();
             var currentVersionRaw = appName.Version;
@@ -129,8 +131,8 @@ Just because the executable is named PoeFilterX does NOT necessarily mean it's a
             Console.WriteLine($"Downloading file...\n\tFrom:'{targetFile}'\n\tTo:'{downloadPath}'");
             await GithubHelper.DownloadFile(targetFile, downloadPath);
 
-            Console.WriteLine("Bootstrapping complete! Installer is synched. Updating PoeFilterX now...");
-            Process.Start(downloadPath, $"--a=\"{author}\" --r=\"{repo}\"");
+            Console.WriteLine("Bootstrapping complete! Installer is synched. Updating PoeFilterX now...\n\n\n\n\n");
+            _ = Process.Start(downloadPath, $"--a=\"{author}\" --r=\"{repo}\"");
 
         }
     }

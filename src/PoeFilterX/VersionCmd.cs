@@ -9,7 +9,7 @@ namespace PoeFilterX
 @"Prints the version info of PoeFilterX
     Usage: poefilterx [version|-v]";
 
-        internal static Task Run(string[] args)
+        internal static Task Run(string[] _)
         {
             var executingPath = Process.GetCurrentProcess().MainModule?.FileName ?? 
                 throw new ApplicationException("Something has gone very wrong with this process, what are you doing?");
@@ -29,10 +29,7 @@ namespace PoeFilterX
                 Console.WriteLine($"{info.ProductName}-{info.ProductVersion}");
             }
 
-
             return Task.CompletedTask;
         }
-
-
     }
 }

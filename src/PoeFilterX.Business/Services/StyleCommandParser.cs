@@ -52,12 +52,16 @@ namespace PoeFilterX.Business.Services
         {
             var args = runningArgs.Trim().ToArgs();
             if (args.Length == 0)
+            {
                 return null;
+            }
 
             var cmdName = args[0].ToLower();
 
             if (!Commands.ContainsKey(cmdName))
+            {
                 throw new ParserException($"Unrecognized style command '{args[0]}'");
+            }
 
             return Commands[cmdName](args.Skip(1).ToArray());
         }
@@ -180,10 +184,14 @@ namespace PoeFilterX.Business.Services
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
 
             if (!ArgParser.TryParseToggleString(args[0], out var toggle))
+            {
                 return SetMiniMapIcon(args);
+            }
 
             if (args.Count > 1)
+            {
                 throw ParserException.UnrecognizedCommand(args[1]);
+            }
 
             return EnsureMiniMapIcon() + SetMiniMapIconToggle(toggle);
 
@@ -211,11 +219,15 @@ namespace PoeFilterX.Business.Services
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2);
 
-            if (!ArgParser.TryParseToggleString(args[0], out var toggle)) 
+            if (!ArgParser.TryParseToggleString(args[0], out var toggle))
+            {
                 return SetPlayEffect(args);
+            }
 
             if (args.Count > 1)
+            {
                 throw ParserException.UnrecognizedCommand(args[1]);
+            }
 
             return EnsurePlayEffect() + SetPlayEffectToggle(toggle);
 
@@ -242,8 +254,10 @@ namespace PoeFilterX.Business.Services
             var colorRaw = args[0].ToLower();
             if (args.Count == 1 && colorRaw.StartsWith("0x"))
             {
-                if (colorRaw.Length != 8 && colorRaw.Length != 10)
+                if (colorRaw.Length is not 8 and not 10)
+                {
                     throw new ParserException("Unexpected color code, expected '0xAARRGGBB' or '0xRRGGBB");
+                }
 
                 try
                 {
@@ -265,7 +279,6 @@ namespace PoeFilterX.Business.Services
                 {
                     throw new ParserException("Unexpected color code, expected '0xAARRGGBB'");
                 }
-
             }
             else
             {
@@ -274,15 +287,21 @@ namespace PoeFilterX.Business.Services
 
                 var green = 0;
                 if (args.Count >= 2)
+                {
                     ArgParser.ThrowIfIntOutOfRange(args[1], 0, 255, out green);
+                }
 
                 var blue = 0;
                 if (args.Count >= 3)
+                {
                     ArgParser.ThrowIfIntOutOfRange(args[2], 0, 255, out blue);
+                }
 
                 var alpha = 255;
                 if (args.Count >= 4)
+                {
                     ArgParser.ThrowIfIntOutOfRange(args[3], 0, 255, out alpha);
+                }
 
                 command += SetColor(selector, Color.FromArgb(alpha, red, green, blue));
             }
@@ -301,7 +320,9 @@ namespace PoeFilterX.Business.Services
             return (block) =>
             {
                 if (method(block) == null)
+                {
                     block.SetPropertyValue(selector, Color.FromArgb(0, 0, 0, 0));
+                }
             };
         }
 
@@ -412,7 +433,9 @@ namespace PoeFilterX.Business.Services
             if (ArgParser.TryParseToggleString(args[0], out var toggle))
             {
                 if (args.Count > 1)
+                {
                     throw ParserException.UnrecognizedCommand(args[1]);
+                }
 
                 return
                    SetSoundToggled(selector, toggle) +
@@ -422,7 +445,9 @@ namespace PoeFilterX.Business.Services
             var cmd = EnsureSound(selector) + SetSoundId(selector, args[0]);
 
             if (args.Count >= 2)
+            {
                 cmd += SetSoundVolume(selector, args[1]);
+            }
 
             if (args.Count >= 3)
             {
@@ -439,7 +464,9 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (method(b) == null)
+                {
                     b.SetPropertyValue(selector, new AlertSound());
+                }
             };
         }
 
@@ -492,7 +519,9 @@ namespace PoeFilterX.Business.Services
             return (block) =>
             {
                 if (method(block) == null)
+                {
                     block.SetPropertyValue(selector, new AlertSound());
+                }
 
                 var baseSound = method(block) ?? throw new Exception("SetPropertyValue failed");
 
@@ -526,11 +555,14 @@ namespace PoeFilterX.Business.Services
             var command = EnsureMiniMapIcon() + SetMiniMapIconSize(args[0]);
 
             if (args.Count >= 2)
+            {
                 command += SetMiniMapIconColor(args[1]);
+            }
 
             if (args.Count >= 3)
+            {
                 command += SetMiniMapIconShape(args[2]);
-
+            }
 
             return command;
         }
@@ -544,7 +576,9 @@ namespace PoeFilterX.Business.Services
 
             return (b) => {
                 if (b.MinimapIcon == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                }
 
                 b.MinimapIcon.Size = size;
             };
@@ -556,7 +590,10 @@ namespace PoeFilterX.Business.Services
 
             return (b) => {
                 if (b.MinimapIcon == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                }
+
                 b.MinimapIcon.Color = color;
             };
         }
@@ -567,7 +604,10 @@ namespace PoeFilterX.Business.Services
 
             return (b) => {
                 if (b.MinimapIcon == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                }
+
                 b.MinimapIcon.Shape = shape;
             };
         }
@@ -577,7 +617,10 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (b.MinimapIcon == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
+                }
+
                 b.MinimapIcon.Enabled = toggle;
             };
         }
@@ -587,7 +630,9 @@ namespace PoeFilterX.Business.Services
             var cmd = EnsurePlayEffect() + SetPlayEffectColor(args[0]);
 
             if (args.Count >= 2)
+            {
                 cmd += SetPlayEffectDuration(args[1]);
+            }
 
             return cmd;
         }
@@ -601,7 +646,10 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (b.PlayEffect == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                }
+
                 b.PlayEffect.Color = color;
             };
         }
@@ -614,7 +662,10 @@ namespace PoeFilterX.Business.Services
                 return (b) =>
                 {
                     if (b.PlayEffect == null)
+                    {
                         throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                    }
+
                     b.PlayEffect.Temporary = false;
                 };
             }
@@ -623,7 +674,10 @@ namespace PoeFilterX.Business.Services
                 return (b) =>
                 {
                     if (b.PlayEffect == null)
+                    {
                         throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                    }
+
                     b.PlayEffect.Temporary = true;
                 };
             }
@@ -636,10 +690,12 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (b.PlayEffect == null)
+                {
                     throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
+                }
+
                 b.PlayEffect.Enabled = toggle;
             };
         }
-
     }
 }

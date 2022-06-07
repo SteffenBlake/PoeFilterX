@@ -17,13 +17,19 @@
             var normalizedTo = new DirectoryInfo(to).FullName;
 
             if (IsCircular(normalizedFrom, normalizedTo))
+            {
                 return false;
+            }
 
             if (!UsingLinks.ContainsKey(normalizedFrom))
+            {
                 UsingLinks.Add(normalizedFrom, new List<string>());
+            }
 
             if (UsingLinks[normalizedFrom].Contains(normalizedTo))
+            {
                 return true;
+            }
 
             UsingLinks[normalizedFrom].Add(normalizedTo);
 
@@ -34,7 +40,9 @@
         private bool IsCircular(string from, string to)
         {
             if (from == to)
+            {
                 return true;
+            }
 
             // to file doesn't have any dependencies at all
             return 

@@ -57,16 +57,19 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-
         public Action<FilterBlock>? Parse(IReadOnlyList<string> args)
         {
             if (args.Count == 0)
+            {
                 return null;
+            }
 
             var cmdName = args[0];
 
             if (!Commands.ContainsKey(cmdName))
+            {
                 throw new ParserException($"Unrecognized command '{args[0]}'");
+            }
 
             // Inject configuration variables (env vars, etc) via %VARNAME% replace
             var composedArguments = Config.InjectEnvironment(args.Skip(1).ToArray());
@@ -77,7 +80,9 @@ namespace PoeFilterX.Business.Services
         private Action<FilterBlock> SetBool(Expression<Func<FilterBlock, bool?>> selector, IReadOnlyList<string> args)
         {
             if (args.Count > 1)
+            {
                 throw ParserException.UnexpectedArgCount(args.Count, 1);
+            }
 
             ArgParser.ThrowIfNotBoolean(args[0], out var value);
 
@@ -90,7 +95,9 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (method(b) == null)
+                {
                     b.SetPropertyValue(selector, new List<string>());
+                }
 
                 var items = method(b) ?? throw new Exception("SetPropertyValue failed");
                 b.SetPropertyValue(selector, items.Concat(args).ToList());
@@ -110,7 +117,9 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (method(b) == null)
+                {
                     b.SetPropertyValue(selector, new List<TEnum>());
+                }
 
                 var items = method(b) ?? throw new Exception("SetPropertyValue failed");
                 b.SetPropertyValue(selector, items.Concat(values).ToList());
@@ -120,11 +129,14 @@ namespace PoeFilterX.Business.Services
         private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min, int max)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
+            {
                 args = args.Skip(1).ToArray();
+            }
 
             if (args.Count > 1)
+            {
                 throw ParserException.UnexpectedArgCount(args.Count, 1);
-
+            }
 
             ArgParser.ThrowIfIntOutOfRange(args[0], min, max, out var value, selector.GetName());
             var addition = new OperatorArg<int>(value, filterOperator);
@@ -135,7 +147,9 @@ namespace PoeFilterX.Business.Services
         private Action<FilterBlock> AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>?>> selector, IReadOnlyList<string> args)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
+            {
                 args = args.Skip(1).ToArray();
+            }
 
             var addition = new OperatorArg<IList<string>>(args.ToList(), filterOperator);
 
@@ -146,10 +160,14 @@ namespace PoeFilterX.Business.Services
             where TEnum : struct, Enum
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
+            {
                 args = args.Skip(1).ToArray();
+            }
 
             if (args.Count > 1)
+            {
                 throw ParserException.UnexpectedArgCount(args.Count, 1);
+            }
 
             ArgParser.ThrowIfNotEnum<TEnum>(args[0], out var value);
 
@@ -164,7 +182,9 @@ namespace PoeFilterX.Business.Services
             return (b) =>
             {
                 if (method(b) == null)
+                {
                     b.SetPropertyValue(selector, new List<OperatorArg<T>>());
+                }
             };
         }
 
@@ -181,7 +201,5 @@ namespace PoeFilterX.Business.Services
                     b.SetPropertyValue(selector, operatorList);
                 });
         }
-
     }
-
 }

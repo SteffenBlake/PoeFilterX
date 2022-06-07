@@ -21,7 +21,7 @@
                 Environment.Exit(1);
             }
 
-            string command = args[0].ToLower().Trim();
+            var command = args[0].ToLower().Trim();
 
             if (!Commands.ContainsKey(command))
             {
@@ -31,7 +31,7 @@
 
             args = args.Skip(1).ToArray();
 
-            Task cmdTask = Commands[command](args);
+            var cmdTask = Commands[command](args);
             cmdTask.Wait();
 
             if (cmdTask.IsFaulted)

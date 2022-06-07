@@ -49,7 +49,8 @@ namespace PoeFilterX.Extensions
             var addLazyTransientOfType = addLazyTransientOfT.MakeGenericMethod(type);
 
             // Call the method with its required parameter.
-            addLazyTransientOfType.Invoke(null, new[] { services });
+            // ReSharper disable once CoVariantArrayConversion
+            _ = addLazyTransientOfType.Invoke(null, new[] { services });
 
             return services;
         }

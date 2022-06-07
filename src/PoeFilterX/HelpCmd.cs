@@ -11,7 +11,7 @@ Type poefilterx help <command> for more details for a given command.
 
         internal static Task Run(string[] args)
         {
-            var HelpList = new Dictionary<string, string>
+            var helpList = new Dictionary<string, string>
             {
                 { "", HelpCmd.HelpText },
                 { "build", BuildCmd.HelpText },
@@ -20,7 +20,7 @@ Type poefilterx help <command> for more details for a given command.
             };
 
             var helpKey = string.Join(' ', args);
-            Console.WriteLine(HelpList[helpKey]);
+            Console.WriteLine(helpList[helpKey]);
             return Task.CompletedTask;
         }
     }

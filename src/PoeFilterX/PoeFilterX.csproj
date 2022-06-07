@@ -26,15 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestFiles\Parent\Test Parent.fss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\Parent\Test Parent.filterx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="TestFiles\Test.fss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Test.filterx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
