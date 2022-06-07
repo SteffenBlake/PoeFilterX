@@ -12,19 +12,31 @@ The list of features provided by PoeFilterX is quite extensive, check them out!
 ## Multiline Filter Commands!
 With semicolon delimitting, enjoy substantially easier to read filters with multiline commands!
 
+![Image demonstrating multiline filter commands](resources/multiline.png)
+
 ## Composable and Re-usable Style Sheets!
 Filter Composition has been broken out to seperate Filter Style Sheets (.fss files) which make your filter styling composable and modular for ease of re-use!
+
+![Image demonstrating style sheets](resources/StyleSheets.png)
 
 ## Variable Injection!
 Inject variables into the build runtime from other sources to easily update your filter on the fly. Might be time to get familiar with the poe.ninja API, perhaps?
 
+![Image demonstrating injecting of variables](resources/VariableInjection.png)
+
 ## Filter and Style Inherittance!
 Plug in existing style sheets and filterx files from content creators, then extend them with your own additional logic/styling!
 
+![Image demonstrating Style Inheritence](resources/Inheritance.png)
+
 Organize your filter project in a cohesive and logical way, instead of having one giant monolithic file to handle!
+
+![Image demonstrating project organization](resources/Modular.png)
 
 ## Nested Filter Blocks!
 Lower duplicate code by nesting Filter blocks in order to re-use patterns!
+
+![Image demonstrating nested filter blocks](resources/NestedBlocks.png)
 
 # Planned Feature Roadmap
 Here's a list of features I plan to implement in the future as well, all are a Work in Progress
