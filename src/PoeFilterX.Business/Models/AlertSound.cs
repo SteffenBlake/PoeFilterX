@@ -2,7 +2,7 @@
 {
     public class AlertSound
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public int? Volume { get; set; }
 

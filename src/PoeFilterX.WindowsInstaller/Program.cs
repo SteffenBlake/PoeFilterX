@@ -27,7 +27,7 @@ namespace PoeFilterX.WindowsInstaller
             }
 
             var config = new ConfigurationBuilder()
-               .AddEnvironmentVariables("POEFILTERX_")
+               .AddEnvironmentVariables("POEFILTERX_INSTALLER_")
                .AddCommandLine(args)
                .Build();
 
@@ -41,18 +41,8 @@ namespace PoeFilterX.WindowsInstaller
 
             var target = $"{version}-{platform}";
 
-            var author = config["a"] ?? config["author"];
-            if (author == null)
-            {
-                await Console.Error.WriteLineAsync("Github Author Parameter is required");
-                return;
-            }
-            var repo = config["r"] ?? config["repo"];
-            if (repo == null)
-            {
-                await Console.Error.WriteLineAsync("Github Repo Parameter is required");
-                return;
-            }
+            var author = config["a"] ?? config["author"] ?? "SteffenBlake";
+            var repo = config["r"] ?? config["repo"] ?? "PoeFilterX";
 
             var installFolder = config["p"] ?? config["path"] ?? "C:\\Program Files\\PoeFilterX\\";
             if (!Directory.Exists(installFolder))
@@ -86,13 +76,13 @@ namespace PoeFilterX.WindowsInstaller
             var downloadPath = Path.Combine(installFolder, targetFileName);
             await GithubHelper.DownloadFile(targetFile, downloadPath);
 
-            var processes = Process.GetProcesses().Where(p => p.ProcessName == "PoeFilterX" || p.ProcessName == "PoeFilterX.exe");
+            var processes = Process.GetProcesses().Where(p => p.ProcessName is "PoeFilterX" or "PoeFilterX.exe");
 
             while (processes.Any())
             {
                 Console.WriteLine("Waiting for PoeFilterX to terminate...");
                 await Task.Delay(1000);
-                processes = Process.GetProcesses().Where(p => p.ProcessName == "PoeFilterX" || p.ProcessName == "PoeFilterX.exe");
+                processes = Process.GetProcesses().Where(p => p.ProcessName is "PoeFilterX" or "PoeFilterX.exe");
             }
 
             Console.WriteLine($"Zip file downloaded. Unzipping to {installFolder}");
@@ -110,6 +100,11 @@ namespace PoeFilterX.WindowsInstaller
             Environment.SetEnvironmentVariable("PATH", path, scope);
 
             Console.WriteLine("Installation complete! Please run 'PoeFilterX version' to verify! (May require a system restart)");
+
+            if (config["y"] == null)
+            {
+                Console.WriteLine("<Press enter to finish>");
+            }
         }
     }
 }

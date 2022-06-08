@@ -236,13 +236,13 @@ namespace PoeFilterX.Business.Services
         private Action<FilterBlock> PlayEffectColor(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
-            return SetPlayEffectColor(args[0]);
+            return EnsurePlayEffect() + SetPlayEffectColor(args[0]);
         }
 
         private Action<FilterBlock> PlayEffectDuration(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
-            return SetPlayEffectDuration(args[0]);
+            return EnsurePlayEffect() + SetPlayEffectDuration(args[0]);
         }
 
         private Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)

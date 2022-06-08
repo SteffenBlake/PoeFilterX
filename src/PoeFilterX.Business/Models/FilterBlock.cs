@@ -38,7 +38,7 @@ namespace PoeFilterX.Business.Models
 
         public IList<string> Class { get; set; } = new List<string>();
 
-        public IList<string> BaseType { get; set; } = new List<string>();
+        public IList<OperatorArg<IList<string>>> BaseType { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<OperatorArg<int>> LinkedSockets { get; set; } = new List<OperatorArg<int>>();
 
@@ -154,14 +154,13 @@ namespace PoeFilterX.Business.Models
 
             var builder = new StringBuilder();
 
-            _ = builder.AppendLine(Show ? "Show" : "Hide");
-
             Compile(builder, AreaLevel);
             Compile(builder, ItemLevel);
             Compile(builder, DropLevel);
             Compile(builder, Quality);
             Compile(builder, Rarity);
             Compile(builder, Class);
+            Compile(builder, BaseType);
             Compile(builder, LinkedSockets);
             Compile(builder, SocketGroup);
             Compile(builder, Sockets);
@@ -195,12 +194,12 @@ namespace PoeFilterX.Business.Models
             Compile(builder, SetTextColor);
             Compile(builder, SetBackgroundColor);
             Compile(builder, SetFontSize);
-            if (PlayAlertSound?.Enabled ?? false)
+            if (PlayAlertSound?.Id != null && (PlayAlertSound?.Enabled ?? false))
             {
                 Compile(builder, PlayAlertSound);
             }
 
-            if (PlayAlertSoundPositional?.Enabled ?? false)
+            if (PlayAlertSoundPositional?.Id != null && (PlayAlertSoundPositional?.Enabled ?? false))
             {
                 Compile(builder, PlayAlertSoundPositional);
             }
@@ -212,12 +211,12 @@ namespace PoeFilterX.Business.Models
 
             Compile(builder, CustomAlertSound);
 
-            if (MinimapIcon?.Enabled ?? false)
+            if ((MinimapIcon?.HasValue ?? false) && (MinimapIcon?.Enabled ?? false))
             {
                 Compile(builder, MinimapIcon);
             }
 
-            if (PlayEffect?.Enabled ?? false)
+            if ((PlayEffect?.Color != null) && (PlayEffect?.Enabled ?? false))
             {
                 Compile(builder, PlayEffect);
             }
@@ -237,7 +236,7 @@ namespace PoeFilterX.Business.Models
         {
             foreach (var operatorArg in value)
             {
-                _ =builder.AppendLine($"\t{valueName} {operatorArg.Operator.GetDisplayName()} {operatorArg.Value}");
+                _ = builder.AppendLine($"\t{valueName} {operatorArg.Operator.GetDisplayName()} {operatorArg.Value}");
             }
         }
 

@@ -24,7 +24,7 @@ namespace PoeFilterX.Business.Services
                 { "Quality", (args) => AddOperatorInt(b => b.Quality, args, 0, 100) }, 
                 { "Rarity", (args) => AddOperatorEnum(b => b.Rarity, args) }, 
                 { "Class", (args) => AddStrings(b => b.Class, args) }, 
-                { "BaseType", (args) => AddStrings(b => b.BaseType, args) }, 
+                { "BaseType", (args) => AddOperatorStrings(b => b.BaseType, args) }, 
                 { "LinkedSockets", (args) => AddOperatorInt(b => b.LinkedSockets, args, 1, 6) }, 
                 { "SocketGroup", (args) => AddOperatorStrings(b => b.SocketGroup, args) }, 
                 { "Sockets", (args) => AddOperatorStrings(b => b.Sockets, args) }, 

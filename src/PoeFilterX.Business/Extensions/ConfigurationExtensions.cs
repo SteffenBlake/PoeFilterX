@@ -18,9 +18,11 @@ namespace PoeFilterX.Business.Extensions
             var enviroRegex = new Regex("%\\w+%");
             for (var n = 0; n < args.Count; n++)
             {
+                var dirty = false;
                 var arg = args[n];
                 while (enviroRegex.IsMatch(arg))
                 {
+                    dirty = true;
                     var match = enviroRegex.Matches(arg)[0];
                     var key = arg.Substring(match.Index, match.Length);
                     var keyInner = key[1..^1];
@@ -29,12 +31,26 @@ namespace PoeFilterX.Business.Extensions
                     {
                         throw new ParserException($"Unrecognized environment variable '{keyInner}'");
                     }
+                    else
+                    {
+                        var logVal = value.Length < 30 ? value : $"{value[..30]}...";
+                        Console.WriteLine($"Injecting Variable '{keyInner}'\n\tVal: '{logVal}'");
+                    }
 
                     arg = arg.Replace(key, value);
                 }
 
-                yield return arg;
-
+                if (dirty)
+                {
+                    foreach (var subArg in arg.ToArgs())
+                    {
+                        yield return subArg;
+                    }
+                }
+                else
+                {
+                    yield return arg;
+                }
             }
         }
     }
