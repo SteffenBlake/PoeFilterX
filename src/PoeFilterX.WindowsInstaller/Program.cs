@@ -10,36 +10,44 @@ namespace PoeFilterX.WindowsInstaller
     {
         public static async Task<int> Main(string[] args)
         {
-            if (OperatingSystem.IsWindows())
+            var config = new ConfigurationBuilder()
+                .AddEnvironmentVariables("POEFILTERX_INSTALLER_")
+                .AddCommandLine(args)
+                .Build();
+
+            var result = 0;
+            if (!OperatingSystem.IsWindows())
             {
-                using var identity = WindowsIdentity.GetCurrent();
-                var principal = new WindowsPrincipal(identity);
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                {
-                    await Console.Error.WriteLineAsync("Update functionality must be run as Administrator to work.");
-                    return 1;
-                }
+                await Console.Error.WriteLineAsync("Update functionality only supported for Windows at this time");
+                result = 1;
             }
             else
             {
-                await Console.Error.WriteLineAsync("Update functionality only supported for Windows at this time");
-                return 1;
+                using var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
+                if (principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    if (!await RunInstall(config))
+                    {
+                        // error occurred
+                        result = 1;
+                    }
+                }
+                else
+                {
+                    await Console.Error.WriteLineAsync("Update functionality must be run as Administrator to work.");
+                    result = 1;
+                }
             }
-
-            var config = new ConfigurationBuilder()
-               .AddEnvironmentVariables("POEFILTERX_INSTALLER_")
-               .AddCommandLine(args)
-               .Build();
-
-            var result = await RunInstall(config);
 
             if (config["y"] == null)
             {
                 Console.WriteLine("<Press enter to finish>");
+                _ = Console.ReadLine();
             }
             
             // Exit code 1 if an error occurred
-            return result ? 0 : 1;
+            return result;
         }
 
         private static async Task<bool> RunInstall(IConfigurationRoot config)
