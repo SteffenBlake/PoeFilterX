@@ -8,7 +8,7 @@ namespace PoeFilterX.WindowsInstaller
 {
     internal class Program
     {
-        public static async Task Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             if (OperatingSystem.IsWindows())
             {
@@ -17,13 +17,13 @@ namespace PoeFilterX.WindowsInstaller
                 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                 {
                     await Console.Error.WriteLineAsync("Update functionality must be run as Administrator to work.");
-                    return;
+                    return 1;
                 }
             }
             else
             {
                 await Console.Error.WriteLineAsync("Update functionality only supported for Windows at this time");
-                return;
+                return 1;
             }
 
             var config = new ConfigurationBuilder()
@@ -31,10 +31,23 @@ namespace PoeFilterX.WindowsInstaller
                .AddCommandLine(args)
                .Build();
 
+            var result = await RunInstall(config);
+
+            if (config["y"] == null)
+            {
+                Console.WriteLine("<Press enter to finish>");
+            }
+            
+            // Exit code 1 if an error occurred
+            return result ? 0 : 1;
+        }
+
+        private static async Task<bool> RunInstall(IConfigurationRoot config)
+        {
             var version = SystemHelper.GetAssemblyVersionStr();
             if (version == null)
             {
-                return;
+                return false;
             }
 
             var platform = SystemHelper.GetSystemPlatform();
@@ -55,13 +68,13 @@ namespace PoeFilterX.WindowsInstaller
             if (executingFolder == null)
             {
                 await Console.Error.WriteLineAsync("Unable to discern executing folder. Something went wrong.");
-                return;
+                return false;
             }
 
             var repoData = await GithubHelper.PullData(author, repo, version);
             if (repoData == null)
             {
-                return;
+                return false;
             }
 
             var targetFileName = $"PoeFilterX-{target}.zip";
@@ -70,7 +83,7 @@ namespace PoeFilterX.WindowsInstaller
             if (targetFile == null)
             {
                 await Console.Error.WriteLineAsync($"Could not locate associated zip file {targetFileName}");
-                return;
+                return false;
             }
 
             var downloadPath = Path.Combine(installFolder, targetFileName);
@@ -99,12 +112,9 @@ namespace PoeFilterX.WindowsInstaller
 
             Environment.SetEnvironmentVariable("PATH", path, scope);
 
-            Console.WriteLine("Installation complete! Please run 'PoeFilterX version' to verify! (May require a system restart)");
-
-            if (config["y"] == null)
-            {
-                Console.WriteLine("<Press enter to finish>");
-            }
+            Console.WriteLine(
+                "Installation complete! Please run 'PoeFilterX version' to verify! (May require a system restart)");
+            return true;
         }
     }
 }
