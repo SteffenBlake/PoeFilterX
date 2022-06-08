@@ -1,0 +1,44 @@
+﻿using Currencies.fss;
+
+Style currency-icon;
+
+{
+    BaseType == "Mirror of Kalandra";
+    Style mirror-tier;
+}
+{
+    BaseType == %ExaltTier_Currency%;
+    Style exalt-tier;
+    {
+        StackSize > 1;
+        Style mirror-tier;
+    }
+}
+{
+    BaseType == %DivineTier_Currency%;
+    Style divine-tier;
+    {
+        StackSize > 1;
+        Style exalt-tier;
+    }
+}
+{
+    BaseType == %ChaosTier_Currency%;
+    Style chaos-tier;
+    {
+        StackSize > 10;
+        Style exalt-tier;
+    }
+    {
+        StackSize > 1;
+        Style divine-tier;
+    }
+}
+{
+    BaseType == %MehTier_Currency%;
+    Style meh-tier;
+    {
+        StackSize > 10;
+        Style chaos-tier;
+    }
+}

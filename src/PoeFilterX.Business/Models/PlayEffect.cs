@@ -4,7 +4,7 @@ namespace PoeFilterX.Business.Models
 {
     public class PlayEffect
     {
-        public FilterColor Color { get; set; } = FilterColor.White;
+        public FilterColor? Color { get; set; }
 
         public bool Temporary { get; set; } = false;
 

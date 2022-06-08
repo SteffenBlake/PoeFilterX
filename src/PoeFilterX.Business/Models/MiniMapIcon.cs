@@ -4,13 +4,15 @@ namespace PoeFilterX.Business.Models
 {
     public class MiniMapIcon
     {
-        public int Size { get; set; } = 2;
+        public int? Size { get; set; }
 
-        public FilterColor Color { get; set; } = FilterColor.White;
+        public FilterColor? Color { get; set; }
 
-        public MiniMapIconShape Shape { get; set; } = MiniMapIconShape.Square;
+        public MiniMapIconShape? Shape { get; set; }
 
         public bool Enabled { get; set; } = true;
+
+        public bool HasValue => Size is not null && Color is not null && Shape is not null;
 
         public override string ToString()
         {

@@ -102,7 +102,7 @@ namespace PoeFilterX.Tests.StyleCommands
         }
 
         [TestCase($"{COMMAND}-size: 1", 2, FilterColor.Blue, MiniMapIconShape.Moon, false, ExpectedResult = new object[] { 1, FilterColor.Blue, MiniMapIconShape.Moon, false })]
-        public object[] IconSize_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
+        public object[] IconSize_Values_PreExisting(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
             var filterblock = new FilterBlock
@@ -115,6 +115,28 @@ namespace PoeFilterX.Tests.StyleCommands
                     Enabled = enabled
                 }
             };
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style(filterblock);
+
+            // Assert
+            Assert.IsNotNull(filterblock.MinimapIcon);
+            return new object[]
+            {
+                filterblock.MinimapIcon.Size,
+                filterblock.MinimapIcon.Color,
+                filterblock.MinimapIcon.Shape,
+                filterblock.MinimapIcon.Enabled,
+            };
+        }
+
+        [TestCase($"{COMMAND}-size: 1", ExpectedResult = new object?[] { 1, null, null, true })]
+        public object[] IconSize_Values_NotExisting(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
 
             // Act
             var style = Parser.Parse(args);
@@ -158,7 +180,7 @@ namespace PoeFilterX.Tests.StyleCommands
         }
 
         [TestCase($"{COMMAND}-color: red", 2, FilterColor.Blue, MiniMapIconShape.Moon, false, ExpectedResult = new object[] { 2, FilterColor.Red, MiniMapIconShape.Moon, false })]
-        public object[] IconColor_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
+        public object[] IconColor_Values_PreExisting(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
             var filterblock = new FilterBlock
@@ -171,6 +193,28 @@ namespace PoeFilterX.Tests.StyleCommands
                     Enabled = enabled
                 }
             };
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style(filterblock);
+
+            // Assert
+            Assert.IsNotNull(filterblock.MinimapIcon);
+            return new object[]
+            {
+                filterblock.MinimapIcon.Size,
+                filterblock.MinimapIcon.Color,
+                filterblock.MinimapIcon.Shape,
+                filterblock.MinimapIcon.Enabled,
+            };
+        }
+
+        [TestCase($"{COMMAND}-color: red", ExpectedResult = new object?[] { null, FilterColor.Red, null, true })]
+        public object[] IconColor_Values_NotPreExisting(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
 
             // Act
             var style = Parser.Parse(args);
@@ -214,7 +258,7 @@ namespace PoeFilterX.Tests.StyleCommands
         }
 
         [TestCase($"{COMMAND}-shape: star", 2, FilterColor.Blue, MiniMapIconShape.Moon, false, ExpectedResult = new object[] { 2, FilterColor.Blue, MiniMapIconShape.Star, false })]
-        public object[] IconShape_Values(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
+        public object[] IconShape_Values_PreExisting(string args, int size, FilterColor color, MiniMapIconShape shape, bool enabled)
         {
             // Arrange
             var filterblock = new FilterBlock
@@ -244,5 +288,25 @@ namespace PoeFilterX.Tests.StyleCommands
             };
         }
 
+        [TestCase($"{COMMAND}-shape: star", ExpectedResult = new object?[] { null, null, MiniMapIconShape.Star, true })]
+        public object[] IconShape_Values_NotPreExisting(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style(filterblock);
+
+            // Assert
+            return new object[]
+            {
+                filterblock.MinimapIcon?.Size,
+                filterblock.MinimapIcon?.Color,
+                filterblock.MinimapIcon?.Shape,
+                filterblock.MinimapIcon?.Enabled,
+            };
+        }
     }
 }

@@ -27,11 +27,13 @@
         {
             for (var n = FilterBlocks.Count -1; n >=0; n--)
             {
-                var filterText = FilterBlocks[n].Compile(_styles).Trim();
+                var filterText = "\t" + FilterBlocks[n].Compile(_styles).Trim();
                 if (string.IsNullOrWhiteSpace(filterText))
                 {
                     continue;
                 }
+
+                await writer.WriteLineAsync(FilterBlocks[n].Show ? "Show" : "Hide");
 
                 await writer.WriteLineAsync(filterText);
                 await writer.WriteLineAsync();

@@ -107,7 +107,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}-color: red", FilterColor.Blue, false, true, ExpectedResult = new object[] { FilterColor.Red, false, true })]
         [TestCase($"{COMMAND}-color: red", FilterColor.Blue, true, false, ExpectedResult = new object[] { FilterColor.Red, true, false })]
         [TestCase($"{COMMAND}-color: red", FilterColor.Blue, true, true, ExpectedResult = new object[] { FilterColor.Red, true, true })]
-        public object[] PillarColor_Values(string args, FilterColor color, bool temporary, bool enabled)
+        public object[] PillarColor_Values_PreExisting(string args, FilterColor color, bool temporary, bool enabled)
         {
             // Arrange
             var filterblock = new FilterBlock
@@ -119,6 +119,27 @@ namespace PoeFilterX.Tests.StyleCommands
                     Enabled = enabled
                 }
             };
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style(filterblock);
+
+            // Assert
+            Assert.IsNotNull(filterblock.PlayEffect);
+            return new object[]
+            {
+                filterblock.PlayEffect.Color,
+                filterblock.PlayEffect.Temporary,
+                filterblock.PlayEffect.Enabled,
+            };
+        }
+
+        [TestCase($"{COMMAND}-color: red", ExpectedResult = new object?[] { FilterColor.Red, false, true })]
+        public object[] PillarColor_Values_NoPreExisting(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
 
             // Act
             var style = Parser.Parse(args);
@@ -165,7 +186,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}-duration: temporary", FilterColor.Blue, false, true, ExpectedResult = new object[] { FilterColor.Blue, true, true })]
         [TestCase($"{COMMAND}-duration: permanent", FilterColor.Blue, true, false, ExpectedResult = new object[] { FilterColor.Blue, false, false })]
         [TestCase($"{COMMAND}-duration: temporary", FilterColor.Blue, true, true, ExpectedResult = new object[] { FilterColor.Blue, true, true })]
-        public object[] PillarDuration_Values(string args, FilterColor color, bool temporary, bool enabled)
+        public object[] PillarDuration_Values_PreExisting(string args, FilterColor color, bool temporary, bool enabled)
         {
             // Arrange
             var filterblock = new FilterBlock
@@ -177,6 +198,28 @@ namespace PoeFilterX.Tests.StyleCommands
                     Enabled = enabled
                 }
             };
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style(filterblock);
+
+            // Assert
+            Assert.IsNotNull(filterblock.PlayEffect);
+            return new object[]
+            {
+                filterblock.PlayEffect.Color,
+                filterblock.PlayEffect.Temporary,
+                filterblock.PlayEffect.Enabled,
+            };
+        }
+
+        [TestCase($"{COMMAND}-duration: permanent", ExpectedResult = new object?[] { null, false, true })]
+        [TestCase($"{COMMAND}-duration: temporary", ExpectedResult = new object?[] { null, true, true })]
+        public object[] PillarDuration_Values_NoPreExisting(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
 
             // Act
             var style = Parser.Parse(args);
