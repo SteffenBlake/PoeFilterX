@@ -110,6 +110,12 @@ namespace PoeFilterX.WindowsInstaller
             Environment.SetEnvironmentVariable("PATH", path, scope);
 
             Console.WriteLine("Installation complete! Please run 'PoeFilterX version' to verify! (May require a system restart)");
+
+            if (config["y"] == null)
+            {
+                Console.WriteLine("<Press enter to finish>");
+            }
+
         }
     }
 }

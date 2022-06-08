@@ -132,7 +132,7 @@ Just because the executable is named PoeFilterX does NOT necessarily mean it's a
             await GithubHelper.DownloadFile(targetFile, downloadPath);
 
             Console.WriteLine("Bootstrapping complete! Installer is synched. Updating PoeFilterX now...\n\n\n\n\n");
-            _ = Process.Start(downloadPath, $"--a=\"{author}\" --r=\"{repo}\"");
+            _ = Process.Start(downloadPath, $"--a \"{author}\" --r \"{repo}\" --y y");
 
         }
     }
