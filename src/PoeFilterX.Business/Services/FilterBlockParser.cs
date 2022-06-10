@@ -90,7 +90,7 @@ namespace PoeFilterX.Business.Services
 
                     runningString = "";
                 }
-                else
+                else if (!isComment)
                 {
                     runningString += next;
                 }
