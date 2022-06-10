@@ -10,53 +10,65 @@ namespace PoeFilterX.Business.Services
     {
         private IConfiguration Config { get; }
         private ArgParser ArgParser { get; }
-        private IDictionary<string, Func<string[], Action<FilterBlock>>> Commands { get; }
+        private IDictionary<string, Func<string[], Action<FilterBlock>?>> Commands { get; }
         public FilterCommandParser(IConfiguration config, ArgParser argParser)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             ArgParser = argParser ?? throw new ArgumentNullException(nameof(argParser));
 
-            Commands = new Dictionary<string, Func<string[], Action<FilterBlock>>>
+            Commands = new Dictionary<string, Func<string[], Action<FilterBlock>?>>
             {
-                { "AreaLevel", (args) => AddOperatorInt(b => b.AreaLevel, args, 0, 100) }, 
-                { "ItemLevel", (args) => AddOperatorInt(b => b.ItemLevel, args, 0, 100) }, 
-                { "DropLevel", (args) => AddOperatorInt(b => b.DropLevel, args, 0, 100) }, 
-                { "Quality", (args) => AddOperatorInt(b => b.Quality, args, 0, 100) }, 
-                { "Rarity", (args) => AddOperatorEnum(b => b.Rarity, args) }, 
-                { "Class", (args) => AddStrings(b => b.Class, args) }, 
-                { "BaseType", (args) => AddOperatorStrings(b => b.BaseType, args) }, 
-                { "LinkedSockets", (args) => AddOperatorInt(b => b.LinkedSockets, args, 1, 6) }, 
-                { "SocketGroup", (args) => AddOperatorStrings(b => b.SocketGroup, args) }, 
-                { "Sockets", (args) => AddOperatorStrings(b => b.Sockets, args) }, 
-                { "Height", (args) => AddOperatorInt(b => b.Height, args, 0, 100) }, 
-                { "Width", (args) => AddOperatorInt(b => b.Width, args, 0, 100) }, 
-                { "HasExplicitMod", (args) => AddStrings(b => b.HasExplicitMod, args) }, 
-                { "AnyEnchantment", (args) => SetBool(b => b.AnyEnchantment, args) }, 
-                { "EnchantmentPassiveNode", (args) => AddStrings(b => b.EnchantmentPassiveNode, args) },
-                { "EnchantmentPassiveNum", (args) => AddOperatorInt(b => b.EnchantmentPassiveNum, args, 0, 100) },
-                { "StackSize", (args) => AddOperatorInt(b => b.StackSize, args, 0, 100) },
-                { "GemLevel", (args) => AddOperatorInt(b => b.GemLevel, args, 0, 100) },
-                { "GemQualityType", (args) => AddEnums(b => b.GemQualityType, args) },
-                { "AlternateQuality", (args) => SetBool(b => b.AlternateQuality, args) },
-                { "Replica", (args) => SetBool(b => b.Replica, args) },
-                { "Identified", (args) => SetBool(b => b.Identified, args) },
-                { "Corrupted", (args) => SetBool(b => b.Corrupted, args) },
-                { "CorruptedMods", (args) => AddOperatorInt(b => b.CorruptedMods, args, 0, 100) },
-                { "Mirrored", (args) => SetBool(b => b.Mirrored, args) },
-                { "ElderItem", (args) => SetBool(b => b.ElderItem, args) },
-                { "ShaperItem", (args) => SetBool(b => b.ShaperItem, args) },
-                { "HasInfluence", (args) => AddEnums(b => b.HasInfluence, args) },
-                { "FracturedItem", (args) => SetBool(b => b.FracturedItem, args) },
-                { "SynthesisedItem", (args) => SetBool(b => b.SynthesisedItem, args) },
-                { "ElderMap", (args) => SetBool(b => b.ElderMap, args) },
-                { "ShapedMap", (args) => SetBool(b => b.ShapedMap, args) },
-                { "BlightedMap", (args) => SetBool(b => b.BlightedMap, args) },
-                { "HasEnchantment", (args) => AddStrings(b => b.HasEnchantment, args) },
-                { "MapTier", (args) => AddOperatorInt(b => b.MapTier, args, 0, 100) },
-                { "Style", (args) => AddStrings(b => b.Styles, args)},
+                { nameof(FilterBlock.HasValue), HasValue },
+                { nameof(FilterBlock.IsTrue), IsTrue },
+
+                { nameof(FilterBlock.AlternateQuality), (args) => SetBool(b => b.AlternateQuality, args) },
+                { nameof(FilterBlock.AnyEnchantment), (args) => SetBool(b => b.AnyEnchantment, args) }, 
+                { nameof(FilterBlock.AreaLevel), (args) => AddOperatorInt(b => b.AreaLevel, args) },
+                { nameof(FilterBlock.BaseArmour), (args) => AddOperatorInt(b => b.BaseArmour, args) },
+                { nameof(FilterBlock.BaseDefencePercentile), (args) => AddOperatorInt(b => b.BaseDefencePercentile, args) },
+                { nameof(FilterBlock.BaseEnergyShield), (args) => AddOperatorInt(b => b.BaseEnergyShield, args) },
+                { nameof(FilterBlock.BaseEvasion), (args) => AddOperatorInt(b => b.BaseEvasion, args) },
+                { nameof(FilterBlock.BaseType), (args) => AddOperatorStrings(b => b.BaseType, args) }, 
+                { nameof(FilterBlock.BaseWard), (args) => AddOperatorInt(b => b.BaseWard, args) },
+                { nameof(FilterBlock.BlightedMap), (args) => SetBool(b => b.BlightedMap, args) },
+                { nameof(FilterBlock.Class), (args) => AddStrings(b => b.Class, args) }, 
+                { nameof(FilterBlock.Corrupted), (args) => SetBool(b => b.Corrupted, args) },
+                { nameof(FilterBlock.CorruptedMods), (args) => AddOperatorInt(b => b.CorruptedMods, args) },
+                { nameof(FilterBlock.DropLevel), (args) => AddOperatorInt(b => b.DropLevel, args) },
+                { nameof(FilterBlock.ElderItem), (args) => SetBool(b => b.ElderItem, args) },
+                { nameof(FilterBlock.ElderMap), (args) => SetBool(b => b.ElderMap, args) },
+                { nameof(FilterBlock.EnchantmentPassiveNode), (args) => AddStrings(b => b.EnchantmentPassiveNode, args) },
+                { nameof(FilterBlock.EnchantmentPassiveNum), (args) => AddOperatorInt(b => b.EnchantmentPassiveNum, args) },
+                { nameof(FilterBlock.FracturedItem), (args) => SetBool(b => b.FracturedItem, args) },
+                { nameof(FilterBlock.GemLevel), (args) => AddOperatorInt(b => b.GemLevel, args) },
+                { nameof(FilterBlock.GemQualityType), (args) => AddEnums(b => b.GemQualityType, args) },
+                { nameof(FilterBlock.HasEaterOfWorldsImplicit), (args) => AddOperatorInt(b => b.HasEaterOfWorldsImplicit, args) },
+                { nameof(FilterBlock.HasEnchantment), (args) => AddStrings(b => b.HasEnchantment, args) },
+                { nameof(FilterBlock.HasExplicitMod), (args) => AddStrings(b => b.HasExplicitMod, args) },
+                { nameof(FilterBlock.HasInfluence), (args) => AddEnums(b => b.HasInfluence, args) },
+                { nameof(FilterBlock.HasSearingExarchImplicit), (args) => AddOperatorInt(b => b.HasSearingExarchImplicit, args) },
+                { nameof(FilterBlock.Height), (args) => AddOperatorInt(b => b.Height, args) },
+                { nameof(FilterBlock.Identified), (args) => SetBool(b => b.Identified, args) },
+                { nameof(FilterBlock.ItemLevel), (args) => AddOperatorInt(b => b.ItemLevel, args) },
+                { nameof(FilterBlock.LinkedSockets), (args) => AddOperatorInt(b => b.LinkedSockets, args, 0, 6) }, 
+                { nameof(FilterBlock.MapTier), (args) => AddOperatorInt(b => b.MapTier, args) },
+                { nameof(FilterBlock.Mirrored), (args) => SetBool(b => b.Mirrored, args) },
+                { nameof(FilterBlock.Quality), (args) => AddOperatorInt(b => b.Quality, args) },
+                { nameof(FilterBlock.Rarity), (args) => AddOperatorEnum(b => b.Rarity, args) }, 
+                { nameof(FilterBlock.Replica), (args) => SetBool(b => b.Replica, args) },
+                { nameof(FilterBlock.Scourged), (args) => SetBool(b => b.Scourged, args) },
+                { nameof(FilterBlock.ShapedMap), (args) => SetBool(b => b.ShapedMap, args) },
+                { nameof(FilterBlock.ShaperItem), (args) => SetBool(b => b.ShaperItem, args) },
+                { nameof(FilterBlock.SocketGroup), (args) => AddOperatorStrings(b => b.SocketGroup, args) },
+                { nameof(FilterBlock.Sockets), (args) => AddOperatorStrings(b => b.Sockets, args) }, 
+                { nameof(FilterBlock.StackSize), (args) => AddOperatorInt(b => b.StackSize, args) },
+                { nameof(FilterBlock.SynthesisedItem), (args) => SetBool(b => b.SynthesisedItem, args) },
+                { nameof(FilterBlock.UberBlightedMap), (args) => SetBool(b => b.UberBlightedMap, args) },
+                { nameof(FilterBlock.Width), (args) => AddOperatorInt(b => b.Width, args) },
+
+                { nameof(FilterBlock.Style), (args) => AddStrings(b => b.Style, args)},
             };
         }
-
         public Action<FilterBlock>? Parse(IReadOnlyList<string> args)
         {
             if (args.Count == 0)
@@ -77,6 +89,36 @@ namespace PoeFilterX.Business.Services
             return Commands[cmdName](composedArguments);
         }
 
+        private Action<FilterBlock>? IsTrue(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                return null;
+            }
+
+            ArgParser.ThrowIfArgsWrong(args, 1);
+            ArgParser.ThrowIfNotBoolean(args[0], out var isTrue);
+
+            return (b) => b.IsTrue.Add(isTrue);
+        }
+
+        private static Action<FilterBlock> HasValue(string[] args)
+        {
+            return (b) =>
+            {
+                if (args.Length == 0)
+                {
+                    b.HasValue.Add(" ");
+                }
+
+                foreach (var arg in args)
+                {
+                    b.HasValue.Add(arg);
+                }
+            };
+        }
+
+
         private Action<FilterBlock> SetBool(Expression<Func<FilterBlock, bool?>> selector, IReadOnlyList<string> args)
         {
             if (args.Count > 1)
@@ -89,8 +131,13 @@ namespace PoeFilterX.Business.Services
             return (b) => b.SetPropertyValue(selector, value);
         }
 
-        private static Action<FilterBlock> AddStrings(Expression<Func<FilterBlock, IList<string>?>> selector, IReadOnlyList<string> args)
+        private static Action<FilterBlock>? AddStrings(Expression<Func<FilterBlock, IList<string>?>> selector, IReadOnlyList<string> args)
         {
+            if (args.Count == 0)
+            {
+                return null;
+            }
+
             var method = selector.Compile();
             return (b) =>
             {
@@ -104,10 +151,15 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddEnums<TEnum>(Expression<Func<FilterBlock, IEnumerable<TEnum>?>> selector, IEnumerable<string> args)
+        private Action<FilterBlock>? AddEnums<TEnum>(Expression<Func<FilterBlock, IEnumerable<TEnum>?>> selector, IReadOnlyList<string> args)
             where TEnum : struct, Enum
         {
             var method = selector.Compile();
+            if (args.Count == 0)
+            {
+                return null;
+            }
+
             var values = args.Select(a =>
             {
                 ArgParser.ThrowIfNotEnum<TEnum>(a, out var value);
@@ -126,7 +178,7 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min, int max)
+        private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min = 0, int? max = null)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
             {
@@ -144,11 +196,16 @@ namespace PoeFilterX.Business.Services
             return AddOperator(selector, addition);
         }
 
-        private Action<FilterBlock> AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>?>> selector, IReadOnlyList<string> args)
+        private Action<FilterBlock>? AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>?>> selector, IReadOnlyList<string> args)
         {
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
             {
                 args = args.Skip(1).ToArray();
+            }
+
+            if (args.Count == 0)
+            {
+                return null;
             }
 
             var addition = new OperatorArg<IList<string>>(args.ToList(), filterOperator);

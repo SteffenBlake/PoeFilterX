@@ -5,6 +5,7 @@ using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services;
 using PoeFilterX.Business.Services.Abstractions;
 using PoeFilterX.Extensions;
+using System.Security.Principal;
 
 namespace PoeFilterX
 {
@@ -63,8 +64,16 @@ a directory with a single .filterx file present, path does not need to be provid
                 Environment.Exit(1);
             }
 
-            var outputPath = filterXConfig.OutputPath();
+            var outputPath = Path.GetFullPath(filterXConfig.OutputPath());
             Console.WriteLine($"Publishing to {outputPath}");
+
+            // Check if its a directory or file
+            if (Directory.Exists(outputPath))
+            {
+                await Console.Error.WriteLineAsync("Output path is a directory, not a file.");
+                Environment.Exit(1);
+            }
+
             if (File.Exists(outputPath))
             {
                 File.Delete(outputPath);

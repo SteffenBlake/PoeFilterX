@@ -24,7 +24,18 @@
 
         public string? O { get; set; }
         public string? Output { get; set; }
-        public string OutputPath() => O ?? Output ?? System.IO.Path.GetFileNameWithoutExtension(UsedPath()) + ".filter";
+        public string OutputPath()
+        {
+            var output = O ?? Output;
+            if (output == null)
+            {
+                var usedPath = UsedPath();
+                var dir = System.IO.Path.GetDirectoryName(usedPath);
+                var file = System.IO.Path.GetFileNameWithoutExtension(usedPath) + ".filter";
+                return System.IO.Path.Combine(dir, file);
+            }
 
+            return output;
+        }
     }
 }

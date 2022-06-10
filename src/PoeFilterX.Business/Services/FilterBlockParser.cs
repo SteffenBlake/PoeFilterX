@@ -17,7 +17,7 @@ namespace PoeFilterX.Business.Services
             Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
+        public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null, bool nested = false)
         {
             var runningString = "";
             var isComment = false;
@@ -35,7 +35,7 @@ namespace PoeFilterX.Business.Services
                 }
                 else if (next == '{' && !isComment)
                 {
-                    await ReadBlockAsync(filter, reader, filterBlock);
+                    await ReadBlockAsync(filter, reader, filterBlock, true);
                 }
                 else if (next == '}' && !isComment)
                 {
@@ -57,7 +57,7 @@ namespace PoeFilterX.Business.Services
 
                     if (args[0].ToLower() == "using")
                     {
-                        if (parent != null)
+                        if (nested)
                         {
                             throw ParserException.UnrecognizedCommand(args[0]);
                         }
@@ -77,7 +77,7 @@ namespace PoeFilterX.Business.Services
                             throw ParserException.CircularDependency();
                         }
 
-                        await FileParserFactory().ParseAsync(filter, relativeFile);
+                        await FileParserFactory().ParseAsync(filter, relativeFile, filterBlock);
                     } 
                     else
                     {

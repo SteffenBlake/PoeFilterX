@@ -12,120 +12,181 @@ namespace PoeFilterX.Business.Models
         // So we can still log what line caused the failure
 
         private readonly List<Action<FilterBlock>> _commands = new();
-        public IReadOnlyList<Action<FilterBlock>> Commands => 
-            Parent == null ? 
-            _commands.AsReadOnly() : 
-            Parent.Commands.Concat(_commands).ToList().AsReadOnly(); 
-
-        private FilterBlock? Parent { get; }
 
         public FilterBlock(FilterBlock? parent = null)
         {
             Parent = parent;
         }
 
-        public void AddCommand(Action<FilterBlock> command) => _commands.Add(command);
+#region "Composition"
+        
+        private FilterBlock? Parent { get; }
+
+        public IReadOnlyList<Action<FilterBlock>> Commands =>
+            Parent == null ? _commands.AsReadOnly() : Parent.Commands.Concat(_commands).ToList().AsReadOnly();
+
+        public IList<string> CompiledStyles =>
+            Parent?.CompiledStyles.Concat(Style ?? new List<string>()).ToList() ?? Style ?? new List<string>();
+
+        public IList<string>? Style { get; set; }
+
+#endregion
+#region "Advanced Conditions"
+
+    public IList<string?> HasValue { get; set; } = new List<string?>();
+
+#endregion
+
+#region "Conditions"
+
+        public AlertSound? AlertSound { get; set; }
+
+        public bool? AlternateQuality { get; set; }
+
+        public bool? AnyEnchantment { get; set; }
 
         public IList<OperatorArg<int>> AreaLevel { get; set; } = new List<OperatorArg<int>>();
 
-        public IList<OperatorArg<int>> ItemLevel { get; set; } = new List<OperatorArg<int>>();
+        public IList<OperatorArg<int>> BaseArmour { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> BaseDefencePercentile { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> BaseEnergyShield { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> BaseEvasion { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<IList<string>>> BaseType { get; set; } = new List<OperatorArg<IList<string>>>();
+
+        public IList<OperatorArg<int>> BaseWard { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? BlightedMap { get; set; }
+
+        public IList<string> Class { get; set; } = new List<string>();
+
+        public bool? Corrupted { get; set; }
+
+        public IList<OperatorArg<int>> CorruptedMods { get; set; } = new List<OperatorArg<int>>();
 
         public IList<OperatorArg<int>> DropLevel { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? ElderItem { get; set; }
+
+        public bool? ElderMap { get; set; }
+
+        public IList<string> EnchantmentPassiveNode { get; set; } = new List<string>();
+
+        public IList<OperatorArg<int>> EnchantmentPassiveNum { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? FracturedItem { get; set; }
+
+        public IList<OperatorArg<int>> GemLevel { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<GemQualityType> GemQualityType { get; set; } = new List<GemQualityType>();
+
+        public IList<OperatorArg<int>> HasEaterOfWorldsImplicit { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<string> HasEnchantment { get; set; } = new List<string>();
+
+        public IList<string> HasExplicitMod { get; set; } = new List<string>();
+
+        public IList<InfluenceType> HasInfluence { get; set; } = new List<InfluenceType>();
+
+        public IList<OperatorArg<int>> HasSearingExarchImplicit { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> Height { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? Identified { get; set; }
+
+        public IList<OperatorArg<int>> ItemLevel { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> LinkedSockets { get; set; } = new List<OperatorArg<int>>();
+
+        public IList<OperatorArg<int>> MapTier { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? Mirrored { get; set; }
 
         public IList<OperatorArg<int>> Quality { get; set; } = new List<OperatorArg<int>>();
 
         public IList<OperatorArg<FilterRarity>> Rarity { get; set; } = new List<OperatorArg<FilterRarity>>();
 
-        public IList<string> Class { get; set; } = new List<string>();
+        public bool? Replica { get; set; }
 
-        public IList<OperatorArg<IList<string>>> BaseType { get; set; } = new List<OperatorArg<IList<string>>>();
+        public bool? Scourged { get; set; }
 
-        public IList<OperatorArg<int>> LinkedSockets { get; set; } = new List<OperatorArg<int>>();
+        public bool? ShapedMap { get; set; }
+
+        public bool? ShaperItem { get; set; }
 
         public IList<OperatorArg<IList<string>>> SocketGroup { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<OperatorArg<IList<string>>> Sockets { get; set; } = new List<OperatorArg<IList<string>>>();
-
-        public IList<OperatorArg<int>> Height { get; set; } = new List<OperatorArg<int>>();
-
-        public IList<OperatorArg<int>> Width { get; set; } = new List<OperatorArg<int>>();
-
-        public IList<string> HasExplicitMod { get; set; } = new List<string>();
-
-        public bool? AnyEnchantment { get; set; }
-
-        public IList<string> HasEnchantment { get; set; } = new List<string>();
-
-        public IList<string> EnchantmentPassiveNode { get; set; } = new List<string>();
-
-        public IList<OperatorArg<int>> EnchantmentPassiveNum { get; set; } = new List<OperatorArg<int>>();
+        
         public IList<OperatorArg<int>> StackSize { get; set; } = new List<OperatorArg<int>>();
-        public IList<OperatorArg<int>> GemLevel { get; set; } = new List<OperatorArg<int>>();
-
-        public IList<GemQualityType> GemQualityType { get; set; } = new List<GemQualityType>();
-
-        public bool? AlternateQuality { get; set; }
-        public bool? Replica { get; set; }
-        public bool? Identified { get; set; }
-        public bool? Corrupted { get; set; }
-
-        public IList<OperatorArg<int>> CorruptedMods { get; set; } = new List<OperatorArg<int>>();
-
-        public bool? Mirrored { get; set; }
-
-        public bool? ElderItem { get; set; }
-
-        public bool? ShaperItem { get; set; }
-
-        public IList<InfluenceType> HasInfluence { get; set; } = new List<InfluenceType>();
-
-        public bool? FracturedItem { get; set; }
 
         public bool? SynthesisedItem { get; set; }
 
-        public bool? ElderMap { get; set; }
+        public bool? UberBlightedMap { get; set; }
 
-        public bool? ShapedMap { get; set; }
+        public IList<OperatorArg<int>> Width { get; set; } = new List<OperatorArg<int>>();
 
-        public bool? BlightedMap { get; set; }
+#endregion
 
-        public IList<OperatorArg<int>> MapTier { get; set; } = new List<OperatorArg<int>>();
+#region "Actions"
 
         public bool Show { get; set; } = true;
 
-        public Color? SetBorderColor { get; set; }
-        public Color? SetTextColor { get; set; }
-        public Color? SetBackgroundColor { get; set; }
-
-        public int? SetFontSize { get; set; }
-
-        public AlertSound? AlertSound { get; set; }
-
-        public AlertSound? PlayAlertSound => 
+        public AlertSound? PlayAlertSound =>
             AlertSound is { Positional: false } ? AlertSound : null;
-        public AlertSound? PlayAlertSoundPositional => 
-            AlertSound is { Positional: true } ? AlertSound : null;
 
-        public bool? DropSound { get; set; }
+        public AlertSound? PlayAlertSoundPositional =>
+            AlertSound is { Positional: true } ? AlertSound : null;
 
         public string? CustomAlertSound { get; set; }
 
         public bool CustomAlertSoundEnabled { get; set; } = true;
 
-        public MiniMapIcon? MinimapIcon { get; set; }
+        public bool? DropSound { get; set; }
 
         public PlayEffect? PlayEffect { get; set; }
+        
+        public MiniMapIcon? MinimapIcon { get; set; }
 
-        public IList<string>? Styles { get; set; }
+        public Color? SetBackgroundColor { get; set; }
 
-        public IList<string> CompiledStyles =>
-            Parent?.CompiledStyles.Concat(Styles ?? new List<string>()).ToList() ?? Styles ?? new List<string>();
+        public Color? SetBorderColor { get; set; }
+
+        public int? SetFontSize { get; set; }
+
+        public Color? SetTextColor { get; set; }
+
+        public IList<bool> IsTrue { get; set; } = new List<bool>();
+
+        #endregion
+
+        public void AddCommand(Action<FilterBlock> command)
+        {
+            _commands.Add(command);
+        }
 
         public string Compile(IDictionary<string, IList<(int Rank, Action<FilterBlock> Command)>> stylesTable)
         {
             foreach (var command in Commands)
             {
                 command(this);
+            }
+
+            if (HasValue.Any())
+            {
+                var compiledHasValue = string.Join(' ', HasValue).Trim();
+                if (string.IsNullOrEmpty(compiledHasValue))
+                {
+                    return "";
+                }
+            }
+
+            if (IsTrue.Any(b => !b))
+            {
+                return "";
             }
 
             var styles = CompiledStyles.Distinct();
@@ -137,6 +198,7 @@ namespace PoeFilterX.Business.Models
                     {
                         throw new ParserException($"Filter block referenced undeclared style '{s}'");
                     }
+
                     return stylesTable[s];
                 })
                 .OrderBy(s => s.Rank)
@@ -147,53 +209,63 @@ namespace PoeFilterX.Business.Models
                 return "";
             }
 
-            foreach(var (_, command) in styleCmds)
+            foreach (var (_, command) in styleCmds)
             {
                 command(this);
             }
 
             var builder = new StringBuilder();
 
-            Compile(builder, AreaLevel);
-            Compile(builder, ItemLevel);
-            Compile(builder, DropLevel);
-            Compile(builder, Quality);
-            Compile(builder, Rarity);
-            Compile(builder, Class);
-            Compile(builder, BaseType);
-            Compile(builder, LinkedSockets);
-            Compile(builder, SocketGroup);
-            Compile(builder, Sockets);
-            Compile(builder, Height);
-            Compile(builder, Width);
-            Compile(builder, HasExplicitMod);
-            Compile(builder, AnyEnchantment);
-            Compile(builder, HasEnchantment);
-            Compile(builder, EnchantmentPassiveNode);
-            Compile(builder, EnchantmentPassiveNum);
-            Compile(builder, StackSize);
-            Compile(builder, GemLevel);
-            Compile(builder, GemQualityType);
             Compile(builder, AlternateQuality);
-            Compile(builder, Replica);
-            Compile(builder, Identified);
+            Compile(builder, AnyEnchantment);
+            Compile(builder, AreaLevel);
+            Compile(builder, BaseArmour);
+            Compile(builder, BaseDefencePercentile);
+            Compile(builder, BaseEnergyShield);
+            Compile(builder, BaseEvasion);
+            Compile(builder, BaseType);
+            Compile(builder, BaseWard);
+            Compile(builder, BlightedMap);
+            Compile(builder, Class);
             Compile(builder, Corrupted);
             Compile(builder, CorruptedMods);
-            Compile(builder, Mirrored);
+            Compile(builder, DropLevel);
             Compile(builder, ElderItem);
-            Compile(builder, ShaperItem);
-            Compile(builder, HasInfluence);
-            Compile(builder, FracturedItem);
-            Compile(builder, SynthesisedItem);
             Compile(builder, ElderMap);
-            Compile(builder, ShapedMap);
-            Compile(builder, BlightedMap);
+            Compile(builder, EnchantmentPassiveNode);
+            Compile(builder, EnchantmentPassiveNum);
+            Compile(builder, FracturedItem);
+            Compile(builder, GemLevel);
+            Compile(builder, GemQualityType);
+            Compile(builder, HasEaterOfWorldsImplicit);
+            Compile(builder, HasEnchantment);
+            Compile(builder, HasExplicitMod);
+            Compile(builder, HasInfluence);
+            Compile(builder, HasSearingExarchImplicit);
+            Compile(builder, Height);
+            Compile(builder, Identified);
+            Compile(builder, ItemLevel);
+            Compile(builder, LinkedSockets);
             Compile(builder, MapTier);
+            Compile(builder, Mirrored);
+            Compile(builder, Quality);
+            Compile(builder, Rarity);
+            Compile(builder, Replica);
+            Compile(builder, Scourged);
+            Compile(builder, ShapedMap);
+            Compile(builder, ShaperItem);
+            Compile(builder, SocketGroup);
+            Compile(builder, Sockets);
+            Compile(builder, StackSize);
+            Compile(builder, SynthesisedItem);
+            Compile(builder, UberBlightedMap);
+            Compile(builder, Width);
 
             Compile(builder, SetBorderColor);
             Compile(builder, SetTextColor);
             Compile(builder, SetBackgroundColor);
             Compile(builder, SetFontSize);
+
             if (PlayAlertSound?.Id != null && (PlayAlertSound?.Enabled ?? false))
             {
                 Compile(builder, PlayAlertSound);
@@ -216,7 +288,7 @@ namespace PoeFilterX.Business.Models
                 Compile(builder, MinimapIcon);
             }
 
-            if ((PlayEffect?.Color != null) && (PlayEffect?.Enabled ?? false))
+            if (PlayEffect?.Color != null && (PlayEffect?.Enabled ?? false))
             {
                 Compile(builder, PlayEffect);
             }
@@ -224,7 +296,8 @@ namespace PoeFilterX.Business.Models
             return builder.ToString();
         }
 
-        private static void Compile<T>(StringBuilder builder, T? value, [CallerArgumentExpression("value")] string? valueName = null)
+        private static void Compile<T>(StringBuilder builder, T? value,
+            [CallerArgumentExpression("value")] string? valueName = null)
         {
             if (value != null)
             {
@@ -232,7 +305,8 @@ namespace PoeFilterX.Business.Models
             }
         }
 
-        private static void Compile<T>(StringBuilder builder, IList<OperatorArg<T>> value, [CallerArgumentExpression("value")] string? valueName = null)
+        private static void Compile<T>(StringBuilder builder, IList<OperatorArg<T>> value,
+            [CallerArgumentExpression("value")] string? valueName = null)
         {
             foreach (var operatorArg in value)
             {
@@ -240,7 +314,8 @@ namespace PoeFilterX.Business.Models
             }
         }
 
-        private static void Compile<T>(StringBuilder builder, IList<OperatorArg<IList<T>>> value, [CallerArgumentExpression("value")] string? valueName = null)
+        private static void Compile<T>(StringBuilder builder, IList<OperatorArg<IList<T>>> value,
+            [CallerArgumentExpression("value")] string? valueName = null)
         {
             // Group multiple operator commands together if they have the same operator
             foreach (var group in value.GroupBy(o => o.Operator))
@@ -252,7 +327,8 @@ namespace PoeFilterX.Business.Models
             }
         }
 
-        private static void Compile<T>(StringBuilder builder, IList<T> value, [CallerArgumentExpression("value")] string? valueName = null)
+        private static void Compile<T>(StringBuilder builder, IList<T> value,
+            [CallerArgumentExpression("value")] string? valueName = null)
         {
             if (!value.Any())
             {
@@ -263,11 +339,13 @@ namespace PoeFilterX.Business.Models
             _ = builder.AppendLine($"\t{valueName} {string.Join(' ', encapsulted)}");
         }
 
-        private static void Compile(StringBuilder builder, Color? value, [CallerArgumentExpression("value")] string? valueName = null)
+        private static void Compile(StringBuilder builder, Color? value,
+            [CallerArgumentExpression("value")] string? valueName = null)
         {
             if (value != null)
             {
-                _ = builder.AppendLine($"\t{valueName} {value.Value.R} {value.Value.G} {value.Value.B} {value.Value.A}");
+                _ = builder.AppendLine(
+                    $"\t{valueName} {value.Value.R} {value.Value.G} {value.Value.B} {value.Value.A}");
             }
         }
     }

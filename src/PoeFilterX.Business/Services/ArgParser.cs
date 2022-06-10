@@ -27,9 +27,9 @@ namespace PoeFilterX.Business.Services
 
         }
 
-        public void ThrowIfIntOutOfRange(string arg, int min, int max, out int result, [CallerArgumentExpression("result")] string? resultName = null)
+        public void ThrowIfIntOutOfRange(string arg, int min, int? max, out int result, [CallerArgumentExpression("result")] string? resultName = null)
         {
-            if (!int.TryParse(arg, out result) || result < min || result > max)
+            if (!int.TryParse(arg, out result) || result < min || (max.HasValue && result > max))
             {
                 throw new ParserException($"Unexpected value for {resultName}, expected {min}-{max}, got '{arg}'");
             }

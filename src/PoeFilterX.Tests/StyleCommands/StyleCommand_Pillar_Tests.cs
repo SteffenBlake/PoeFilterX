@@ -28,13 +28,14 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}: 3")]
         [TestCase($"{COMMAND}: null")]
         [TestCase($"{COMMAND}: 255 255 255 255 255")]
+        [TestCase($"{COMMAND}: enabled burger")]
         [TestCase($"{COMMAND}: burger")]
         [TestCase($"{COMMAND}: red burger")]
         [TestCase($"{COMMAND}: red permanent burger")]
         public void Pillar_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}: red", FilterColor.Blue, false, false, ExpectedResult = new object[] {FilterColor.Red, false, false})]
@@ -100,7 +101,7 @@ namespace PoeFilterX.Tests.StyleCommands
         public void PillarColor_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}-color: red", FilterColor.Blue, false, false, ExpectedResult = new object[] { FilterColor.Red, false, false })]
@@ -179,7 +180,7 @@ namespace PoeFilterX.Tests.StyleCommands
         public void PillarDuration_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}-duration: permanent", FilterColor.Blue, false, false, ExpectedResult = new object[] { FilterColor.Blue, false, false })]

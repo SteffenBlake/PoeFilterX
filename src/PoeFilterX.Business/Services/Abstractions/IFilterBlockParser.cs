@@ -4,6 +4,6 @@ namespace PoeFilterX.Business.Services.Abstractions
 {
     public interface IFilterBlockParser
     {
-        Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null);
+        Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null, bool nested = false);
     }
 }

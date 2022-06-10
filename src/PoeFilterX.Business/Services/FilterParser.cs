@@ -16,11 +16,11 @@ namespace PoeFilterX.Business.Services
             BlockParser = blockParser ?? throw new ArgumentNullException(nameof(blockParser));
         }
 
-        public async Task ParseAsync(Filter filter, TrackingStreamReader reader)
+        public async Task ParseAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
         {
             while (!reader.EndOfStream)
             {
-                await BlockParser.ReadBlockAsync(filter, reader);
+                await BlockParser.ReadBlockAsync(filter, reader, parent);
             }
         }
     }

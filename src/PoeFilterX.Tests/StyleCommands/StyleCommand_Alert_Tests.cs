@@ -35,10 +35,11 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}: 10 150 1")]
         [TestCase($"{COMMAND}: 10 150 0")]
         [TestCase($"{COMMAND}: 10 150 -1")]
+        [TestCase($"{COMMAND}: enabled -1")]
         public void Alert_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}: 1", ExpectedResult = new object?[] { 1, null })]
@@ -109,6 +110,27 @@ namespace PoeFilterX.Tests.StyleCommands
             };
         }
 
+        [TestCase($"{COMMAND}: enabled", ExpectedResult = new object?[] { null, null, true })]
+        [TestCase($"{COMMAND}: disabled", ExpectedResult = new object?[] { null, null, false })]
+        public object?[] Alert_Toggle(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style?.Invoke(filterblock);
+
+            // Assert
+            Assert.IsNotNull(filterblock.AlertSound);
+            return new object?[] {
+                filterblock.AlertSound?.Id,
+                filterblock.AlertSound?.Volume,
+                filterblock.AlertSound?.Enabled,
+            };
+        }
+
         [TestCase($"{COMMAND}-id:")]
         [TestCase($"{COMMAND}-id: ")]
         [TestCase($"{COMMAND}-id: #42143")]
@@ -137,7 +159,7 @@ namespace PoeFilterX.Tests.StyleCommands
         public void AlertId_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}-id: 1", ExpectedResult = 1)]
@@ -226,7 +248,7 @@ namespace PoeFilterX.Tests.StyleCommands
         public void AlertVolume_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}-volume: 0", ExpectedResult = 0)]
@@ -315,7 +337,7 @@ namespace PoeFilterX.Tests.StyleCommands
         public void AlertStyle_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
         }
 
         [TestCase($"{COMMAND}-style: global", ExpectedResult = false)]
@@ -437,7 +459,23 @@ namespace PoeFilterX.Tests.StyleCommands
         public void AlertPath_InvalidArgs_Throws(string args)
         {
             // Assert
-            Assert.Throws<ParserException>(() => Parser.Parse(args));
+            _ = Assert.Throws<ParserException>(() => Parser.Parse(args));
+        }
+
+        [TestCase(@$"{COMMAND}-path: enabled", ExpectedResult = true)]
+        [TestCase(@$"{COMMAND}-path: disabled", ExpectedResult = false)]
+        public bool AlertPath_Toggled(string args)
+        {
+            // Arrange
+            var filterblock = new FilterBlock();
+
+            // Act
+            var style = Parser.Parse(args);
+            Assert.IsNotNull(style);
+            style?.Invoke(filterblock);
+
+            // Assert
+            return filterblock.CustomAlertSoundEnabled;
         }
 
         [TestCase(@$"{COMMAND}-path: test", ExpectedResult = "test")]
