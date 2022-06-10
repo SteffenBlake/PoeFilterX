@@ -14,7 +14,7 @@ namespace PoeFilterX.Business.Services
             SectionParsers = sectionParsers ?? throw new ArgumentNullException(nameof(sectionParsers));
         }
 
-        public async Task ParseAsync(Filter filter, string path)
+        public async Task ParseAsync(Filter filter, string path, FilterBlock? parent = null)
         {
             path = path.Trim();
             if (string.IsNullOrEmpty(path))
@@ -35,7 +35,7 @@ namespace PoeFilterX.Business.Services
 
             try 
             {
-                await parser.ParseAsync(filter, reader);
+                await parser.ParseAsync(filter, reader, parent);
             }
             catch (ParserException ex)
             {

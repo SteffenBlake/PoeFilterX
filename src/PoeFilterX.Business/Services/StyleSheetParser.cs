@@ -19,7 +19,7 @@ namespace PoeFilterX.Business.Services
 
         public string FileExtension => ".fss";
 
-        public async Task ParseAsync(Filter filter, TrackingStreamReader reader)
+        public async Task ParseAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
         {
             var runningArg = "";
             var comment = false;
@@ -93,6 +93,8 @@ namespace PoeFilterX.Business.Services
                     {
                         throw new ParserException($"Unrecognized command '{args[0]}'");
                     }
+
+                    runningArg = "";
                 }
                 else
                 {

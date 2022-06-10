@@ -1,8 +1,9 @@
 using PoeFilterX.Business.Extensions;
+using System.Linq.Expressions;
 
 namespace PoeFilterX.Tests
 {
-    public class Lamba_SetPropertyValue_Tests
+    public class Lamba_Tests
     {
         public class TestClass
         {
@@ -66,6 +67,16 @@ namespace PoeFilterX.Tests
 
             // Assert
             Assert.That(testClass.ValueString, Is.Null);
+        }
+
+        [Test]
+        public void GetName_Works()
+        {
+            Expression<Func<TestClass, string?>> strSelector = (t) => t.ValueString;
+            Expression<Func<TestClass, int?>> intSelector = (t) => t.ValueInt;
+
+            Assert.That(strSelector.GetName(), Is.EqualTo(nameof(TestClass.ValueString)));
+            Assert.That(intSelector.GetName(), Is.EqualTo(nameof(TestClass.ValueInt)));
         }
     }
 }

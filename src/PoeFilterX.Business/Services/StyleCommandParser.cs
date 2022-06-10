@@ -127,9 +127,13 @@ namespace PoeFilterX.Business.Services
         private Action<FilterBlock> Alert(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
-            return ArgParser.TryParseToggleString(args[0], out var toggle) ? 
-                SetSoundToggled((b) => b.AlertSound, toggle) : 
-                SetSound((b) => b.AlertSound, args);
+
+            if (args.Count == 1 && ArgParser.TryParseToggleString(args[0], out var toggle))
+            {
+                return SetSoundToggled((b) => b.AlertSound, toggle);
+            }
+
+            return SetAlertSound((b) => b.AlertSound, args);
         }
 
         private Action<FilterBlock> AlertId(IReadOnlyList<string> args)
@@ -161,6 +165,7 @@ namespace PoeFilterX.Business.Services
 
             throw ParserException.UnrecognizedCommand(args[0]);
         }
+
         private Action<FilterBlock> AlertPath(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
@@ -183,18 +188,12 @@ namespace PoeFilterX.Business.Services
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3);
 
-            if (!ArgParser.TryParseToggleString(args[0], out var toggle))
+            if (args.Count == 1 && ArgParser.TryParseToggleString(args[0], out var toggle))
             {
-                return SetMiniMapIcon(args);
+                return EnsureMiniMapIcon() + SetMiniMapIconToggle(toggle);
             }
 
-            if (args.Count > 1)
-            {
-                throw ParserException.UnrecognizedCommand(args[1]);
-            }
-
-            return EnsureMiniMapIcon() + SetMiniMapIconToggle(toggle);
-
+            return SetMiniMapIcon(args);
         }
 
         private Action<FilterBlock> MiniMapIconSize(IReadOnlyList<string> args)
@@ -219,17 +218,12 @@ namespace PoeFilterX.Business.Services
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2);
 
-            if (!ArgParser.TryParseToggleString(args[0], out var toggle))
+            if (args.Count == 1 && ArgParser.TryParseToggleString(args[0], out var toggle))
             {
-                return SetPlayEffect(args);
+                return EnsurePlayEffect() + SetPlayEffectToggle(toggle);
             }
 
-            if (args.Count > 1)
-            {
-                throw ParserException.UnrecognizedCommand(args[1]);
-            }
-
-            return EnsurePlayEffect() + SetPlayEffectToggle(toggle);
+            return SetPlayEffect(args);
 
         }
 
@@ -428,20 +422,8 @@ namespace PoeFilterX.Business.Services
             return (block) => block.SetPropertyValue(selector, value);
         }
 
-        private Action<FilterBlock> SetSound(Expression<Func<FilterBlock, AlertSound?>> selector, IReadOnlyList<string> args)
+        private Action<FilterBlock> SetAlertSound(Expression<Func<FilterBlock, AlertSound?>> selector, IReadOnlyList<string> args)
         {
-            if (ArgParser.TryParseToggleString(args[0], out var toggle))
-            {
-                if (args.Count > 1)
-                {
-                    throw ParserException.UnrecognizedCommand(args[1]);
-                }
-
-                return
-                   SetSoundToggled(selector, toggle) +
-                   SetCustomSoundToggled(!toggle);
-            }
-
             var cmd = EnsureSound(selector) + SetSoundId(selector, args[0]);
 
             if (args.Count >= 2)
@@ -575,11 +557,6 @@ namespace PoeFilterX.Business.Services
             ArgParser.ThrowIfIntOutOfRange(arg, 0, 2, out var size);
 
             return (b) => {
-                if (b.MinimapIcon == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
-                }
-
                 b.MinimapIcon.Size = size;
             };
         }
@@ -589,11 +566,6 @@ namespace PoeFilterX.Business.Services
             ArgParser.ThrowIfNotEnum<FilterColor>(arg, out var color);
 
             return (b) => {
-                if (b.MinimapIcon == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
-                }
-
                 b.MinimapIcon.Color = color;
             };
         }
@@ -603,11 +575,6 @@ namespace PoeFilterX.Business.Services
             ArgParser.ThrowIfNotEnum<MiniMapIconShape>(arg, out var shape);
 
             return (b) => {
-                if (b.MinimapIcon == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
-                }
-
                 b.MinimapIcon.Shape = shape;
             };
         }
@@ -616,11 +583,6 @@ namespace PoeFilterX.Business.Services
         {
             return (b) =>
             {
-                if (b.MinimapIcon == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.MinimapIcon)}");
-                }
-
                 b.MinimapIcon.Enabled = toggle;
             };
         }
@@ -645,55 +607,35 @@ namespace PoeFilterX.Business.Services
 
             return (b) =>
             {
-                if (b.PlayEffect == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
-                }
-
                 b.PlayEffect.Color = color;
             };
         }
 
-        private static Action<FilterBlock> SetPlayEffectDuration(string arg)
+        private static Action<FilterBlock> SetPlayEffectDuration(string duration)
         {
-            var dur = arg.ToLower();
-            if (dur == "permanent")
+            var durationLower = duration.ToLower();
+            if (durationLower == "permanent")
             {
                 return (b) =>
                 {
-                    if (b.PlayEffect == null)
-                    {
-                        throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
-                    }
-
                     b.PlayEffect.Temporary = false;
                 };
             }
-            else if (dur == "temporary")
+            else if (durationLower == "temporary")
             {
                 return (b) =>
                 {
-                    if (b.PlayEffect == null)
-                    {
-                        throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
-                    }
-
                     b.PlayEffect.Temporary = true;
                 };
             }
 
-            throw ParserException.UnrecognizedCommand(arg);
+            throw ParserException.UnrecognizedCommand(duration);
         }
 
         private static Action<FilterBlock> SetPlayEffectToggle(bool toggle)
         {
             return (b) =>
             {
-                if (b.PlayEffect == null)
-                {
-                    throw new ParserException($"SetPropertyValue failed to instantiate {nameof(b.PlayEffect)}");
-                }
-
                 b.PlayEffect.Enabled = toggle;
             };
         }

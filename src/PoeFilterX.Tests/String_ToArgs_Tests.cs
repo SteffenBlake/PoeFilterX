@@ -13,6 +13,7 @@ namespace PoeFilterX.Tests
         [TestCase(@" A      B "" C \\D E""", ExpectedResult = new []{"A", "B", @" C \D E"})]
         [TestCase("            \n", ExpectedResult = new string[0])]
         [TestCase(" \"  \" \"\t\"  \"\n\"", ExpectedResult = new [] {"  ", "\t", "\n"})]
+        [TestCase("\"\\t\" \"\\n\"", ExpectedResult = new [] {"\t", "\n"})]
         public string[] String_ToArgs_ByCase(string command)
         {
             return command.ToArgs();
@@ -20,10 +21,14 @@ namespace PoeFilterX.Tests
 
         [TestCase(@"\")]
         [TestCase(@"\""")]
+        [TestCase(@"""")]
         [TestCase(@"""\")]
+        [TestCase(@"""\o""")]
+        [TestCase(@"""\ """)]
+        [TestCase(@"""\p""")]
         public void String_ToArgs_ThrowsParserException(string command)
         {
-            Assert.Throws<ParserException>(() => command.ToArgs());
+            _ = Assert.Throws<ParserException>(() => command.ToArgs());
         }
 
     }

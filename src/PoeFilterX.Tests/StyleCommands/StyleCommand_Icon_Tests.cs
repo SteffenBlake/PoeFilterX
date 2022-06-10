@@ -28,6 +28,7 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}: 3")]
         [TestCase($"{COMMAND}: null")]
         [TestCase($"{COMMAND}: 255 255 255 255 255")]
+        [TestCase($"{COMMAND}: enabled burger")]
         [TestCase($"{COMMAND}: 2 burger")]
         [TestCase($"{COMMAND}: 2 red burger")]
         [TestCase($"{COMMAND}: 2 red circle burger")]
