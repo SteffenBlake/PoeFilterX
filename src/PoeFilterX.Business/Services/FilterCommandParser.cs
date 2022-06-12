@@ -31,7 +31,7 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.BaseType), (args) => AddOperatorStrings(b => b.BaseType, args) }, 
                 { nameof(FilterBlock.BaseWard), (args) => AddOperatorInt(b => b.BaseWard, args) },
                 { nameof(FilterBlock.BlightedMap), (args) => SetBool(b => b.BlightedMap, args) },
-                { nameof(FilterBlock.Class), (args) => AddStrings(b => b.Class, args) }, 
+                { nameof(FilterBlock.Class), (args) => AddOperatorStrings(b => b.Class, args) }, 
                 { nameof(FilterBlock.Corrupted), (args) => SetBool(b => b.Corrupted, args) },
                 { nameof(FilterBlock.CorruptedMods), (args) => AddOperatorInt(b => b.CorruptedMods, args) },
                 { nameof(FilterBlock.DropLevel), (args) => AddOperatorInt(b => b.DropLevel, args) },

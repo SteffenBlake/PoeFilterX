@@ -25,13 +25,4 @@
     <ProjectReference Include="..\PoeFilterX.Common\PoeFilterX.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Test\Currencies.fss">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Test\TestFilter.filterx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

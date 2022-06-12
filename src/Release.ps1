@@ -51,7 +51,7 @@ $msInstallerFrom = Join-Path -Path $Releases -ChildPath "PoeFilterX.WindowsInsta
 $msInstallerTo = "PoeFilterX.WindowsInstaller-$VERSION.exe"
 $msInstallerToPath = Join-Path -Path $Releases -ChildPath "PoeFilterX.WindowsInstaller-$VERSION.exe"
 
-if ((Test-Path $msInstallerToPath) -and $FORCE) {
+if (Test-Path $msInstallerToPath) {
     Remove-Item -Force $msInstallerToPath
 }
 

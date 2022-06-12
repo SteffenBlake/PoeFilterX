@@ -61,7 +61,7 @@ namespace PoeFilterX.Business.Models
 
         public bool? BlightedMap { get; set; }
 
-        public IList<string> Class { get; set; } = new List<string>();
+        public IList<OperatorArg<IList<string>>> Class { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public bool? Corrupted { get; set; }
 
