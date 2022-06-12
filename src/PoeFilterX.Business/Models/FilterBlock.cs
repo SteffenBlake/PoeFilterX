@@ -192,16 +192,15 @@ namespace PoeFilterX.Business.Models
             var styles = CompiledStyles.Distinct();
 
             var styleCmds = styles
-                .SelectMany(s =>
+                .Select(st =>
                 {
-                    if (!stylesTable.ContainsKey(s))
+                    if (!stylesTable.ContainsKey(st))
                     {
-                        throw new ParserException($"Filter block referenced undeclared style '{s}'");
+                        throw new ParserException($"Filter block referenced undeclared style '{st}'");
                     }
 
-                    return stylesTable[s];
+                    return stylesTable[st].OrderBy(s => s.Rank).ToList();
                 })
-                .OrderBy(s => s.Rank)
                 .ToList();
 
             if (!styleCmds.Any())
@@ -209,9 +208,12 @@ namespace PoeFilterX.Business.Models
                 return "";
             }
 
-            foreach (var (_, command) in styleCmds)
+            foreach (var style in styleCmds)
             {
-                command(this);
+                foreach (var (_, command) in style)
+                {
+                    command(this);
+                }
             }
 
             var builder = new StringBuilder();
@@ -260,6 +262,11 @@ namespace PoeFilterX.Business.Models
             Compile(builder, SynthesisedItem);
             Compile(builder, UberBlightedMap);
             Compile(builder, Width);
+
+            if (Parent != null && string.IsNullOrEmpty(builder.ToString().Trim()))
+            {
+                return "";
+            }
 
             Compile(builder, SetBorderColor);
             Compile(builder, SetTextColor);

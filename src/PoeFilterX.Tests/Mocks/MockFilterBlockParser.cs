@@ -6,7 +6,7 @@ namespace PoeFilterX.Tests.Mocks
 {
     public class MockFilterBlockParser : IFilterBlockParser
     {
-        public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
+        public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null, bool nested = false)
         {
             _ = await reader.ReadLineAsync();
         }

@@ -2,7 +2,7 @@
   "profiles": {
     "PoeFilterX": {
       "commandName": "Project",
-      "commandLineArgs": "build --p \"C:\\Users\\steff\\Desktop\\PixxelFilter\\PixxelFilter-High.filterx\""
+      "commandLineArgs": "build --p \"C:\\Users\\steff\\Desktop\\PixxelFilter\\PixxelFilter-High.filterx\" --o"
     }
   }
 }
