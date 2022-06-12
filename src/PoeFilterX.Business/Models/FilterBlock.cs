@@ -73,7 +73,7 @@ namespace PoeFilterX.Business.Models
 
         public bool? ElderMap { get; set; }
 
-        public IList<string> EnchantmentPassiveNode { get; set; } = new List<string>();
+        public IList<OperatorArg<IList<string>>> EnchantmentPassiveNode { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<OperatorArg<int>> EnchantmentPassiveNum { get; set; } = new List<OperatorArg<int>>();
 
@@ -85,9 +85,9 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> HasEaterOfWorldsImplicit { get; set; } = new List<OperatorArg<int>>();
 
-        public IList<string> HasEnchantment { get; set; } = new List<string>();
+        public IList<OperatorArg<IList<string>>> HasEnchantment { get; set; } = new List<OperatorArg<IList<string>>>();
 
-        public IList<string> HasExplicitMod { get; set; } = new List<string>();
+        public IList<OperatorArg<IList<string>>> HasExplicitMod { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<InfluenceType> HasInfluence { get; set; } = new List<InfluenceType>();
 
