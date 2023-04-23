@@ -10,8 +10,8 @@
             { "-v", VersionCmd.Run },
             { "--version", VersionCmd.Run },
             { "version", VersionCmd.Run },
-            { "update", UpdateCmd.Run },
-            { "validate", ValidateCmd.Run }
+            { "init", InitCmd.Run }
+            //{ "validate", ValidateCmd.Run }
         };
 
         public static void Main(string[] args)

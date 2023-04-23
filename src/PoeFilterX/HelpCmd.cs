@@ -5,9 +5,9 @@
         private const string HelpText = @"Utility for compiling .filterx projects into Path of Exile .filter files
 Type poefilterx help <command> for more details for a given command.
 ==Commands==
+    poefilterx init - Walkthrough wizard to bootstrap a new template PoeFilterX project (Start here!).
     poefilterx build - Builds a .filterx project into a filter file.
-    poefilterx version - Prints the version info of PoeFilterX.
-    poefilterx update - Updates PoeFilterX";
+    poefilterx version - Prints the version info of PoeFilterX.";
 
         internal static Task Run(string[] args)
         {
@@ -16,7 +16,6 @@ Type poefilterx help <command> for more details for a given command.
                 { "", HelpCmd.HelpText },
                 { "build", BuildCmd.HelpText },
                 { "version", VersionCmd.HelpText },
-                { "update", UpdateCmd.HelpText },
                 { "init", InitCmd.HelpText },
                 //{ "validate", ValidateCmd.HelpText }
             };
