@@ -2,7 +2,7 @@
   "profiles": {
     "PoeFilterX": {
       "commandName": "Project",
-      "commandLineArgs": "build --p \"C:\\Users\\steff\\Desktop\\PixxelFilter\\Ruthless\\PixxelFilter-Ruthless-Low.filterx\"",
+      "commandLineArgs": "build --p \"..\\..\\..\\..\\Test-Filter\\Test.filterx\"",
       "hotReloadEnabled": false
     },
     "WSL": {

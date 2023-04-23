@@ -14,9 +14,9 @@ namespace PoeFilterX.Business.Services
         public string ResolvePath(string executingPath, string relativePath)
         {
             // Substitute the @/ path prefix with node_modules folder in executing root
-            if (relativePath.StartsWith("@/"))
+            if (relativePath.StartsWith("@"))
             {
-                var nodeRelativePath = relativePath[2..];
+                var nodeRelativePath = relativePath[1..];
 
                 return Path.Combine(Config.NodePath, nodeRelativePath);
             }

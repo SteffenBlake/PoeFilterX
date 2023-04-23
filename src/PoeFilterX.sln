@@ -20,14 +20,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		Manual-Install.ps1 = Manual-Install.ps1
 		Release.ps1 = Release.ps1
-		PoeFilterX\bin\Debug\net6.0\TestFilter.filter = PoeFilterX\bin\Debug\net6.0\TestFilter.filter
+		Test-Filter\Test.filterx = Test-Filter\Test.filterx
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.WindowsInstaller", "PoeFilterX.WindowsInstaller\PoeFilterX.WindowsInstaller.csproj", "{92608140-442D-41B2-A874-FF62F87A301F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.Common", "PoeFilterX.Common\PoeFilterX.Common.csproj", "{4CCF850D-0FC7-4475-9CB0-37535D7C9E23}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "PoeFilterX.NPM", "PoeFilterX.NPM\PoeFilterX.NPM.njsproj", "{B22B809D-F26A-4CE8-89DA-BAA0F56103F6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test-Filter", "Test-Filter", "{58345486-813D-47FD-B5B8-882B62066AD2}"
+	ProjectSection(SolutionItems) = preProject
+		Test-Filter\Test.filter = Test-Filter\Test.filter
+		Test-Filter\Test.filterx = Test-Filter\Test.filterx
+		Test-Filter\Test.fss = Test-Filter\Test.fss
+		Test-Filter\Test.json = Test-Filter\Test.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "node_modules", "node_modules", "{00BEF353-3705-45B4-9950-7CA211F543C3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test-module", "test-module", "{B73D1382-35E0-4711-BEE8-FABBDD61E8FE}"
+	ProjectSection(SolutionItems) = preProject
+		Test-Filter\node_modules\test-module\module.filterx = Test-Filter\node_modules\test-module\module.filterx
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,13 +68,14 @@ Global
 		{4CCF850D-0FC7-4475-9CB0-37535D7C9E23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CCF850D-0FC7-4475-9CB0-37535D7C9E23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CCF850D-0FC7-4475-9CB0-37535D7C9E23}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B22B809D-F26A-4CE8-89DA-BAA0F56103F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B22B809D-F26A-4CE8-89DA-BAA0F56103F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B22B809D-F26A-4CE8-89DA-BAA0F56103F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B22B809D-F26A-4CE8-89DA-BAA0F56103F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{58345486-813D-47FD-B5B8-882B62066AD2} = {8B45AAA0-EAC7-41B7-88D1-D676C25999E0}
+		{00BEF353-3705-45B4-9950-7CA211F543C3} = {58345486-813D-47FD-B5B8-882B62066AD2}
+		{B73D1382-35E0-4711-BEE8-FABBDD61E8FE} = {00BEF353-3705-45B4-9950-7CA211F543C3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B834610E-8F71-4956-A30E-5444F6E3D659}

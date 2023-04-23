@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using PoeFilterX.Business.Extensions;
-using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services.Abstractions;
-using System.IO;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace PoeFilterX.Business.Services
@@ -11,36 +8,21 @@ namespace PoeFilterX.Business.Services
     public class VariableStore : IVariableStore
     {
         private IConfiguration Config { get; }
-        private IDictionary<string, List<string>> Data { get; set; } = new Dictionary<string, List<string>>();
+        private IDictionary<string, HashSet<string>> Data { get; set; } = new Dictionary<string, HashSet<string>>();
 
-        public string FileExtension => ".json";
 
         public VariableStore(IConfiguration config)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public async Task ParseAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null)
+        public void Add(string key, string value)
         {
-            var newDataRaw = await reader.ReadToEndAsync();
-
-            var newData = JsonSerializer.Deserialize<Dictionary<string, string[]>>(newDataRaw) ?? new();
-
-            foreach (var kvp in newData)
+            if (!Data.ContainsKey(key))
             {
-                var args = kvp.Value.SelectMany(s => s.ToArgs()).ToList();
-                if (!Data.ContainsKey(kvp.Key))
-                {
-                    Data[kvp.Key] = kvp.Value.ToList();
-                }
-                else
-                {
-                    Data[kvp.Key].AddRange(kvp.Value);
-                }
-
-                // Final Distinct cleanup
-                Data[kvp.Key] = Data[kvp.Key].Distinct().ToList();
+                Data[key] = new();
             }
+            _ = Data[key].Add(value);
         }
 
         public string[] InjectEnvironment(IReadOnlyList<string> args)

@@ -33,6 +33,6 @@
             return System.IO.Path.Combine(dir, file);
         }
 
-        public string NodePath => System.IO.Path.Combine(UsedPath, "node_modules");
+        public string NodePath => System.IO.Path.Combine(System.IO.Path.GetDirectoryName(UsedPath), "node_modules");
     }
 }

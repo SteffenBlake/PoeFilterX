@@ -52,7 +52,7 @@ a directory with a single .filterx file present, path does not need to be provid
                 .AddLazySingleton<IFileParser, FileParser>()
                 .AddLazySingleton<IStreamFetcher, FileStreamFetcher>()
 
-                .AddLazySingleton<ISectionParser, VariableStore>()
+                .AddLazySingleton<ISectionParser, VariableSectionParser>()
                 .AddLazySingleton<IVariableStore, VariableStore>()
 
                 .AddLazySingleton<ISectionParser, FilterXParser>()
