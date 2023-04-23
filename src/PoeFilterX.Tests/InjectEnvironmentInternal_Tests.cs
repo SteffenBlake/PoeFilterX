@@ -1,16 +1,15 @@
 ﻿using Microsoft.Extensions.Configuration;
 using PoeFilterX.Business;
-using PoeFilterX.Business.Extensions;
+using PoeFilterX.Business.Services;
 
 namespace PoeFilterX.Tests
 {
     public class InjectEnvironmentInternal_Tests
     {
-        private IConfiguration Config { get; set; }
-
+        private VariableStore Store { get; }
         public InjectEnvironmentInternal_Tests()
         {
-            Config = new ConfigurationBuilder()
+            var config = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
                     {"TEST_A", "VAL_A"},
@@ -19,14 +18,17 @@ namespace PoeFilterX.Tests
                     {"TEST_D", "VAL_D"},
                 })
                 .Build();
+
+            Store = new VariableStore(config);
         }
+
 
         [TestCase("%TEST_A%", @"""%TEST_B%""", ExpectedResult = new [] { "VAL_A", @"VAL_B" })]
         [TestCase("TEST_C", @"""TEST_D""", ExpectedResult = new [] { "TEST_C", @"""TEST_D""" })]
         public string[] InjectEnvironment_Cases(params string[] args)
         {
             // Act
-            var results = Config.InjectEnvironment(args);
+            var results = Store.InjectEnvironment(args);
 
             // Assert
             return results;
@@ -36,7 +38,7 @@ namespace PoeFilterX.Tests
         public void InjectEnvironment_ThrowsUnrecognized(params string[] args)
         {
             // Act
-            _ = Assert.Throws<ParserException>(() => Config.InjectEnvironment(args));
+            _ = Assert.Throws<ParserException>(() => Store.InjectEnvironment(args));
         }
     }
 }

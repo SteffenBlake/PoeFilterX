@@ -6,12 +6,14 @@ namespace PoeFilterX.Business.Services
 {
     public class StyleSheetParser : ISectionParser
     {
+        private IPathResolver PathResolver { get; }
         private Func<IFileParser> FileParserFactory { get; }
         private IStyleBlockParser BlockParser { get; }
         private ExecutingContext Context { get; }
 
-        public StyleSheetParser(Func<IFileParser> fileParserFactory, IStyleBlockParser blockParser, ExecutingContext context)
+        public StyleSheetParser(IPathResolver pathResolver, Func<IFileParser> fileParserFactory, IStyleBlockParser blockParser, ExecutingContext context)
         {
+            PathResolver = pathResolver ?? throw new ArgumentNullException(nameof(pathResolver));
             FileParserFactory = fileParserFactory ?? throw new ArgumentNullException(nameof(fileParserFactory));
             BlockParser = blockParser ?? throw new ArgumentNullException(nameof(blockParser));
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -73,14 +75,15 @@ namespace PoeFilterX.Business.Services
                         }
 
                         var filePath = args[1];
-                        var extension = Path.GetExtension(filePath);
-                        if (extension != FileExtension)
-                        {
-                            throw new ParserException($"Unrecognized file extension for StyleSheet using statement: '{extension}'");
-                        }
 
                         var directory = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
-                        var relativeFile = Path.Combine(directory, filePath);
+                        var relativeFile = PathResolver.ResolvePath(directory, filePath);
+
+                        var extension = Path.GetExtension(relativeFile);
+                        if (extension != FileExtension)
+                        {
+                            throw new ParserException($"Unrecognized file extension for StyleSheet using statement: '{relativeFile}', expected: '{FileExtension}'");
+                        }
 
                         if (!Context.TryAddUsing(reader.Path, relativeFile))
                         {

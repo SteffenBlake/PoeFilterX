@@ -17,6 +17,8 @@ Type poefilterx help <command> for more details for a given command.
                 { "build", BuildCmd.HelpText },
                 { "version", VersionCmd.HelpText },
                 { "update", UpdateCmd.HelpText },
+                { "init", InitCmd.HelpText },
+                //{ "validate", ValidateCmd.HelpText }
             };
 
             var helpKey = string.Join(' ', args);

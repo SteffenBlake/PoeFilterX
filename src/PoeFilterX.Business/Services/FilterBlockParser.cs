@@ -6,12 +6,14 @@ namespace PoeFilterX.Business.Services
 {
     public class FilterBlockParser : IFilterBlockParser
     {
+        private IPathResolver PathResolver { get; }
         private Func<IFileParser> FileParserFactory { get; }
         private IFilterCommandParser CommandParser { get; }
         private ExecutingContext Context { get; }
 
-        public FilterBlockParser(Func<IFileParser> fileParserFactory, IFilterCommandParser commandParser, ExecutingContext context)
+        public FilterBlockParser(IPathResolver pathResolver, Func<IFileParser> fileParserFactory, IFilterCommandParser commandParser, ExecutingContext context)
         {
+            PathResolver = pathResolver ?? throw new ArgumentNullException(nameof(pathResolver));
             FileParserFactory = fileParserFactory ?? throw new ArgumentNullException(nameof(fileParserFactory));
             CommandParser = commandParser ?? throw new ArgumentNullException(nameof(commandParser));
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -69,8 +71,8 @@ namespace PoeFilterX.Business.Services
 
                         var filePath = args[1].Trim();
 
-                        var directory = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
-                        var relativeFile = Path.Combine(directory, filePath);
+                        var currentDir = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
+                        var relativeFile = PathResolver.ResolvePath(currentDir, filePath);
 
                         if (!Context.TryAddUsing(reader.Path, relativeFile))
                         {

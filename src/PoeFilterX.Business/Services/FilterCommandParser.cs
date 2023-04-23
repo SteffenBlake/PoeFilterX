@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using PoeFilterX.Business.Extensions;
+﻿using PoeFilterX.Business.Extensions;
 using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services.Abstractions;
 using System.Linq.Expressions;
@@ -8,12 +7,12 @@ namespace PoeFilterX.Business.Services
 {
     public class FilterCommandParser : IFilterCommandParser
     {
-        private IConfiguration Config { get; }
+        private IVariableStore VariableStore { get; }
         private ArgParser ArgParser { get; }
         private IDictionary<string, Func<string[], Action<FilterBlock>?>> Commands { get; }
-        public FilterCommandParser(IConfiguration config, ArgParser argParser)
+        public FilterCommandParser(IVariableStore variableStore, ArgParser argParser)
         {
-            Config = config ?? throw new ArgumentNullException(nameof(config));
+            VariableStore = variableStore ?? throw new ArgumentNullException(nameof(variableStore));
             ArgParser = argParser ?? throw new ArgumentNullException(nameof(argParser));
 
             Commands = new Dictionary<string, Func<string[], Action<FilterBlock>?>>
@@ -83,8 +82,8 @@ namespace PoeFilterX.Business.Services
                 throw new ParserException($"Unrecognized command '{args[0]}'");
             }
 
-            // Inject configuration variables (env vars, etc) via %VARNAME% replace
-            var composedArguments = Config.InjectEnvironment(args.Skip(1).ToArray());
+            // Inject configuration variables (env vars, .json files, etc) via %VARNAME% replace
+            var composedArguments = VariableStore.InjectEnvironment(args.Skip(1).ToArray());
 
             return Commands[cmdName](composedArguments);
         }
@@ -178,13 +177,23 @@ namespace PoeFilterX.Business.Services
             };
         }
 
-        private Action<FilterBlock> AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min = 0, int? max = null)
+        private Action<FilterBlock>? AddOperatorInt(Expression<Func<FilterBlock, IList<OperatorArg<int>>?>> selector, IReadOnlyList<string> args, int min = 0, int? max = null)
         {
+            if (args.Count == 0)
+            {
+                return null;
+            }
+
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
             {
                 args = args.Skip(1).ToArray();
             }
 
+            if (args.Count == 0)
+            {
+                return null;
+            }
+            
             if (args.Count > 1)
             {
                 throw ParserException.UnexpectedArgCount(args.Count, 1);
@@ -198,6 +207,11 @@ namespace PoeFilterX.Business.Services
 
         private Action<FilterBlock>? AddOperatorStrings(Expression<Func<FilterBlock, IList<OperatorArg<IList<string>>>?>> selector, IReadOnlyList<string> args)
         {
+            if (args.Count == 0)
+            {
+                return null;
+            }
+
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
             {
                 args = args.Skip(1).ToArray();
@@ -213,12 +227,22 @@ namespace PoeFilterX.Business.Services
             return AddOperator(selector, addition);
         }
 
-        private Action<FilterBlock> AddOperatorEnum<TEnum>(Expression<Func<FilterBlock, IList<OperatorArg<TEnum>>?>> selector, IReadOnlyList<string> args)
+        private Action<FilterBlock>? AddOperatorEnum<TEnum>(Expression<Func<FilterBlock, IList<OperatorArg<TEnum>>?>> selector, IReadOnlyList<string> args)
             where TEnum : struct, Enum
         {
+            if (args.Count == 0)
+            {
+                return null;
+            }
+
             if (ArgParser.TryParseOperator(args[0], out var filterOperator))
             {
                 args = args.Skip(1).ToArray();
+            }
+            
+            if (args.Count == 0)
+            {
+                return null;
             }
 
             if (args.Count > 1)

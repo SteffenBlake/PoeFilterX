@@ -6,7 +6,7 @@ namespace PoeFilterX.Tests
 {
     public  class FilterParser_Tests
     {
-        public FilterParser FilterParser { get; set; }
+        public FilterXParser FilterParser { get; set; }
         public MockStreamFetcher MockStreamFetcher { get; set; }
         public MockFilterBlockParser MockFilterBlockParser { get; set; }
 
@@ -14,7 +14,7 @@ namespace PoeFilterX.Tests
         {
             MockStreamFetcher = new MockStreamFetcher(new Dictionary<string, string> { { "", "" } });
             MockFilterBlockParser = new MockFilterBlockParser();
-            FilterParser = new FilterParser(MockStreamFetcher, MockFilterBlockParser);
+            FilterParser = new FilterXParser(MockStreamFetcher, MockFilterBlockParser);
         }
 
         [SetUp]
@@ -22,7 +22,7 @@ namespace PoeFilterX.Tests
         {
             MockStreamFetcher = new MockStreamFetcher(new Dictionary<string, string> { { "A", "test\ntest\n" } });
             MockFilterBlockParser = new MockFilterBlockParser();
-            FilterParser = new FilterParser(MockStreamFetcher, MockFilterBlockParser);
+            FilterParser = new FilterXParser(MockStreamFetcher, MockFilterBlockParser);
         }
 
         [Test]
