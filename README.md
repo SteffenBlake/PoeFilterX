@@ -54,7 +54,7 @@ Lower duplicate code by nesting Filter blocks in order to re-use patterns!
 # Planned Feature Roadmap
 Here's a list of features I plan to implement in the future as well, all are a Work in Progress
 
-* [x] - Package Management, to simplify importing of existing filter packages via `poefilterx install <packagename>`
+* [x] - Package Management, to simplify importing of existing filter packages via NPM
 * [x] - `init` command to speed up the bootstrapping process of making a new filter project via `poefilterx init`
 * [ ] - ~~Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program~~
 * [ ] - Add support for the `[ .. ]` bracket blocks, to "block" unwanted filter blocks from generating
