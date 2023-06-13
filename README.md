@@ -12,6 +12,12 @@ Head over to the [Installation Guide](https://github.com/SteffenBlake/PoeFilterX
 
 The list of features provided by PoeFilterX is quite extensive, check them out!
 
+## Super easy bootstrapping
+
+Quickly bootstrap up your first project in as simple as the single command, `poefilterx init`!
+
+![Image demonstrating poefilterx init](resources/Bootstrapping.png)
+
 ## Multiline Filter Commands!
 With semicolon delimitting, enjoy substantially easier to read filters with multiline commands!
 
@@ -36,6 +42,10 @@ Organize your filter project in a cohesive and logical way, instead of having on
 
 ![Image demonstrating project organization](resources/Modular.png)
 
+And even import filters, style sheets, and variables from packages too, all via the powerful Node Package Management system!
+
+![Image demonstrating importanting from NPM Packages](resources/Packages.png)
+
 ## Nested Filter Blocks!
 Lower duplicate code by nesting Filter blocks in order to re-use patterns!
 
@@ -44,9 +54,10 @@ Lower duplicate code by nesting Filter blocks in order to re-use patterns!
 # Planned Feature Roadmap
 Here's a list of features I plan to implement in the future as well, all are a Work in Progress
 
-* [ ] - Package Management, to simplify importing of existing filter packages via `poefilterx install <packagename>`
-* [ ] - `new` command to speed up the bootstrapping process of making a new filter project via `poefilterx new <projectName>`
-* [ ] - Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program
+* [x] - Package Management, to simplify importing of existing filter packages via `poefilterx install <packagename>`
+* [x] - `init` command to speed up the bootstrapping process of making a new filter project via `poefilterx init`
+* [ ] - ~~Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program~~
+* [ ] - Add support for the `[ .. ]` bracket blocks, to "block" unwanted filter blocks from generating
 * [ ] - Advanced "Range" int variable for Operator Filter Commands, combining the `>=` + `<=` operators into one, IE `Quality 10~20;`
 * [ ] - Visual Studio Extension for code highlighting, code completion, and comment/uncomment hotkey
 
