@@ -33,12 +33,5 @@ namespace PoeFilterX.Tests
             // Assert
             return results;
         }
-
-        [TestCase("%TEST_X%")]
-        public void InjectEnvironment_ThrowsUnrecognized(params string[] args)
-        {
-            // Act
-            _ = Assert.Throws<ParserException>(() => Store.InjectEnvironment(args));
-        }
     }
 }

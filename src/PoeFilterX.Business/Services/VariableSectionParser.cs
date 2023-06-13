@@ -23,7 +23,9 @@ namespace PoeFilterX.Business.Services
 
             foreach (var kvp in newData)
             {
-                var args = kvp.Value.SelectMany(s => s.ToArgs()).ToList();
+                VariableStore.Track(kvp.Key);
+
+                var args = kvp.Value.ToList();
                 
                 foreach (var arg in args)
                 {

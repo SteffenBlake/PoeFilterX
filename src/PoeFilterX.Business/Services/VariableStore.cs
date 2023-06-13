@@ -16,12 +16,17 @@ namespace PoeFilterX.Business.Services
             Config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public void Add(string key, string value)
+        public void Track(string key)
         {
             if (!Data.ContainsKey(key))
             {
                 Data[key] = new();
             }
+        }
+
+        public void Add(string key, string value)
+        {
+            Track(key);
             _ = Data[key].Add(value);
         }
 
@@ -44,19 +49,15 @@ namespace PoeFilterX.Business.Services
                     var key = arg.Substring(match.Index, match.Length);
                     var keyInner = key[1..^1];
                     var value = Config[keyInner];
-                    if (value == null && Data.ContainsKey(keyInner))
+                    if (Data.ContainsKey(keyInner))
                     {
-                        value = string.Join(' ', Data[keyInner].Select(s => $"\"{s}\""));
+                        value ??= string.Join(' ', Data[keyInner].Select(s => $"\"{s}\""));
                     }
-                    if (value == null)
-                    {
-                        throw new ParserException($"Unrecognized environment variable '{keyInner}'");
-                    }
-                    else
-                    {
-                        var logVal = value.Length < 30 ? value : $"{value[..30]}...";
-                        Console.WriteLine($"Injecting Variable '{keyInner}'\n\tVal: '{logVal}'");
-                    }
+
+                    value ??= "";
+
+                    var logVal = value.Length < 30 ? value : $"{value[..30]}...";
+                    Console.WriteLine($"Injecting Variable '{keyInner}'\n\tVal: '{logVal}'");
 
                     arg = arg.Replace(key, value);
                 }
