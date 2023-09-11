@@ -13,14 +13,16 @@ namespace PoeFilterX.Business.Models
 
         private readonly List<Action<FilterBlock>> _commands = new();
 
-        public FilterBlock(FilterBlock? parent = null)
+        public FilterBlock(FilterBlock? parent = null, bool abstracted = false)
         {
             Parent = parent;
+            Abstracted = abstracted;
         }
 
 #region "Composition"
         
         private FilterBlock? Parent { get; }
+        private bool Abstracted { get; }
 
         public IReadOnlyList<Action<FilterBlock>> Commands =>
             Parent == null ? _commands.AsReadOnly() : Parent.Commands.Concat(_commands).ToList().AsReadOnly();

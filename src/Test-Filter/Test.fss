@@ -1,5 +1,11 @@
 test-style {
 	show: true;
+}
+
+common {
 	bg-color: 150 200 200 200;
-	alert-path: "test_file.mp3";
+}
+
+magic {
+	bg-color: 200 150 200 200;
 }

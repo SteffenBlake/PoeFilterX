@@ -2,9 +2,16 @@ using @test-module/module.filterx;
 using Test.json;
 using Test.fss;
 
-{
-	Rarity Rare;
+[
 	Identified True;
     Class %Gear%;
 	Style test-style;
-}
+	{
+		Rarity Normal;
+		Style common;
+	}
+	{
+		Rarity Magic;
+		Style magic;
+	}
+]
