@@ -57,7 +57,7 @@ Here's a list of features I plan to implement in the future as well, all are a W
 * [x] - Package Management, to simplify importing of existing filter packages via NPM
 * [x] - `init` command to speed up the bootstrapping process of making a new filter project via `poefilterx init`
 * [ ] - ~~Docker build image to further simplify the "plug and play" capability for power users who want to avoid installing yet another program~~
-* [ ] - Add support for the `[ .. ]` bracket blocks, to "block" unwanted filter blocks from generating
+* [x] - Add support for the `[ .. ]` bracket blocks, to "block" unwanted filter blocks from generating
 * [ ] - Advanced "Range" int variable for Operator Filter Commands, combining the `>=` + `<=` operators into one, IE `Quality 10~20;`
 * [ ] - Visual Studio Extension for code highlighting, code completion, and comment/uncomment hotkey
 
