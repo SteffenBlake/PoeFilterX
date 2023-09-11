@@ -19,13 +19,26 @@ namespace PoeFilterX.Business.Services
             Context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task ReadBlockAsync(Filter filter, TrackingStreamReader reader, FilterBlock? parent = null, bool nested = false)
+        public async Task ReadBlockAsync(
+            Filter filter, 
+            TrackingStreamReader reader, 
+            FilterBlock? parent = null, 
+            bool nested = false,
+            bool abstracted = false
+        )
         {
             var runningString = "";
             var isComment = false;
 
             var filterBlock = new FilterBlock(parent);
-            filter.AddFilterBlock(filterBlock);
+            // Abstracted filter blocks will not serialize out
+            // So they dont actually get added to the finalized output filter
+            // but we still instantiate them as their non abstracted children will
+            // Get serialized, so we need to continue all following logic down the chain
+            if (!abstracted)
+            {
+                filter.AddFilterBlock(filterBlock);
+            }
 
             while (!reader.EndOfStream)
             {
@@ -37,13 +50,26 @@ namespace PoeFilterX.Business.Services
                 }
                 else if (next == '{' && !isComment)
                 {
-                    await ReadBlockAsync(filter, reader, filterBlock, true);
+                    await ReadBlockAsync(filter, reader, filterBlock, nested:true, abstracted:false);
+                }
+                else if (next == '[' && !isComment)
+                {
+                    await ReadBlockAsync(filter, reader, filterBlock, nested:true, abstracted:true);
                 }
                 else if (next == '}' && !isComment)
                 {
-                    if (parent == null)
+                    if (parent == null || abstracted)
                     {
                         throw ParserException.UnexpectedCharacter('}', ' ');
+                    }
+
+                    break;
+                }
+                else if (next == ']' && !isComment)
+                {
+                    if (parent == null || !abstracted)
+                    {
+                        throw ParserException.UnexpectedCharacter(']', ' ');
                     }
 
                     break;
@@ -54,7 +80,6 @@ namespace PoeFilterX.Business.Services
                 }
                 else if (next == ';' && !isComment)
                 {
-
                     var args = runningString.Trim().ToArgs();
 
                     if (args[0].ToLower() == "using")

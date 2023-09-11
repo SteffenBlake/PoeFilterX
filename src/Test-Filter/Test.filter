@@ -1,6 +1,12 @@
 Show
-	Class = "Body" "Armours" "Helmets" "Gloves" "Boots"
+	Class = "Body Armours" "Helmets" "Gloves" "Boots"
 	Identified True
-	Rarity = Rare
+	Rarity = Magic
+	SetBackgroundColor 200 150 200 200
+
+Show
+	Class = "Body Armours" "Helmets" "Gloves" "Boots"
+	Identified True
+	Rarity = Normal
 	SetBackgroundColor 150 200 200 200
 
