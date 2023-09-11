@@ -478,9 +478,9 @@ namespace PoeFilterX.Tests.StyleCommands
             return filterblock.CustomAlertSoundEnabled;
         }
 
-        [TestCase(@$"{COMMAND}-path: test", ExpectedResult = "test")]
-        [TestCase(@$"{COMMAND}-path: ""test""", ExpectedResult = "test")]
-        [TestCase(@$"{COMMAND}-path: ""test test""", ExpectedResult = "test test")]
+        [TestCase(@$"{COMMAND}-path: test", ExpectedResult = "\"test\"")]
+        [TestCase(@$"{COMMAND}-path: ""test""", ExpectedResult = "\"test\"")]
+        [TestCase(@$"{COMMAND}-path: ""test test""", ExpectedResult = "\"test test\"")]
         public string? AlertPath_Values_GlobalExplicit(string args)
         {
             // Arrange

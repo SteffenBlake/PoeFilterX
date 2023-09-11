@@ -96,5 +96,20 @@
 
             return args.ToArray();
         }
+
+        public static string EnsureQuotes(this string self)
+        {
+            var selfInternal = self;
+            if (!selfInternal.StartsWith("\""))
+            {
+                selfInternal = '"' + selfInternal;
+            }
+            if (!selfInternal.EndsWith("\""))
+            {
+                selfInternal += '"';
+            }
+
+            return selfInternal;
+        }
     }
 }

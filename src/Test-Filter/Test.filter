@@ -1,6 +1,7 @@
 Show
-	Class = "Body" "Armours" "Helmets" "Gloves" "Boots"
+	Class = "Body Armours" "Helmets" "Gloves" "Boots"
 	Identified True
 	Rarity = Rare
 	SetBackgroundColor 150 200 200 200
+	CustomAlertSound "test_file.mp3"
 

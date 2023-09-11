@@ -515,7 +515,7 @@ namespace PoeFilterX.Business.Services
 
         private static Action<FilterBlock> SetCustomSound(string path)
         {
-            return SetCustomSoundToggled(true) + ((b) => b.CustomAlertSound = path);
+            return SetCustomSoundToggled(true) + ((b) => b.CustomAlertSound = path.EnsureQuotes());
         }
 
         private static Action<FilterBlock> SetCustomSoundToggled(bool toggle)

@@ -1,5 +1,4 @@
-﻿using PoeFilterX.Business.Extensions;
-using PoeFilterX.Business.Models;
+﻿using PoeFilterX.Business.Models;
 using PoeFilterX.Business.Services.Abstractions;
 using System.Text.Json;
 

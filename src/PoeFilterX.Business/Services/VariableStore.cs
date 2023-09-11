@@ -49,9 +49,9 @@ namespace PoeFilterX.Business.Services
                     var key = arg.Substring(match.Index, match.Length);
                     var keyInner = key[1..^1];
                     var value = Config[keyInner];
-                    if (Data.ContainsKey(keyInner))
+                    if (Data.TryGetValue(keyInner, out var valueInner))
                     {
-                        value ??= string.Join(' ', Data[keyInner].Select(s => $"\"{s}\""));
+                        value ??= string.Join(' ', valueInner.Select(s => $"\"{s}\""));
                     }
 
                     value ??= "";
