@@ -20,9 +20,9 @@ namespace PoeFilterX.Business.Services
         }
 
         public async Task ReadBlockAsync(
-            Filter filter, 
-            TrackingStreamReader reader, 
-            FilterBlock? parent = null, 
+            Filter filter,
+            TrackingStreamReader reader,
+            FilterBlock? parent = null,
             bool nested = false,
             bool abstracted = false
         )
@@ -50,11 +50,11 @@ namespace PoeFilterX.Business.Services
                 }
                 else if (next == '{' && !isComment)
                 {
-                    await ReadBlockAsync(filter, reader, filterBlock, nested:true, abstracted:false);
+                    await ReadBlockAsync(filter, reader, filterBlock, nested: true, abstracted: false);
                 }
                 else if (next == '[' && !isComment)
                 {
-                    await ReadBlockAsync(filter, reader, filterBlock, nested:true, abstracted:true);
+                    await ReadBlockAsync(filter, reader, filterBlock, nested: true, abstracted: true);
                 }
                 else if (next == '}' && !isComment)
                 {
@@ -105,7 +105,7 @@ namespace PoeFilterX.Business.Services
                         }
 
                         await FileParserFactory().ParseAsync(filter, relativeFile, filterBlock);
-                    } 
+                    }
                     else
                     {
                         var cmd = CommandParser.Parse(args);

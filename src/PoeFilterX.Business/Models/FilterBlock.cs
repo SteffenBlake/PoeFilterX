@@ -83,13 +83,15 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> GemLevel { get; set; } = new List<OperatorArg<int>>();
 
-        public IList<GemQualityType> GemQualityType { get; set; } = new List<GemQualityType>();
+        public bool? HasCruciblePassiveTree { get; set; }
 
         public IList<OperatorArg<int>> HasEaterOfWorldsImplicit { get; set; } = new List<OperatorArg<int>>();
 
         public IList<OperatorArg<IList<string>>> HasEnchantment { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<OperatorArg<IList<string>>> HasExplicitMod { get; set; } = new List<OperatorArg<IList<string>>>();
+
+        public bool? HasImplicitMod { get; set; }
 
         public IList<InfluenceType> HasInfluence { get; set; } = new List<InfluenceType>();
 
@@ -126,6 +128,8 @@ namespace PoeFilterX.Business.Models
         public IList<OperatorArg<int>> StackSize { get; set; } = new List<OperatorArg<int>>();
 
         public bool? SynthesisedItem { get; set; }
+
+        public bool? TransfiguredGem { get; set; }
 
         public bool? UberBlightedMap { get; set; }
 
@@ -240,10 +244,11 @@ namespace PoeFilterX.Business.Models
             Compile(builder, EnchantmentPassiveNum);
             Compile(builder, FracturedItem);
             Compile(builder, GemLevel);
-            Compile(builder, GemQualityType);
+            Compile(builder, HasCruciblePassiveTree);
             Compile(builder, HasEaterOfWorldsImplicit);
             Compile(builder, HasEnchantment);
             Compile(builder, HasExplicitMod);
+            Compile(builder, HasImplicitMod);
             Compile(builder, HasInfluence);
             Compile(builder, HasSearingExarchImplicit);
             Compile(builder, Height);
@@ -262,6 +267,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, Sockets);
             Compile(builder, StackSize);
             Compile(builder, SynthesisedItem);
+            Compile(builder, TransfiguredGem);
             Compile(builder, UberBlightedMap);
             Compile(builder, Width);
 
