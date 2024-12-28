@@ -19,8 +19,8 @@ namespace PoeFilterX.Business.Models
             Abstracted = abstracted;
         }
 
-#region "Composition"
-        
+        #region "Composition"
+
         private FilterBlock? Parent { get; }
         private bool Abstracted { get; }
 
@@ -32,14 +32,14 @@ namespace PoeFilterX.Business.Models
 
         public IList<string>? Style { get; set; }
 
-#endregion
-#region "Advanced Conditions"
+        #endregion
+        #region "Advanced Conditions"
 
-    public IList<string?> HasValue { get; set; } = new List<string?>();
+        public IList<string?> HasValue { get; set; } = new List<string?>();
 
-#endregion
+        #endregion
 
-#region "Conditions"
+        #region "Conditions"
 
         public AlertSound? AlertSound { get; set; }
 
@@ -107,6 +107,8 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> MapTier { get; set; } = new List<OperatorArg<int>>();
 
+        public IList<OperatorArg<int>> WaystoneTier { get; set; } = new List<OperatorArg<int>>();
+
         public bool? Mirrored { get; set; }
 
         public IList<OperatorArg<int>> Quality { get; set; } = new List<OperatorArg<int>>();
@@ -124,7 +126,7 @@ namespace PoeFilterX.Business.Models
         public IList<OperatorArg<IList<string>>> SocketGroup { get; set; } = new List<OperatorArg<IList<string>>>();
 
         public IList<OperatorArg<IList<string>>> Sockets { get; set; } = new List<OperatorArg<IList<string>>>();
-        
+
         public IList<OperatorArg<int>> StackSize { get; set; } = new List<OperatorArg<int>>();
 
         public bool? SynthesisedItem { get; set; }
@@ -135,9 +137,9 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> Width { get; set; } = new List<OperatorArg<int>>();
 
-#endregion
+        #endregion
 
-#region "Actions"
+        #region "Actions"
 
         public bool Show { get; set; } = true;
 
@@ -154,7 +156,7 @@ namespace PoeFilterX.Business.Models
         public bool? DropSound { get; set; }
 
         public PlayEffect? PlayEffect { get; set; }
-        
+
         public MiniMapIcon? MinimapIcon { get; set; }
 
         public Color? SetBackgroundColor { get; set; }
@@ -256,6 +258,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, ItemLevel);
             Compile(builder, LinkedSockets);
             Compile(builder, MapTier);
+            Compile(builder, WaystoneTier);
             Compile(builder, Mirrored);
             Compile(builder, Quality);
             Compile(builder, Rarity);

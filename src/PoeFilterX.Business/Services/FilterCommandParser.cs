@@ -21,16 +21,16 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.IsTrue), IsTrue },
 
                 { nameof(FilterBlock.AlternateQuality), (args) => SetBool(b => b.AlternateQuality, args) },
-                { nameof(FilterBlock.AnyEnchantment), (args) => SetBool(b => b.AnyEnchantment, args) }, 
+                { nameof(FilterBlock.AnyEnchantment), (args) => SetBool(b => b.AnyEnchantment, args) },
                 { nameof(FilterBlock.AreaLevel), (args) => AddOperatorInt(b => b.AreaLevel, args) },
                 { nameof(FilterBlock.BaseArmour), (args) => AddOperatorInt(b => b.BaseArmour, args) },
                 { nameof(FilterBlock.BaseDefencePercentile), (args) => AddOperatorInt(b => b.BaseDefencePercentile, args) },
                 { nameof(FilterBlock.BaseEnergyShield), (args) => AddOperatorInt(b => b.BaseEnergyShield, args) },
                 { nameof(FilterBlock.BaseEvasion), (args) => AddOperatorInt(b => b.BaseEvasion, args) },
-                { nameof(FilterBlock.BaseType), (args) => AddOperatorStrings(b => b.BaseType, args) }, 
+                { nameof(FilterBlock.BaseType), (args) => AddOperatorStrings(b => b.BaseType, args) },
                 { nameof(FilterBlock.BaseWard), (args) => AddOperatorInt(b => b.BaseWard, args) },
                 { nameof(FilterBlock.BlightedMap), (args) => SetBool(b => b.BlightedMap, args) },
-                { nameof(FilterBlock.Class), (args) => AddOperatorStrings(b => b.Class, args) }, 
+                { nameof(FilterBlock.Class), (args) => AddOperatorStrings(b => b.Class, args) },
                 { nameof(FilterBlock.Corrupted), (args) => SetBool(b => b.Corrupted, args) },
                 { nameof(FilterBlock.CorruptedMods), (args) => AddOperatorInt(b => b.CorruptedMods, args) },
                 { nameof(FilterBlock.DropLevel), (args) => AddOperatorInt(b => b.DropLevel, args) },
@@ -50,17 +50,18 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.Height), (args) => AddOperatorInt(b => b.Height, args) },
                 { nameof(FilterBlock.Identified), (args) => SetBool(b => b.Identified, args) },
                 { nameof(FilterBlock.ItemLevel), (args) => AddOperatorInt(b => b.ItemLevel, args) },
-                { nameof(FilterBlock.LinkedSockets), (args) => AddOperatorInt(b => b.LinkedSockets, args, 0, 6) }, 
+                { nameof(FilterBlock.LinkedSockets), (args) => AddOperatorInt(b => b.LinkedSockets, args, 0, 6) },
                 { nameof(FilterBlock.MapTier), (args) => AddOperatorInt(b => b.MapTier, args) },
+                { nameof(FilterBlock.WaystoneTier), (args) => AddOperatorInt(b => b.WaystoneTier, args) },
                 { nameof(FilterBlock.Mirrored), (args) => SetBool(b => b.Mirrored, args) },
                 { nameof(FilterBlock.Quality), (args) => AddOperatorInt(b => b.Quality, args) },
-                { nameof(FilterBlock.Rarity), (args) => AddOperatorEnum(b => b.Rarity, args) }, 
+                { nameof(FilterBlock.Rarity), (args) => AddOperatorEnum(b => b.Rarity, args) },
                 { nameof(FilterBlock.Replica), (args) => SetBool(b => b.Replica, args) },
                 { nameof(FilterBlock.Scourged), (args) => SetBool(b => b.Scourged, args) },
                 { nameof(FilterBlock.ShapedMap), (args) => SetBool(b => b.ShapedMap, args) },
                 { nameof(FilterBlock.ShaperItem), (args) => SetBool(b => b.ShaperItem, args) },
                 { nameof(FilterBlock.SocketGroup), (args) => AddOperatorStrings(b => b.SocketGroup, args) },
-                { nameof(FilterBlock.Sockets), (args) => AddOperatorStrings(b => b.Sockets, args) }, 
+                { nameof(FilterBlock.Sockets), (args) => AddOperatorStrings(b => b.Sockets, args) },
                 { nameof(FilterBlock.StackSize), (args) => AddOperatorInt(b => b.StackSize, args) },
                 { nameof(FilterBlock.SynthesisedItem), (args) => SetBool(b => b.SynthesisedItem, args) },
                 { nameof(FilterBlock.TransfiguredGem), (args) => SetBool(b => b.TransfiguredGem, args) },
@@ -195,7 +196,7 @@ namespace PoeFilterX.Business.Services
             {
                 return null;
             }
-            
+
             if (args.Count > 1)
             {
                 throw ParserException.UnexpectedArgCount(args.Count, 1);
@@ -241,7 +242,7 @@ namespace PoeFilterX.Business.Services
             {
                 args = args.Skip(1).ToArray();
             }
-            
+
             if (args.Count == 0)
             {
                 return null;
@@ -275,8 +276,8 @@ namespace PoeFilterX.Business.Services
         {
             var method = selector.Compile();
 
-            return 
-                EnsureOperator(selector) + 
+            return
+                EnsureOperator(selector) +
                 ((b) =>
                 {
                     var operatorList = method(b);

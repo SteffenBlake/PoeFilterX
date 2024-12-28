@@ -30,7 +30,7 @@ namespace PoeFilterX.Tests
         [TestCase(@"""\t"";")]
         [TestCase(@"\"";")]
         [TestCase(@"\\;")]
-        public void Parse_InvalidData_Throws(string data) 
+        public void Parse_InvalidData_Throws(string data)
         {
             // Arrange
             using var stream = new MemoryStream();
@@ -46,10 +46,10 @@ namespace PoeFilterX.Tests
         }
 
         [TestCase(
-            "testA; testA; testB; }", 
-            ExpectedResult = new object[] { 
-                new object[] {"testA", 2 }, 
-                new object[] { "testB", 1 }, 
+            "testA; testA; testB; }",
+            ExpectedResult = new object[] {
+                new object[] {"testA", 2 },
+                new object[] { "testB", 1 },
             }
         )]
         [TestCase(
@@ -102,7 +102,7 @@ namespace PoeFilterX.Tests
             _ = BlockParser.Parse(trackingStream);
 
             // Assert
-            var calls = CommandParser.Calls.Select(c => (object)new object[] {c.Key, c.Value }).ToArray();
+            var calls = CommandParser.Calls.Select(c => (object)new object[] { c.Key, c.Value }).ToArray();
             return calls;
         }
     }

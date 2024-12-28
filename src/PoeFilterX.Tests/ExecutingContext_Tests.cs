@@ -28,8 +28,5 @@ namespace PoeFilterX.Tests
             Assert.That(ExecutingContext.TryAddUsing("B", "E"), Is.True);
 
         }
-
-
-
     }
 }
