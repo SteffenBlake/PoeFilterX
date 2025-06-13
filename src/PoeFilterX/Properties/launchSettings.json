@@ -2,12 +2,8 @@
   "profiles": {
     "PoeFilterX": {
       "commandName": "Project",
-      "commandLineArgs": "build --p \"..\\..\\..\\..\\Test-Filter\\Test.filterx\"",
+      "commandLineArgs": "build --p \"../Test-Filter/Test.filterx\"",
       "hotReloadEnabled": false
-    },
-    "WSL": {
-      "commandName": "WSL2",
-      "distributionName": ""
     }
   }
 }

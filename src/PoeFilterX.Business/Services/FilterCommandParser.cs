@@ -52,7 +52,7 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.ItemLevel), (args) => AddOperatorInt(b => b.ItemLevel, args) },
                 { nameof(FilterBlock.LinkedSockets), (args) => AddOperatorInt(b => b.LinkedSockets, args, 0, 6) },
                 { nameof(FilterBlock.MapTier), (args) => AddOperatorInt(b => b.MapTier, args) },
-                { nameof(FilterBlock.WaystoneTier), (args) => AddOperatorInt(b => b.WaystoneTier, args) },
+                { nameof(FilterBlock.MemoryStrands), (args) => AddOperatorInt(b => b.MemoryStrands, args, 0, 100) },
                 { nameof(FilterBlock.Mirrored), (args) => SetBool(b => b.Mirrored, args) },
                 { nameof(FilterBlock.Quality), (args) => AddOperatorInt(b => b.Quality, args) },
                 { nameof(FilterBlock.Rarity), (args) => AddOperatorEnum(b => b.Rarity, args) },
@@ -66,7 +66,9 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.SynthesisedItem), (args) => SetBool(b => b.SynthesisedItem, args) },
                 { nameof(FilterBlock.TransfiguredGem), (args) => SetBool(b => b.TransfiguredGem, args) },
                 { nameof(FilterBlock.UberBlightedMap), (args) => SetBool(b => b.UberBlightedMap, args) },
+                { nameof(FilterBlock.WaystoneTier), (args) => AddOperatorInt(b => b.WaystoneTier, args) },
                 { nameof(FilterBlock.Width), (args) => AddOperatorInt(b => b.Width, args) },
+                { nameof(FilterBlock.ZanaMemory), (args) => SetBool(b => b.ZanaMemory, args) },
 
                 { nameof(FilterBlock.Style), (args) => AddStrings(b => b.Style, args)},
             };

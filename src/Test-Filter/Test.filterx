@@ -15,3 +15,9 @@ using Test.fss;
 		Style magic;
 	}
 ]
+
+{
+    ZanaMemory True;
+    MemoryStrands >= 20;
+    Style common;
+}

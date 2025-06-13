@@ -107,7 +107,7 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> MapTier { get; set; } = new List<OperatorArg<int>>();
 
-        public IList<OperatorArg<int>> WaystoneTier { get; set; } = new List<OperatorArg<int>>();
+        public IList<OperatorArg<int>> MemoryStrands { get; set; } = new List<OperatorArg<int>>();
 
         public bool? Mirrored { get; set; }
 
@@ -135,7 +135,11 @@ namespace PoeFilterX.Business.Models
 
         public bool? UberBlightedMap { get; set; }
 
+        public IList<OperatorArg<int>> WaystoneTier { get; set; } = new List<OperatorArg<int>>();
+
         public IList<OperatorArg<int>> Width { get; set; } = new List<OperatorArg<int>>();
+
+        public bool? ZanaMemory { get; set; }
 
         #endregion
 
@@ -258,7 +262,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, ItemLevel);
             Compile(builder, LinkedSockets);
             Compile(builder, MapTier);
-            Compile(builder, WaystoneTier);
+            Compile(builder, MemoryStrands);
             Compile(builder, Mirrored);
             Compile(builder, Quality);
             Compile(builder, Rarity);
@@ -272,7 +276,9 @@ namespace PoeFilterX.Business.Models
             Compile(builder, SynthesisedItem);
             Compile(builder, TransfiguredGem);
             Compile(builder, UberBlightedMap);
+            Compile(builder, WaystoneTier);
             Compile(builder, Width);
+            Compile(builder, ZanaMemory);
 
             if (Parent != null && string.IsNullOrEmpty(builder.ToString().Trim()))
             {
