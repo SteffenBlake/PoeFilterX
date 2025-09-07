@@ -5,6 +5,7 @@ using Test.fss;
 [
 	Identified True;
     Class %Gear%;
+    UnidentifiedItemTier <= 6;
 	Style test-style;
 	{
 		Rarity Normal;

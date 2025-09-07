@@ -66,6 +66,7 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.SynthesisedItem), (args) => SetBool(b => b.SynthesisedItem, args) },
                 { nameof(FilterBlock.TransfiguredGem), (args) => SetBool(b => b.TransfiguredGem, args) },
                 { nameof(FilterBlock.UberBlightedMap), (args) => SetBool(b => b.UberBlightedMap, args) },
+                { nameof(FilterBlock.UnidentifiedItemTier), (args) => AddOperatorInt(b => b.UnidentifiedItemTier, args) },
                 { nameof(FilterBlock.WaystoneTier), (args) => AddOperatorInt(b => b.WaystoneTier, args) },
                 { nameof(FilterBlock.Width), (args) => AddOperatorInt(b => b.Width, args) },
                 { nameof(FilterBlock.ZanaMemory), (args) => SetBool(b => b.ZanaMemory, args) },

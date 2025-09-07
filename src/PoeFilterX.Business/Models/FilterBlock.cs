@@ -135,6 +135,8 @@ namespace PoeFilterX.Business.Models
 
         public bool? UberBlightedMap { get; set; }
 
+        public IList<OperatorArg<int>> UnidentifiedItemTier { get; set; } = new List<OperatorArg<int>>();
+
         public IList<OperatorArg<int>> WaystoneTier { get; set; } = new List<OperatorArg<int>>();
 
         public IList<OperatorArg<int>> Width { get; set; } = new List<OperatorArg<int>>();
@@ -276,6 +278,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, SynthesisedItem);
             Compile(builder, TransfiguredGem);
             Compile(builder, UberBlightedMap);
+            Compile(builder, UnidentifiedItemTier);
             Compile(builder, WaystoneTier);
             Compile(builder, Width);
             Compile(builder, ZanaMemory);

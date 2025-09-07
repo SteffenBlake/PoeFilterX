@@ -7,11 +7,13 @@ Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
 	Identified True
 	Rarity = Magic
+	UnidentifiedItemTier <= 6
 	SetBackgroundColor 200 150 200 200
 
 Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
 	Identified True
 	Rarity = Normal
+	UnidentifiedItemTier <= 6
 	SetBackgroundColor 150 200 200 200
 
