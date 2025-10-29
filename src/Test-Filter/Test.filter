@@ -5,6 +5,7 @@ Show
 
 Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
+	Foulborn True
 	Identified True
 	Rarity = Magic
 	UnidentifiedItemTier <= 6
@@ -12,6 +13,7 @@ Show
 
 Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
+	Foulborn True
 	Identified True
 	Rarity = Normal
 	UnidentifiedItemTier <= 6
