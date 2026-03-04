@@ -50,6 +50,7 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.HasSearingExarchImplicit), (args) => AddOperatorInt(b => b.HasSearingExarchImplicit, args) },
                 { nameof(FilterBlock.Height), (args) => AddOperatorInt(b => b.Height, args) },
                 { nameof(FilterBlock.Identified), (args) => SetBool(b => b.Identified, args) },
+                { nameof(FilterBlock.Imbued), (args) => SetBool(b => b.Imbued, args) },
                 { nameof(FilterBlock.ItemLevel), (args) => AddOperatorInt(b => b.ItemLevel, args) },
                 { nameof(FilterBlock.LinkedSockets), (args) => AddOperatorInt(b => b.LinkedSockets, args, 0, 6) },
                 { nameof(FilterBlock.MapTier), (args) => AddOperatorInt(b => b.MapTier, args) },

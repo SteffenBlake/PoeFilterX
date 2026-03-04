@@ -102,6 +102,8 @@ namespace PoeFilterX.Business.Models
         public IList<OperatorArg<int>> Height { get; set; } = new List<OperatorArg<int>>();
 
         public bool? Identified { get; set; }
+        
+        public bool? Imbued { get; set; }
 
         public IList<OperatorArg<int>> ItemLevel { get; set; } = new List<OperatorArg<int>>();
 
@@ -264,6 +266,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, HasSearingExarchImplicit);
             Compile(builder, Height);
             Compile(builder, Identified);
+            Compile(builder, Imbued);
             Compile(builder, ItemLevel);
             Compile(builder, LinkedSockets);
             Compile(builder, MapTier);
