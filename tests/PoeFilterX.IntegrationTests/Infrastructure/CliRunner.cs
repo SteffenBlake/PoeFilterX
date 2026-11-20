@@ -63,8 +63,8 @@ internal static class CliRunner
         }
 
         var result = new CliResult(process.ExitCode, await stdout, await stderr);
-        TestContext.WriteLine($"Arguments: {string.Join(" | ", arguments)}");
-        TestContext.WriteLine(
+        TestContext.Out.WriteLine($"Arguments: {string.Join(" | ", arguments)}");
+        TestContext.Out.WriteLine(
             $"Exit: {result.ExitCode}\nstdout:\n{result.StandardOutput}\nstderr:\n{result.StandardError}"
         );
         return result;

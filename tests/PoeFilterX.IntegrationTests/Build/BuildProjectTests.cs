@@ -31,10 +31,13 @@ public class BuildProjectTests
         using var workspace = TestWorkspace.FromCase(casePath);
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--path", "main.filterx" }
+            ["build", "--path", "main.filterx"]
         );
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Zero);
+            Assert.That(result.StandardError, Is.Empty);
+        }
         workspace.AssertExpected(Path.Combine(casePath, "Expected"));
         workspace.AssertInputsUnchanged(Path.Combine(casePath, "Input"));
     }
@@ -45,16 +48,19 @@ public class BuildProjectTests
         using var workspace = TestWorkspace.FromCase(casePath);
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--path", "main.filterx" }
+            ["build", "--path", "main.filterx"]
         );
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
-        var diagnosticPath = Path.Combine(casePath, "error.txt");
-        var fragments = File.ReadAllLines(diagnosticPath).Where(line => line.Length > 0).ToArray();
-        Assert.That(fragments, Is.Not.Empty, "Failure cases must specify a relevant diagnostic.");
-        foreach (var fragment in fragments)
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.StandardError, Does.Contain(fragment));
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+        }
+        var diagnosticPath = Path.Combine(casePath, "error.txt");
+        var code = File.ReadAllText(diagnosticPath).Trim();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(code, Does.Match(@"^PFX\d{4}$"), "Failure cases specify a stable diagnostic code.");
+            Assert.That(result.StandardError, Does.Contain($"error {code}:"));
         }
 
         workspace.AssertInputsUnchanged(Path.Combine(casePath, "Input"));

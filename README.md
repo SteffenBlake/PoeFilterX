@@ -67,4 +67,3 @@ This is a list of features I am investigating, but currently have not conclude e
 * [ ] - Setup live monitoring of PathOfExile log file, letting users trigger commands via in game calls
 * [ ] - Advanced Style Variables, letting you manipulate styles based on Filter Selectors via math. (IE: `font-size: (%MapTier% * 6);`)
 * [ ] - Variable injection into Style Sheets as well. Currently doesn't seem necessary but perhaps might be worth adding to simplify workflows.
-

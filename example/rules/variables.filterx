@@ -1,0 +1,38 @@
+# Imported JSON variables are dictionaries of string arrays. Repeated keys
+# across imported files append values. %Name% expands into argument values.
+{
+    HasValue %CurrencyBases%;
+    Class Currency;
+    BaseType == %CurrencyBases%;
+    Style visible currency high-value;
+}
+
+# Command-line variables override imported JSON values. For example:
+# dotnet run --project src/PoeFilterX -- example/main.filterx --EnableEquipment false
+# Environment variables use the POEFILTERX_ prefix, e.g. POEFILTERX_EnableEquipment.
+{
+    IsTrue %EnableEquipment%;
+    HasValue %EquipmentClasses%;
+    Class %EquipmentClasses%;
+    ItemLevel >= %MinimumItemLevel%;
+    Style visible gear accent;
+}
+
+# Empty or undefined variables expand to no values. HasValue prevents this
+# block, including its children, from being emitted when OptionalBases is empty.
+{
+    HasValue %OptionalBases%;
+    BaseType %OptionalBases%;
+    Style visible high-value;
+    {
+        Corrupted false;
+    }
+}
+
+# Quoting also allows a placeholder to be embedded inside a larger argument.
+# This yields the literal atom showcase-80 rather than a new condition keyword.
+{
+    HasValue "showcase-%MinimumItemLevel%";
+    BaseType "Portal Scroll";
+    Style visible quiet;
+}

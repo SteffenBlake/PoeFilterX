@@ -3,5 +3,5 @@ namespace PoeFilterX.Engine.Requests;
 public sealed record BuildRequest(
     string? Path,
     string? Output,
-    bool Verbose
+    IReadOnlyDictionary<string, string>? Variables = null
 );

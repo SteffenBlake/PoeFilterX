@@ -1,0 +1,44 @@
+# These are syntax examples spanning supported condition families.
+# Game-specific conditions belong in filters for the corresponding game/version.
+{
+    Class Maps;
+    MapTier >= 14;
+    AreaLevel >= 81;
+    BlightedMap false;
+    UberBlightedMap false;
+    ElderMap false;
+    ShapedMap false;
+    ZanaMemory false;
+    MemoryStrands >= 1;
+    Style visible map;
+}
+
+{
+    Class Waystones;
+    WaystoneTier >= 10;
+    UnidentifiedItemTier >= 1;
+    Identified false;
+    Style visible map high-value;
+}
+
+{
+    Class "Skill Gems";
+    AlternateQuality false;
+    TransfiguredGem true;
+    GemLevel >= 20;
+    Quality >= 20;
+    Style visible gem high-value;
+}
+
+{
+    Class "Unique Items";
+    Rarity Unique;
+    Replica false;
+    Fated false;
+    Foulborn false;
+    Imbued false;
+    Scourged false;
+    Corrupted true;
+    CorruptedMods >= 1;
+    Style visible custom-sound;
+}

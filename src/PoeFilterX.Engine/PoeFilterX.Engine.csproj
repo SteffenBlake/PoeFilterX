@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\PoeFilterX.Generator\PoeFilterX.Generator.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\PoeFilterX.Generator\PoeFilterX.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\PoeFilterX.Common\PoeFilterX.Common.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -18,4 +17,14 @@
     <Compile Remove=".generated/**/*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AntlrGrammar Include="Parsing/Grammars/*.g4" />
+    <None Include="../../build/ANTLR-LICENSE.txt" Link="THIRD-PARTY-LICENSES/ANTLR.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Import Project="../../build/Antlr.targets" />
 </Project>

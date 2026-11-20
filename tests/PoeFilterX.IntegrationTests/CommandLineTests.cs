@@ -5,33 +5,6 @@ namespace PoeFilterX.IntegrationTests;
 [Parallelizable(ParallelScope.All)]
 public class CommandLineTests
 {
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task Build_accepts_explicit_and_default_invocation(bool explicitCommand)
-    {
-        using var workspace = new TestWorkspace();
-        string[] options = ["--path", "input file.filterx", "--output", "output file.filter", "--verbose"];
-        string[] arguments = explicitCommand ? ["build", .. options] : options;
-        var result = await CliRunner.RunAsync(workspace.Root, arguments);
-
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
-        Assert.That(Directory.GetFileSystemEntries(workspace.Root), Is.Empty);
-    }
-
-    [TestCase(false)]
-    [TestCase(true)]
-    public async Task Build_with_no_options_invokes_empty_handler(bool explicitCommand)
-    {
-        using var workspace = new TestWorkspace();
-        string[] arguments = explicitCommand ? ["build"] : [];
-        var result = await CliRunner.RunAsync(workspace.Root, arguments);
-
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardOutput, Is.Empty);
-        Assert.That(result.StandardError, Is.Empty);
-    }
-
     [TestCase("--help")]
     [TestCase("-h")]
     [TestCase("-?")]
@@ -40,9 +13,12 @@ public class CommandLineTests
         using var workspace = new TestWorkspace();
         var result = await CliRunner.RunAsync(workspace.Root, [argument]);
 
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
-        Assert.That(result.StandardOutput, Does.Contain("build").And.Contain("--help").And.Contain("--version"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Zero);
+            Assert.That(result.StandardError, Is.Empty);
+            Assert.That(result.StandardOutput, Does.Contain("build").And.Contain("--help").And.Contain("--version"));
+        }
     }
 
     [Test]
@@ -51,9 +27,12 @@ public class CommandLineTests
         using var workspace = new TestWorkspace();
         var result = await CliRunner.RunAsync(workspace.Root, ["build", "--help"]);
 
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
-        Assert.That(result.StandardOutput, Does.Contain("--path").And.Contain("--output").And.Contain("--verbose"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Zero);
+            Assert.That(result.StandardError, Is.Empty);
+            Assert.That(result.StandardOutput, Does.Contain("--path").And.Contain("--output").And.Contain("--verbosity"));
+        }
     }
 
     [TestCase("--version")]
@@ -62,9 +41,12 @@ public class CommandLineTests
         using var workspace = new TestWorkspace();
         var result = await CliRunner.RunAsync(workspace.Root, [argument]);
 
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
-        Assert.That(result.StandardOutput.Trim(), Does.Match(@"^\d+\.\d+\.\d+"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Zero);
+            Assert.That(result.StandardError, Is.Empty);
+            Assert.That(result.StandardOutput.Trim(), Does.Match(@"^\d+\.\d+\.\d+"));
+        }
     }
 
     [TestCase("help")]
@@ -78,7 +60,10 @@ public class CommandLineTests
         using var workspace = new TestWorkspace();
         var result = await CliRunner.RunAsync(workspace.Root, [argument]);
 
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+        }
     }
 }

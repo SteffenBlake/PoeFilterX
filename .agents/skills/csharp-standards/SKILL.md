@@ -102,3 +102,19 @@ var result = aFunc(
 16. Use collection expressions for lists/arrays/etc.
 
 int[] myVals = [1, 2, 3];
+
+17. ANYTIME you run into descrepencies between task and instruction do not gloss over, skip, or bypass. If ANYTHING is confusing, mismatched, or disconnected in convo/instruction/codebase, STOP and CLARIFY with user
+
+18. always finish work by running `dotnet format` with severity info and verbosity diagnostic. Automatic fixes good, but also MUST fix all other diagnostic issues it presents. Do not treat code "nitpicks" as ignorable, MUST fix. Exception: unfinished code
+
+19. After completing work, ensure you run reachability audit helper detect "orphan" left behind "litter" code from dev process. Use output to audit for code that needs cleaning up
+
+```sh
+dotnet .agents/skills/csharp-standards/scripts/ReachabilityAudit.cs -- src/PoeFilterX/PoeFilterX.csproj
+```
+
+20. Avoid "magic string"s where enum's are valid to use instead. String comparison's are much slower than enum comparisons
+
+21. Source generators use equality comparison for caching between stages, ensure you use Record types, tuples, and ImmutableArray with comparers to allow Roslyn to cache between builds nicely
+
+22. Parsing errors shouldn't throw exceptions, instead use Result pattern, bubbling up any encountered parsing issue and properly emitting that to STDERR but as a stack trace of the filter file, not a C# stack trace. C# exceptions should be reserved for being thrown if we have bugs in the C# code, not bugs in the filter code

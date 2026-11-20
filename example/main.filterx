@@ -1,0 +1,107 @@
+# One complete syntax showcase. Start reading here, then follow the imports.
+# This demonstrates the language; it is not a league-ready loot filter.
+# From this directory, run poefilterx with no arguments to build main.filterx.
+# Or run from the repository root with a positional input path:
+# dotnet run --project src/PoeFilterX -- example/main.filterx
+# Add --verbosity Debug for file activity, Trace for imports, or None for silence.
+# The result is example/main.filter. Later blocks appear first in the output.
+
+# Imports are root statements. Paths are relative to the importing file.
+# The using keyword is case-insensitive; quoted paths can contain spaces.
+using data/items.json;
+using "data/more items.json";
+UsInG "styles/main.fss";
+
+# Commands at file scope belong to the implicit root block.
+# This fallback hides anything not matched by a more specific child block.
+Style hidden;
+
+# Semicolons end commands, so argument lists can span lines.
+# Whitespace separates arguments; lists do not use commas or brackets.
+{
+    Class Currency;
+    BaseType ==
+        "Chaos Orb"
+        "Divine Orb"
+        "Orb of Alchemy";
+    StackSize >= 1;
+    Style visible currency high-value; # Inline FilterX comments start with #.
+
+    # Ordinary child blocks inherit the parent conditions and append styles.
+    {
+        StackSize > 5;
+        Style loud;
+    }
+}
+
+# Abstract blocks use square brackets. They provide inherited defaults but
+# produce no output themselves. Their ordinary children still produce output.
+[
+    Style visible gear;
+    Identified false;
+    ItemLevel >= 60;
+
+    {
+        Class "Body Armours" Helmets;
+        Rarity Rare; # Omitting the operator means =.
+        ItemLevel < 86; # Extends the inherited >= 60 condition.
+        Style high-value;
+
+        {
+            Identified true; # Boolean properties override inherited values.
+            Quality >= 20;
+            Style accent;
+        }
+    }
+
+    # Abstract blocks can also nest inside abstract blocks.
+    [
+        Corrupted false;
+        {
+            Class Boots Gloves;
+            Rarity ! Normal;
+            Style quiet;
+        }
+    ]
+]
+
+# Each remaining comparison spelling is demonstrated explicitly.
+{
+    Class "Skill Gems";
+    GemLevel = 20;
+    Quality <= 23;
+    Rarity == Normal;
+    Height > 0;
+    Width < 3;
+    Style visible gem;
+}
+
+# Bare atoms and quoted strings are both arguments. Unicode is preserved.
+# Repeating a list condition appends its values; quoting keeps spaces together.
+{
+    Class "Divination Card";
+    BaseType "The Doctor";
+    BaseType "The Nurse" "L'Érudit";
+    Style visible high-value;
+}
+
+# Empty argument lists are legal for list conditions and contribute no values.
+# Empty normal and abstract blocks are also valid syntax.
+{ BaseType; Style; }
+{}
+[]
+
+# Escape sequences are \" (quote), \\ (backslash), \n (newline), and \t (tab).
+# A quoted #, semicolon, or brace is text, not a comment or delimiter.
+# HasValue is checked at compile time, so these literals are not written into
+# the generated game's filter. Even using and operators can be arguments.
+{
+    HasValue "quote: \"; slash: \\; newline: \n; tab: \t; # {} []" using = == ! < > <= >=;
+    BaseType "Scroll of Wisdom";
+    Style visible quiet;
+}
+
+# Other FilterX files are inserted at the import site and inherit this context.
+using rules/equipment.filterx;
+using rules/maps-and-gems.filterx;
+using rules/variables.filterx;

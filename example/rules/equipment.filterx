@@ -1,0 +1,49 @@
+# Conditions accept integers, booleans, enums, strings, and lists.
+# Each child is independent of its siblings; only parent values are inherited.
+[
+    Style visible gear;
+    Corrupted false;
+
+    {
+        Class "Body Armours";
+        Rarity >= Rare;
+        BaseArmour >= 100;
+        BaseEvasion >= 100;
+        BaseEnergyShield >= 50;
+        BaseDefencePercentile >= 80;
+        Height 3;
+        Width 2;
+        LinkedSockets 6;
+        Sockets >= 6;
+        SocketGroup RGB;
+        Style high-value;
+    }
+
+    {
+        Class Boots;
+        ItemLevel >= 84;
+        DropLevel >= 60;
+        BaseWard > 0;
+        HasInfluence Shaper Elder; # An enum list; quoted enum names work too.
+        ShaperItem true;
+        ElderItem false;
+        FracturedItem false;
+        SynthesisedItem false;
+        Mirrored false;
+        Style accent;
+    }
+
+    {
+        Class Helmets;
+        HasImplicitMod true;
+        HasEaterOfWorldsImplicit >= 1;
+        HasSearingExarchImplicit >= 1;
+        HasExplicitMod "increased maximum Life" "increased Movement Speed";
+        AnyEnchantment true;
+        HasEnchantment "increased Damage";
+        EnchantmentPassiveNode "Added Small Passive Skills grant: 12% increased Damage";
+        EnchantmentPassiveNum 8;
+        HasCruciblePassiveTree false;
+        Style high-value;
+    }
+]

@@ -6,10 +6,33 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
-        var root = new RootCommand("Compile .filterx projects into Path of Exile .filter files.");
-        BuildCmd.Configure(root);
-        root.Subcommands.Add(BuildCmd.Create());
+        var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var arguments = new List<string>(args.Length);
+        for (var index = 0; index < args.Length; index++)
+        {
+            var argument = args[index];
+            if (argument == "--")
+            {
+                arguments.AddRange(args.Skip(index));
+                break;
+            }
 
-        return root.Parse(args).Invoke();
+            var name = argument.Split('=', 2)[0];
+            if (argument.StartsWith("--", StringComparison.Ordinal)
+                && name is not ("--path" or "--p" or "--output" or "--o" or "--verbosity" or "--verbose" or "--v" or "--help" or "--version")
+                && index + 1 < args.Length && !args[index + 1].StartsWith("--", StringComparison.Ordinal))
+            {
+                variables[argument[2..]] = args[++index];
+                continue;
+            }
+
+            arguments.Add(argument);
+        }
+
+        var root = new RootCommand("Compile .filterx projects into Path of Exile .filter files.");
+        BuildCmd.Configure(root, variables);
+        root.Subcommands.Add(BuildCmd.Create(variables));
+
+        return root.Parse([.. arguments]).Invoke();
     }
 }

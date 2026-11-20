@@ -1,0 +1,7 @@
+{
+    "CurrencyBases": ["Chaos Orb", "Divine Orb"],
+    "EquipmentClasses": ["Body Armours", "Helmets"],
+    "MinimumItemLevel": ["80"],
+    "EnableEquipment": ["true"],
+    "OptionalBases": []
+}

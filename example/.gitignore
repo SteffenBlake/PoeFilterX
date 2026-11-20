@@ -1,0 +1,5 @@
+/main.filter
+/node_modules/*
+!/node_modules/example-palette/
+/node_modules/example-palette/*
+!/node_modules/example-palette/palette.fss

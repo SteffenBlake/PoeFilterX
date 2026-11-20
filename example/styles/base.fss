@@ -1,0 +1,7 @@
+/* This is imported relative to styles/main.fss, not the working directory. */
+hidden {
+    show: false;
+    font-size: 24;
+    font-color: 150 150 150;
+    bg-color: 0xC8000000;
+}

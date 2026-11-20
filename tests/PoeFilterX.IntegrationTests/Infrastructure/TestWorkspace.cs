@@ -47,12 +47,15 @@ internal sealed class TestWorkspace : IDisposable
         foreach (var expected in expectedFiles)
         {
             var relative = Path.GetRelativePath(expectedDirectory, expected);
-            Assert.That(File.Exists(PathFor(relative)), Is.True, $"Missing output: {relative}");
-            Assert.That(
-                Normalize(Read(relative)),
-                Is.EqualTo(Normalize(File.ReadAllText(expected))),
-                relative
-            );
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(File.Exists(PathFor(relative)), Is.True, $"Missing output: {relative}");
+                Assert.That(
+                    Normalize(Read(relative)),
+                    Is.EqualTo(Normalize(File.ReadAllText(expected))),
+                    relative
+                );
+            }
         }
 
         var expectedFilters = expectedFiles

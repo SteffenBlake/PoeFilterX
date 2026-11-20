@@ -26,7 +26,7 @@ public class BuildInvocationTests
         workspace.Write("another.filterx", "{ InvalidCommand 1; }");
         foreach (var path in new[] { "main.filterx", workspace.PathFor("main.filterx") })
         {
-            var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", option, path });
+            var result = await CliRunner.RunAsync(workspace.Root, ["build", option, path]);
             AssertSuccess(result);
             Assert.That(
                 TestWorkspace.Normalize(workspace.Read("main.filter")),
@@ -43,35 +43,41 @@ public class BuildInvocationTests
         Directory.CreateDirectory(workspace.PathFor("output ü"));
         foreach (var path in new[] { "output ü/result.filter", workspace.PathFor("output ü/result.filter") })
         {
-            var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", option, path });
+            var result = await CliRunner.RunAsync(workspace.Root, ["build", option, path]);
             AssertSuccess(result);
-            Assert.That(
-                TestWorkspace.Normalize(workspace.Read("output ü/result.filter")),
-                Is.EqualTo(Expected)
-            );
-            Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(
+                            TestWorkspace.Normalize(workspace.Read("output ü/result.filter")),
+                            Is.EqualTo(Expected)
+                        );
+                Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+            }
         }
     }
 
     [Test]
-    public async Task Equals_arguments_and_verbose_option_are_accepted()
+    public async Task Equals_arguments_and_verbosity_option_are_accepted()
     {
         using var workspace = SimpleProject();
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--path=main.filterx", "--output=result.filter", "--verbose=true" }
+            ["build", "--path=main.filterx", "--output=result.filter", "--verbosity=Debug"]
         );
         AssertSuccess(result);
-        Assert.That(TestWorkspace.Normalize(workspace.Read("result.filter")), Is.EqualTo(Expected));
-        Assert.That(result.StandardOutput, Does.Contain("Publishing to"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TestWorkspace.Normalize(workspace.Read("result.filter")), Is.EqualTo(Expected));
+            Assert.That(result.StandardOutput, Does.Contain("Publishing to"));
+        }
     }
 
     [TestCase("--v")]
-    [TestCase("--verbose")]
-    public async Task Verbose_alias_preserves_output(string option)
+    [TestCase("--verbosity")]
+    public async Task Verbosity_alias_preserves_output(string option)
     {
         using var workspace = SimpleProject();
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", option, "true" });
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", option, "Debug"]);
         AssertSuccess(result);
         Assert.That(TestWorkspace.Normalize(workspace.Read("main.filter")), Is.EqualTo(Expected));
     }
@@ -84,11 +90,14 @@ public class BuildInvocationTests
         Directory.CreateDirectory(working);
         var result = await CliRunner.RunAsync(
             working,
-            new[] { "build", "--path", workspace.PathFor("main.filterx") }
+            ["build", "--path", workspace.PathFor("main.filterx")]
         );
         AssertSuccess(result);
-        Assert.That(TestWorkspace.Normalize(workspace.Read("main.filter")), Is.EqualTo(Expected));
-        Assert.That(Directory.GetFiles(working), Is.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TestWorkspace.Normalize(workspace.Read("main.filter")), Is.EqualTo(Expected));
+            Assert.That(Directory.GetFiles(working), Is.Empty);
+        }
     }
 
     [Test]
@@ -99,7 +108,7 @@ public class BuildInvocationTests
         workspace.Write("nested ü/main.fss", workspace.Read("main.fss"));
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--path", "nested ü/../nested ü/./main.filterx" }
+            ["build", "--path", "nested ü/../nested ü/./main.filterx"]
         );
         AssertSuccess(result);
         Assert.That(
@@ -125,13 +134,16 @@ public class BuildInvocationTests
             workspace.Write("nested/main.filterx", "");
         }
 
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build" });
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Does.Contain("Unable to automatically detect"));
-        Assert.That(
-            Directory.GetFiles(workspace.Root, "*.filter", SearchOption.AllDirectories),
-            Is.Empty
-        );
+        var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Does.Contain("Unable to automatically detect"));
+            Assert.That(
+                Directory.GetFiles(workspace.Root, "*.filter", SearchOption.AllDirectories),
+                Is.Empty
+            );
+        }
     }
 
     [TestCase("missing.filterx")]
@@ -142,10 +154,13 @@ public class BuildInvocationTests
         using var workspace = new TestWorkspace();
         workspace.Write("main.fss", "");
         Directory.CreateDirectory(workspace.PathFor("folder.filterx"));
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", "--path", path });
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
-        Assert.That(Directory.GetFiles(workspace.Root, "*.filter"), Is.Empty);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", "--path", path]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+            Assert.That(Directory.GetFiles(workspace.Root, "*.filter"), Is.Empty);
+        }
     }
 
     [TestCase("--path")]
@@ -153,10 +168,13 @@ public class BuildInvocationTests
     public async Task Missing_option_value_is_rejected(string option)
     {
         using var workspace = SimpleProject();
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", option });
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
-        Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", option]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+            Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+        }
     }
 
     [TestCase("--path")]
@@ -164,9 +182,12 @@ public class BuildInvocationTests
     public async Task Empty_path_value_is_rejected(string option)
     {
         using var workspace = SimpleProject();
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build", option, "" });
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", option, ""]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+        }
     }
 
     [TestCase("output-folder")]
@@ -177,11 +198,14 @@ public class BuildInvocationTests
         Directory.CreateDirectory(workspace.PathFor("output-folder"));
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--output", output }
+            ["build", "--output", output]
         );
-        Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.StandardError, Is.Not.Empty);
-        Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Not.Zero);
+            Assert.That(result.StandardError, Is.Not.Empty);
+            Assert.That(File.Exists(workspace.PathFor("main.filter")), Is.False);
+        }
     }
 
     [Test]
@@ -191,7 +215,7 @@ public class BuildInvocationTests
         workspace.Write("main.filter", new string('x', 2000));
         for (var iteration = 0; iteration < 2; iteration++)
         {
-            AssertSuccess(await CliRunner.RunAsync(workspace.Root, new[] { "build" }));
+            AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build"]));
             Assert.That(
                 TestWorkspace.Normalize(workspace.Read("main.filter")),
                 Is.EqualTo(Expected)
@@ -199,7 +223,7 @@ public class BuildInvocationTests
         }
 
         workspace.Write("main.filterx", "using main.fss; { Style test; Identified False; }");
-        AssertSuccess(await CliRunner.RunAsync(workspace.Root, new[] { "build" }));
+        AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build"]));
         Assert.That(
             TestWorkspace.Normalize(workspace.Read("main.filter")),
             Is.EqualTo(Expected.Replace("True", "False"))
@@ -212,10 +236,13 @@ public class BuildInvocationTests
         using var workspace = SimpleProject();
         workspace.Write("main.filter", "existing output\n");
         workspace.Write("main.filterx", "using main.fss;\n{\nUnknownCommand 1;\n}");
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build" });
-        Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.StandardError, Does.Contain("main.filterx").And.Contain("line #3"));
-        Assert.That(workspace.Read("main.filter"), Is.EqualTo("existing output\n"));
+        var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.StandardError, Does.Contain("main.filterx(3,1): error PFX3001:"));
+            Assert.That(workspace.Read("main.filter"), Is.EqualTo("existing output\n"));
+        }
     }
 
     [Test]
@@ -224,10 +251,13 @@ public class BuildInvocationTests
         using var workspace = SimpleProject();
         workspace.Write("main.filter", "existing output\n");
         workspace.Write("main.filterx", "using main.fss; { Style missing; Identified True; }");
-        var result = await CliRunner.RunAsync(workspace.Root, new[] { "build" });
-        Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.StandardError, Does.Contain("undeclared style 'missing'"));
-        Assert.That(workspace.Read("main.filter"), Is.Empty);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.StandardError, Does.Contain("undeclared style 'missing'"));
+            Assert.That(workspace.Read("main.filter"), Is.Empty);
+        }
     }
 
     [TestCase(false, false, "Iron Ring")]
@@ -259,7 +289,7 @@ public class BuildInvocationTests
             env["POEFILTERX_" + VariableKey] = "\"Environment Ring\"";
         }
 
-        AssertSuccess(await CliRunner.RunAsync(workspace.Root, args.ToArray(), environment: env));
+        AssertSuccess(await CliRunner.RunAsync(workspace.Root, [.. args], environment: env));
         var expected = $"Show\n\tBaseType = \"{expectedValue}\"\n\tSetFontSize 40\n\n";
         Assert.That(TestWorkspace.Normalize(workspace.Read("main.filter")), Is.EqualTo(expected));
     }
@@ -278,7 +308,7 @@ public class BuildInvocationTests
         };
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            new[] { "build", "--PFX_IT_8C71_Final", "\"Iron Ring\" \"Gold Ring\"" },
+            ["build", "--PFX_IT_8C71_Final", "\"Iron Ring\" \"Gold Ring\""],
             environment: env
         );
         AssertSuccess(result);
@@ -290,7 +320,10 @@ public class BuildInvocationTests
 
     private static void AssertSuccess(CliResult result)
     {
-        Assert.That(result.ExitCode, Is.Zero);
-        Assert.That(result.StandardError, Is.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.ExitCode, Is.Zero);
+            Assert.That(result.StandardError, Is.Empty);
+        }
     }
 }
