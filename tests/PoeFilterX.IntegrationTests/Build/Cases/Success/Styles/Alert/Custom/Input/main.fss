@@ -1,0 +1,1 @@
+test { alert-path: "sounds/my alert.mp3"; }

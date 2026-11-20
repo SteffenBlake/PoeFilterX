@@ -1,0 +1,4 @@
+using main.fss; # inline
+{ # } ; ignored
+Style test; Identified True; # comment
+} # eof

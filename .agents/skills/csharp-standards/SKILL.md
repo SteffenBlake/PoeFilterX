@@ -98,3 +98,7 @@ var result = aFunc(
 14. Do not assume backwards compatibility is needed. Ask user about it first.
 
 15. Anytime create a project, add reference, modify secrets, add package, ALWAYS USE DOTNET CLI. Editting solution or csproj directly only allowed for removals or adding "special" code that cannot be done via cli
+
+16. Use collection expressions for lists/arrays/etc.
+
+int[] myVals = [1, 2, 3];

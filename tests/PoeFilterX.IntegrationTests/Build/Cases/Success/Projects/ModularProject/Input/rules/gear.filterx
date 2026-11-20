@@ -1,0 +1,1 @@
+[Style gear; HasValue %PFX_IT_8C71_Rings%; BaseType %PFX_IT_8C71_Rings%; Class "Rings"; {ItemLevel >= 80; Style valuable;} {IsTrue False; Identified True;} ]

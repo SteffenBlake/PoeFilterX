@@ -1,0 +1,4 @@
+Show
+	BaseType = "One Two" "Three"
+	SetFontSize 40
+

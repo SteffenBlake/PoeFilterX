@@ -1,0 +1,2 @@
+using main.fss;
+[ Style test; Identified False; Class "Body Armours"; Quality < 19; { Identified True; Class "Boots"; Quality > 10; { Rarity Rare; } } ]

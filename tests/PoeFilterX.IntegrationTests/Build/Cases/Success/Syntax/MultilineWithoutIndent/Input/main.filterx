@@ -1,0 +1,7 @@
+using main.fss;
+{
+Style test;
+BaseType
+"Iron Ring"
+"Gold Ring";
+}

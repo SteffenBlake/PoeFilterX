@@ -1,0 +1,5 @@
+using main.fss;
+Style hidden;
+{ Rarity Rare; Identified True; Class "Body Armours" "Helmets" "Gloves" "Boots"; Style gear high-value;
+ { ItemLevel < 60; Style med-value; }
+}

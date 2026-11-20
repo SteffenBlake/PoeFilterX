@@ -1,0 +1,15 @@
+Show
+	Class = "Stackable Currency"
+	SetBackgroundColor 1 2 3 240
+	SetFontSize 45
+
+Show
+	BaseType = "Iron Ring" "Gold Ring"
+	Class = "Rings"
+	ItemLevel >= 80
+	SetBackgroundColor 1 2 3 240
+	SetFontSize 45
+
+Hide
+	SetBackgroundColor 0 0 0 240
+

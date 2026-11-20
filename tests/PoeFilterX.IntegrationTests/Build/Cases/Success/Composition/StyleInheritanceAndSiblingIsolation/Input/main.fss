@@ -1,0 +1,2 @@
+parent { border-color: 11 22 33 44; alert: 2 90; icon: 1 Red Circle; pillar: Blue Temporary; }
+child { border-color-red: 99; alert-volume: 150; alert-style: positional; icon-shape: Star; pillar-duration: Permanent; }
