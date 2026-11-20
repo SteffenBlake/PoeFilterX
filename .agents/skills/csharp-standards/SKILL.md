@@ -96,3 +96,5 @@ var result = aFunc(
 13. Always use `using` statements for specifying namespaces, do not use global:: and do not use namespaces inside the code, use a `using` statement
 
 14. Do not assume backwards compatibility is needed. Ask user about it first.
+
+15. Anytime create a project, add reference, modify secrets, add package, ALWAYS USE DOTNET CLI. Editting solution or csproj directly only allowed for removals or adding "special" code that cannot be done via cli
