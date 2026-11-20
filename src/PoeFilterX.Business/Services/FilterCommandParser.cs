@@ -39,6 +39,7 @@ namespace PoeFilterX.Business.Services
                 { nameof(FilterBlock.EnchantmentPassiveNode), (args) => AddOperatorStrings(b => b.EnchantmentPassiveNode, args) },
                 { nameof(FilterBlock.EnchantmentPassiveNum), (args) => AddOperatorInt(b => b.EnchantmentPassiveNum, args) },
                 { nameof(FilterBlock.Foulborn), (args) => SetBool(b => b.Foulborn, args) },
+                { nameof(FilterBlock.Fated), (args) => SetBool(b => b.Fated, args) },
                 { nameof(FilterBlock.FracturedItem), (args) => SetBool(b => b.FracturedItem, args) },
                 { nameof(FilterBlock.GemLevel), (args) => AddOperatorInt(b => b.GemLevel, args) },
                 { nameof(FilterBlock.HasCruciblePassiveTree), (args) => SetBool(b => b.HasCruciblePassiveTree, args) },

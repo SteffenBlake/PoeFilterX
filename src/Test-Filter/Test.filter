@@ -5,6 +5,7 @@ Show
 
 Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
+	Fated True
 	Foulborn True
 	Identified True
 	Rarity = Magic
@@ -13,6 +14,7 @@ Show
 
 Show
 	Class = "Body Armours" "Helmets" "Gloves" "Boots"
+	Fated True
 	Foulborn True
 	Identified True
 	Rarity = Normal

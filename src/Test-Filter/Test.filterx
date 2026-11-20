@@ -7,6 +7,7 @@ using Test.fss;
     Class %Gear%;
     UnidentifiedItemTier <= 6;
     Foulborn True;
+	Fated True;
 	Style test-style;
 	{
 		Rarity Normal;

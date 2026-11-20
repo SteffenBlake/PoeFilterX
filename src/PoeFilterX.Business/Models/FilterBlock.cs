@@ -79,6 +79,8 @@ namespace PoeFilterX.Business.Models
 
         public IList<OperatorArg<int>> EnchantmentPassiveNum { get; set; } = new List<OperatorArg<int>>();
 
+        public bool? Fated { get; set; }
+
         public bool? Foulborn { get; set; }
 
         public bool? FracturedItem { get; set; }
@@ -254,6 +256,7 @@ namespace PoeFilterX.Business.Models
             Compile(builder, ElderMap);
             Compile(builder, EnchantmentPassiveNode);
             Compile(builder, EnchantmentPassiveNum);
+            Compile(builder, Fated);
             Compile(builder, Foulborn);
             Compile(builder, FracturedItem);
             Compile(builder, GemLevel);
