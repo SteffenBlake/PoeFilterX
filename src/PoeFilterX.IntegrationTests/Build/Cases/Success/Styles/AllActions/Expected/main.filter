@@ -1,0 +1,11 @@
+Hide
+	Identified True
+	SetBorderColor 1 2 3 4
+	SetTextColor 5 6 7 8
+	SetBackgroundColor 9 10 11 12
+	SetFontSize 40
+	PlayAlertSound 1 90
+	DisableDropSound
+	MinimapIcon 1 Red Circle
+	PlayEffect Blue Temp
+

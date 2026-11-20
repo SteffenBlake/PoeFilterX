@@ -32,8 +32,9 @@ namespace PoeFilterX.Business.Services
 
                 if (comment)
                 {
-                    if (next == '*' && (char)reader.Read() == '/')
+                    if (next == '*' && reader.Peek() == '/')
                     {
+                        reader.Read();
                         comment = false;
                     }
 
@@ -103,6 +104,11 @@ namespace PoeFilterX.Business.Services
                 {
                     runningArg += next;
                 }
+            }
+
+            if (comment || !string.IsNullOrWhiteSpace(runningArg))
+            {
+                throw new ParserException("Unterminated stylesheet command or comment.");
             }
         }
     }

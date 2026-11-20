@@ -1,0 +1,4 @@
+using main.fss;
+[ Identified True; Style parent;
+ { Rarity Rare; Style off; { ItemLevel 80; Style on; } }
+]

@@ -1,0 +1,12 @@
+{
+  "name": "example-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "example-project.filterx",
+  "author": {
+    "name": ""
+  },
+  "scripts": {
+    "build": "poefilterx build"
+  }
+}

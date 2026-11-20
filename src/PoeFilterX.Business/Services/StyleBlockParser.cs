@@ -20,68 +20,81 @@ namespace PoeFilterX.Business.Services
             while (!reader.EndOfStream)
             {
                 var next = (char)reader.Read();
-
                 if (comment)
                 {
-                    if (next is '*' && (char)reader.Read() is '/')
+                    if (next == '*' && reader.Peek() == '/')
                     {
+                        reader.Read();
                         comment = false;
                     }
 
                     continue;
                 }
-                
-                switch (next)
+
+                if (!stringed && next == '/' && reader.Peek() == '*')
                 {
-                    case '/' when reader.Peek() > 0 && (char)reader.Peek() == '*':
-                        comment = true;
-                        _ = reader.Read();
-                        continue;
-
-                    case ';' when !stringed:
-                        {
-                            var cmd = CommandParser.Parse(runningArgs.Trim());
-                            if (cmd != null)
-                            {
-                                commands.Add(cmd);
-                            }
-
-                            runningArgs = "";
-                            break;
-                        }
-
-                    case '}' when !stringed:
-                        return commands;
-
-                    case '"':
-                        stringed = !stringed;
-                        break;
-
-                    case '\\':
-                        if (!stringed)
-                        {
-                            throw ParserException.UnexpectedCharacter('\\', '"');
-                        }
-
-                        var escaped = (char)reader.Read();
-                        if (escaped is '"' or '\\')
-                        {
-                            runningArgs += escaped;
-                        } 
-                        else
-                        {
-                            throw ParserException.UnexpectedCharacter(escaped, '"');
-                        }
-
-                        break;
-
-                    default:
-                        runningArgs += next;
-                        break;
+                    comment = true;
+                    reader.Read();
+                    runningArgs += ' ';
+                    continue;
                 }
+
+                if (next == '\\' && stringed)
+                {
+                    runningArgs += next;
+                    if (reader.EndOfStream)
+                    {
+                        throw ParserException.UnexpectedCharacter(next, '"');
+                    }
+
+                    var escaped = (char)reader.Read();
+                    if (escaped is not '"' and not '\\')
+                    {
+                        throw ParserException.UnexpectedCharacter(escaped, '"');
+                    }
+
+                    runningArgs += escaped;
+                    continue;
+                }
+
+                if (next == '"')
+                {
+                    stringed = !stringed;
+                    runningArgs += next;
+                    continue;
+                }
+
+                if (!stringed && next == ';')
+                {
+                    var command = CommandParser.Parse(runningArgs.Trim());
+                    if (command != null)
+                    {
+                        commands.Add(command);
+                    }
+
+                    runningArgs = "";
+                    continue;
+                }
+
+                if (!stringed && next == '}')
+                {
+                    if (!string.IsNullOrWhiteSpace(runningArgs))
+                    {
+                        throw new ParserException("Missing ';' at end of style command.");
+                    }
+
+                    return commands;
+                }
+
+                if (!stringed && next == '\\')
+                {
+                    throw ParserException.UnexpectedCharacter(next, '"');
+                }
+
+                runningArgs += next;
             }
 
-            throw ParserException.UnexpectedCharacter('}', ' ');
+            throw new ParserException("Unterminated style block, string, or comment.");
         }
     }
 }

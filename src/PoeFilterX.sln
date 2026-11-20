@@ -42,12 +42,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test-module", "test-module"
 		Test-Filter\node_modules\test-module\module.filterx = Test-Filter\node_modules\test-module\module.filterx
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoeFilterX.IntegrationTests", "PoeFilterX.IntegrationTests\PoeFilterX.IntegrationTests.csproj", "{5B760B64-B5C2-48A3-BE23-5EA14BC8B4DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B760B64-B5C2-48A3-BE23-5EA14BC8B4DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B760B64-B5C2-48A3-BE23-5EA14BC8B4DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B760B64-B5C2-48A3-BE23-5EA14BC8B4DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B760B64-B5C2-48A3-BE23-5EA14BC8B4DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4BA0B926-7BB2-4857-8373-C23B6FBEB5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4BA0B926-7BB2-4857-8373-C23B6FBEB5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BA0B926-7BB2-4857-8373-C23B6FBEB5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU

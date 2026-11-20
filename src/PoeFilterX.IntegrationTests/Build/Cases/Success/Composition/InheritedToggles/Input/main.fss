@@ -1,0 +1,3 @@
+parent { alert: 2 90; icon: 1 Red Circle; pillar: Blue Temporary; }
+off { alert: disabled; icon: disabled; pillar: disabled; }
+on { alert: enabled; icon: enabled; pillar: enabled; }

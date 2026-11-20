@@ -42,7 +42,7 @@ namespace PoeFilterX
                 name = projectNameKebab,
                 version = "1.0.0",
                 description = "",
-                main = $"{projectNameKebab}.poefilterx",
+                main = $"{projectNameKebab}.filterx",
                 author = new
                 {
                     name = ""
@@ -56,7 +56,7 @@ namespace PoeFilterX
 
             var filterXPath = Path.Combine(projectDir, $"{projectNameKebab}.filterx");
             Console.WriteLine($"Creating '{filterXPath}'");
-            File.WriteAllText(filterXPath, $"using {projectNameKebab}.fss");
+            File.WriteAllText(filterXPath, $"using {projectNameKebab}.fss;");
 
             var stylePath = Path.Combine(projectDir, $"{projectNameKebab}.fss");
             Console.WriteLine($"Creating '{stylePath}'");

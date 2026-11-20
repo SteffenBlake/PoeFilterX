@@ -1,0 +1,1 @@
+using main.fss; {Style test; Quality > 10; Quality < 20; BaseType "Iron Ring"; BaseType "Iron Ring" "Gold Ring";}

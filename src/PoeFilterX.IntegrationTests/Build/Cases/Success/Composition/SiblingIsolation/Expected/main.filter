@@ -1,0 +1,9 @@
+Show
+	Identified True
+	Rarity = Magic
+	SetFontSize 40
+
+Show
+	Identified False
+	SetFontSize 40
+

@@ -195,13 +195,9 @@ namespace PoeFilterX.Business.Models
                 command(this);
             }
 
-            if (HasValue.Any())
+            if (HasValue.Any(string.IsNullOrWhiteSpace))
             {
-                var compiledHasValue = string.Join(' ', HasValue).Trim();
-                if (string.IsNullOrEmpty(compiledHasValue))
-                {
-                    return "";
-                }
+                return "";
             }
 
             if (IsTrue.Any(b => !b))
@@ -212,15 +208,16 @@ namespace PoeFilterX.Business.Models
             var styles = CompiledStyles.Distinct();
 
             var styleCmds = styles
-                .Select(st =>
+                .SelectMany(st =>
                 {
                     if (!stylesTable.ContainsKey(st))
                     {
                         throw new ParserException($"Filter block referenced undeclared style '{st}'");
                     }
 
-                    return stylesTable[st].OrderBy(s => s.Rank).ToList();
+                    return stylesTable[st];
                 })
+                .OrderBy(style => style.Rank)
                 .ToList();
 
             if (!styleCmds.Any())
@@ -228,12 +225,9 @@ namespace PoeFilterX.Business.Models
                 return "";
             }
 
-            foreach (var style in styleCmds)
+            foreach (var (_, command) in styleCmds)
             {
-                foreach (var (_, command) in style)
-                {
-                    command(this);
-                }
+                command(this);
             }
 
             var builder = new StringBuilder();
@@ -317,7 +311,10 @@ namespace PoeFilterX.Business.Models
                 _ = builder.AppendLine(DropSound.Value ? "\tEnableDropSound" : "\tDisableDropSound");
             }
 
-            Compile(builder, CustomAlertSound);
+            if (CustomAlertSoundEnabled)
+            {
+                Compile(builder, CustomAlertSound);
+            }
 
             if ((MinimapIcon?.HasValue ?? false) && (MinimapIcon?.Enabled ?? false))
             {

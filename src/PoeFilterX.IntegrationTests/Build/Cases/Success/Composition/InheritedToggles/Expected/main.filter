@@ -1,0 +1,12 @@
+Show
+	Identified True
+	ItemLevel = 80
+	Rarity = Rare
+	PlayAlertSound 2 90
+	MinimapIcon 1 Red Circle
+	PlayEffect Blue Temp
+
+Show
+	Identified True
+	Rarity = Rare
+

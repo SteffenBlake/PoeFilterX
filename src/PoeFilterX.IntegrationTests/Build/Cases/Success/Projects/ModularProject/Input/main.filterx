@@ -1,0 +1,5 @@
+using data/items.json;
+using styles/all.fss;
+Style hidden;
+using rules/gear.filterx;
+using rules/currency.filterx;

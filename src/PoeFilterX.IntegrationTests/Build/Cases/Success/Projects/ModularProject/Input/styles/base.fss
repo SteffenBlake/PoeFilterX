@@ -1,0 +1,1 @@
+hidden {show: false; bg-color: 0 0 0;} gear {show: true; bg-color: 1 2 3; font-size: 30;}

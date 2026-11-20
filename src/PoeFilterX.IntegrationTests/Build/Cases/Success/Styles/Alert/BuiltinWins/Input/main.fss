@@ -1,0 +1,1 @@
+test { alert-path: custom.mp3; alert: 3 90; }

@@ -29,12 +29,8 @@ namespace PoeFilterX.Business.Services
         {
             var runningString = "";
             var isComment = false;
-
+            var isString = false;
             var filterBlock = new FilterBlock(parent);
-            // Abstracted filter blocks will not serialize out
-            // So they dont actually get added to the finalized output filter
-            // but we still instantiate them as their non abstracted children will
-            // Get serialized, so we need to continue all following logic down the chain
             if (!abstracted)
             {
                 filter.AddFilterBlock(filterBlock);
@@ -43,85 +39,139 @@ namespace PoeFilterX.Business.Services
             while (!reader.EndOfStream)
             {
                 var next = (char)reader.Read();
-
-                if (next == '#')
+                if (isComment)
                 {
-                    isComment = true;
-                }
-                else if (next == '{' && !isComment)
-                {
-                    await ReadBlockAsync(filter, reader, filterBlock, nested: true, abstracted: false);
-                }
-                else if (next == '[' && !isComment)
-                {
-                    await ReadBlockAsync(filter, reader, filterBlock, nested: true, abstracted: true);
-                }
-                else if (next == '}' && !isComment)
-                {
-                    if (parent == null || abstracted)
+                    if (next == '\n')
                     {
-                        throw ParserException.UnexpectedCharacter('}', ' ');
+                        isComment = false;
+                        runningString += ' ';
                     }
 
-                    break;
+                    continue;
                 }
-                else if (next == ']' && !isComment)
-                {
-                    if (parent == null || !abstracted)
-                    {
-                        throw ParserException.UnexpectedCharacter(']', ' ');
-                    }
 
-                    break;
-                }
-                else if (next == '\n')
-                {
-                    isComment = false;
-                }
-                else if (next == ';' && !isComment)
-                {
-                    var args = runningString.Trim().ToArgs();
-
-                    if (args[0].ToLower() == "using")
-                    {
-                        if (nested)
-                        {
-                            throw ParserException.UnrecognizedCommand(args[0]);
-                        }
-
-                        if (args.Length != 2)
-                        {
-                            throw ParserException.UnexpectedArgCount(args.Length - 1, 1);
-                        }
-
-                        var filePath = args[1].Trim();
-
-                        var currentDir = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
-                        var relativeFile = PathResolver.ResolvePath(currentDir, filePath);
-
-                        if (!Context.TryAddUsing(reader.Path, relativeFile))
-                        {
-                            throw ParserException.CircularDependency();
-                        }
-
-                        await FileParserFactory().ParseAsync(filter, relativeFile, filterBlock);
-                    }
-                    else
-                    {
-                        var cmd = CommandParser.Parse(args);
-                        if (cmd != null)
-                        {
-                            filterBlock.AddCommand(cmd);
-                        }
-                    }
-
-                    runningString = "";
-                }
-                else if (!isComment)
+                if (next == '\\' && isString)
                 {
                     runningString += next;
+                    if (reader.EndOfStream)
+                    {
+                        throw ParserException.UnexpectedCharacter(next, '"');
+                    }
+
+                    runningString += (char)reader.Read();
+                    continue;
+                }
+
+                if (next == '"')
+                {
+                    isString = !isString;
+                    runningString += next;
+                    continue;
+                }
+
+                if (isString)
+                {
+                    runningString += next;
+                    continue;
+                }
+
+                switch (next)
+                {
+                    case '#':
+                        isComment = true;
+                        break;
+
+                    case '{':
+                    case '[':
+                        RequireTerminatedCommand(runningString);
+                        await ReadBlockAsync(
+                            filter,
+                            reader,
+                            filterBlock,
+                            nested: true,
+                            abstracted: next == '['
+                        );
+                        break;
+
+                    case '}':
+                    case ']':
+                        RequireTerminatedCommand(runningString);
+                        if (!nested || (next == ']' != abstracted))
+                        {
+                            throw ParserException.UnexpectedCharacter(next, abstracted ? ']' : '}');
+                        }
+
+                        return;
+
+                    case ';':
+                        var args = runningString.Trim().ToArgs();
+                        if (args.Length == 0)
+                        {
+                            throw new ParserException("Empty command.");
+                        }
+
+                        await ReadCommandAsync(filter, reader, filterBlock, args, nested);
+                        runningString = "";
+                        break;
+
+                    default:
+                        runningString += next;
+                        break;
                 }
             }
+
+            RequireTerminatedCommand(runningString);
+            if (nested)
+            {
+                throw new ParserException($"Missing closing '{(abstracted ? ']' : '}')}'.");
+            }
+        }
+
+        private static void RequireTerminatedCommand(string command)
+        {
+            if (!string.IsNullOrWhiteSpace(command))
+            {
+                throw new ParserException("Missing ';' at end of command.");
+            }
+        }
+
+        private async Task ReadCommandAsync(
+            Filter filter,
+            TrackingStreamReader reader,
+            FilterBlock filterBlock,
+            string[] args,
+            bool nested
+        )
+        {
+            if (!args[0].Equals("using", StringComparison.OrdinalIgnoreCase))
+            {
+                var command = CommandParser.Parse(args);
+                if (command != null)
+                {
+                    filterBlock.AddCommand(command);
+                }
+
+                return;
+            }
+
+            if (nested)
+            {
+                throw ParserException.UnrecognizedCommand(args[0]);
+            }
+
+            if (args.Length != 2)
+            {
+                throw ParserException.UnexpectedArgCount(args.Length - 1, 1);
+            }
+
+            var currentDir = Path.GetDirectoryName(reader.Path) ?? throw new DirectoryNotFoundException(reader.Path);
+            var relativeFile = PathResolver.ResolvePath(currentDir, args[1].Trim());
+            if (!Context.TryAddUsing(reader.Path, relativeFile))
+            {
+                throw ParserException.CircularDependency();
+            }
+
+            await FileParserFactory().ParseAsync(filter, relativeFile, filterBlock);
         }
     }
 }

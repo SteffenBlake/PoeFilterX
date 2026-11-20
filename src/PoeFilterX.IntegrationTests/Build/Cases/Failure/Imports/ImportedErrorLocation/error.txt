@@ -1,0 +1,3 @@
+child.filterx
+line #2
+Unrecognized command

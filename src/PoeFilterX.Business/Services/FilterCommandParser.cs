@@ -112,20 +112,8 @@ namespace PoeFilterX.Business.Services
 
         private static Action<FilterBlock> HasValue(string[] args)
         {
-            return (b) =>
-            {
-                if (args.Length == 0)
-                {
-                    b.HasValue.Add(" ");
-                }
-
-                foreach (var arg in args)
-                {
-                    b.HasValue.Add(arg);
-                }
-            };
+            return (b) => b.HasValue.Add(string.Join(' ', args));
         }
-
 
         private Action<FilterBlock> SetBool(Expression<Func<FilterBlock, bool?>> selector, IReadOnlyList<string> args)
         {

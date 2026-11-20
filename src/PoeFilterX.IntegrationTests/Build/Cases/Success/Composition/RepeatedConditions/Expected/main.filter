@@ -1,0 +1,6 @@
+Show
+	BaseType = "Iron Ring" "Iron Ring" "Gold Ring"
+	Quality > 10
+	Quality < 20
+	SetFontSize 40
+

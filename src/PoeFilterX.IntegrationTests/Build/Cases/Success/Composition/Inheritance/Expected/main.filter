@@ -1,0 +1,15 @@
+Show
+	Class = "Body Armours" "Boots"
+	Identified True
+	Quality < 19
+	Quality > 10
+	Rarity = Rare
+	SetFontSize 40
+
+Show
+	Class = "Body Armours" "Boots"
+	Identified True
+	Quality < 19
+	Quality > 10
+	SetFontSize 40
+

@@ -1,0 +1,1 @@
+using values.json; using main.fss; { Style test; BaseType %PFX_IT_8C71_GearTypes%; }

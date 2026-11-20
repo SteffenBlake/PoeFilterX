@@ -106,8 +106,10 @@ namespace PoeFilterX.Business.Services
             SetColorBlue((b) => b.SetTextColor, args);
 
 
-        private Action<FilterBlock> BackgroundColor(IReadOnlyList<string> args) =>
-            SetColor((b) => b.SetBackgroundColor, args);
+        private Action<FilterBlock> BackgroundColor(IReadOnlyList<string> args)
+        {
+            return SetColor((b) => b.SetBackgroundColor, args, defaultAlpha: 240);
+        }
 
         private Action<FilterBlock> BackgroundColorAlpha(IReadOnlyList<string> args) =>
             SetColorAlpha((b) => b.SetBackgroundColor, args);
@@ -130,29 +132,54 @@ namespace PoeFilterX.Business.Services
 
             if (args.Count == 1 && ArgParser.TryParseToggleString(args[0], out var toggle))
             {
-                return SetSoundToggled((b) => b.AlertSound, toggle);
+                var command = SetSoundToggled((b) => b.AlertSound, toggle);
+                if (toggle)
+                {
+                    command += UseBuiltInSound();
+                }
+
+                return command;
             }
 
-            return SetAlertSound((b) => b.AlertSound, args);
+            return SetAlertSound((b) => b.AlertSound, args) + UseBuiltInSound();
+        }
+
+        private static Action<FilterBlock> UseBuiltInSound()
+        {
+            return (block) =>
+            {
+                if (block.CustomAlertSoundEnabled && block.CustomAlertSound != null)
+                {
+                    block.AlertSound!.Enabled = true;
+                }
+
+                block.CustomAlertSoundEnabled = false;
+            };
         }
 
         private Action<FilterBlock> AlertId(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
-            return EnsureSound((b) => b.AlertSound) + SetSoundId((b) => b.AlertSound, args[0]);
+            return EnsureSound((b) => b.AlertSound)
+                + SetSoundId((b) => b.AlertSound, args[0])
+                + UseBuiltInSound();
         }
 
         private Action<FilterBlock> AlertVolume(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
-            return EnsureSound((b) => b.AlertSound) + SetSoundVolume((b) => b.AlertSound, args[0]);
+            return EnsureSound((b) => b.AlertSound)
+                + SetSoundVolume((b) => b.AlertSound, args[0])
+                + UseBuiltInSound();
         }
 
         private Action<FilterBlock> AlertStyle(IReadOnlyList<string> args)
         {
             ArgParser.ThrowIfArgsWrong(args, 1);
             ArgParser.ThrowIfNotPositionalString(args[0], out var positional);
-            return EnsureSound((b) => b.AlertSound) + SetSoundPositional((b) => b.AlertSound, positional);
+            return EnsureSound((b) => b.AlertSound)
+                + SetSoundPositional((b) => b.AlertSound, positional)
+                + UseBuiltInSound();
         }
 
         private Action<FilterBlock> DropSound(IReadOnlyList<string> args)
@@ -239,7 +266,11 @@ namespace PoeFilterX.Business.Services
             return EnsurePlayEffect() + SetPlayEffectDuration(args[0]);
         }
 
-        private Action<FilterBlock> SetColor(Expression<Func<FilterBlock, Color?>> selector, IReadOnlyList<string> args)
+        private Action<FilterBlock> SetColor(
+            Expression<Func<FilterBlock, Color?>> selector,
+            IReadOnlyList<string> args,
+            int defaultAlpha = 255
+        )
         {
             ArgParser.ThrowIfArgsWrong(args, 1, 2, 3, 4);
             var command = EnsureColor(selector);
@@ -291,7 +322,7 @@ namespace PoeFilterX.Business.Services
                     ArgParser.ThrowIfIntOutOfRange(args[2], 0, 255, out blue);
                 }
 
-                var alpha = 255;
+                var alpha = defaultAlpha;
                 if (args.Count >= 4)
                 {
                     ArgParser.ThrowIfIntOutOfRange(args[3], 0, 255, out alpha);

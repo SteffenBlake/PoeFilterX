@@ -55,13 +55,13 @@ namespace PoeFilterX.Tests
         [TestCase(
             @" "";""; }",
             ExpectedResult = new object[] {
-                new object[] {";", 1 },
+                new object[] {"\";\"", 1 },
             }
         )]
         [TestCase(
             @" ""\""\\""; }",
             ExpectedResult = new object[] {
-                new object[] { @"""\", 1 },
+                new object[] { @"""\""\\""", 1 },
             }
         )]
         [TestCase(

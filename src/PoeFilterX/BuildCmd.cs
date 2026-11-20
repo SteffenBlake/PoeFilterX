@@ -26,10 +26,23 @@ a directory with a single .filterx file present, path does not need to be provid
 
             Console.WriteLine("Building Configuration...");
 
+            if (HasInvalidPathArguments(args))
+            {
+                await Console.Error.WriteLineAsync("Path options require a nonempty value.");
+                Environment.Exit(1);
+            }
+
             var config = new ConfigurationBuilder()
                 .AddEnvironmentVariables("POEFILTERX_")
                 .AddCommandLine(args)
                 .Build();
+
+            var sourcePath = config["p"] ?? config["path"];
+            if (sourcePath != null && Path.GetExtension(sourcePath) != ".filterx")
+            {
+                await Console.Error.WriteLineAsync("Build input must be a .filterx file.");
+                Environment.Exit(1);
+            }
 
             var serviceProvider = ConfigureServices(config);
             var compiler = serviceProvider.GetRequiredService<IPoeFilterXCompiler>();
@@ -37,6 +50,29 @@ a directory with a single .filterx file present, path does not need to be provid
             Console.WriteLine("Setup complete, commencing build.");
 
             await compiler.CompileAsync();
+        }
+
+        private static bool HasInvalidPathArguments(string[] args)
+        {
+            for (var index = 0; index < args.Length; index++)
+            {
+                var argument = args[index];
+                var separator = argument.IndexOf('=');
+                var option = (separator < 0 ? argument : argument[..separator]).ToLowerInvariant();
+                if (option is not "--p" and not "--path" and not "--o" and not "--output")
+                {
+                    continue;
+                }
+
+                var value = separator >= 0 ? argument[(separator + 1)..]
+                    : ++index < args.Length ? args[index] : null;
+                if (string.IsNullOrWhiteSpace(value) || value.StartsWith("--"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static IServiceProvider ConfigureServices(IConfiguration config)

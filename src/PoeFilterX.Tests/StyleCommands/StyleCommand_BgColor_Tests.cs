@@ -63,8 +63,8 @@ namespace PoeFilterX.Tests.StyleCommands
         }
 
         [TestCase($"{COMMAND}: 255 255 255 255",   ExpectedResult = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF })]
-        [TestCase($"{COMMAND}: 255 255 255",       ExpectedResult = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF })]
-        [TestCase($"{COMMAND}: 50 60 70",          ExpectedResult = new byte[] { 50, 60, 70, 255 })]
+        [TestCase($"{COMMAND}: 255 255 255",       ExpectedResult = new byte[] { 0xFF, 0xFF, 0xFF, 0xF0 })]
+        [TestCase($"{COMMAND}: 50 60 70",          ExpectedResult = new byte[] { 50, 60, 70, 240 })]
         [TestCase($"{COMMAND}: 50 60 70 80",       ExpectedResult = new byte[] { 50, 60, 70, 80 })]
         [TestCase($"{COMMAND}: 0 0 0 0",           ExpectedResult = new byte[] { 0, 0, 0, 0 })]
         [TestCase($"{COMMAND}: 00 00 00 00",       ExpectedResult = new byte[] { 0, 0, 0, 0 })]
@@ -74,8 +74,8 @@ namespace PoeFilterX.Tests.StyleCommands
         [TestCase($"{COMMAND}: 0 100 0 0",         ExpectedResult = new byte[] { 0, 100, 0, 0 })]
         [TestCase($"{COMMAND}: 0 0 100 0",         ExpectedResult = new byte[] { 0, 0, 100, 0 })]
         [TestCase($"{COMMAND}: 0 0 0 100",         ExpectedResult = new byte[] { 0, 0, 0, 100 })]
-        [TestCase($"{COMMAND}: 100",               ExpectedResult = new byte[] { 100, 0, 0, 255 })]
-        [TestCase($"{COMMAND}: 100 100",           ExpectedResult = new byte[] { 100, 100, 0, 255 })]
+        [TestCase($"{COMMAND}: 100",               ExpectedResult = new byte[] { 100, 0, 0, 240 })]
+        [TestCase($"{COMMAND}: 100 100",           ExpectedResult = new byte[] { 100, 100, 0, 240 })]
         public byte[] BgColor_ARGBValues(string args)
         {
             // Arrange
