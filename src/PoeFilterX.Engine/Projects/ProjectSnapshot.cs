@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using PoeFilterX.Engine.Syntax;
+using PoeFilterX.Engine.Packages;
 
 namespace PoeFilterX.Engine.Projects;
 
@@ -10,4 +11,7 @@ public sealed record ProjectSnapshot(
     ImmutableDictionary<string, ImmutableDictionary<string, ImmutableArray<string>>> VariableFiles,
     ImmutableArray<ProjectImport> Imports,
     ImmutableArray<SyntaxDiagnostic> Diagnostics
-);
+)
+{
+    public PackageCatalog Packages { get; init; } = PackageCatalog.Empty;
+}

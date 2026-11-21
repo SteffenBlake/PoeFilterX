@@ -18,7 +18,7 @@ internal static class CliRunner
         Assert.That(File.Exists(cliPath), Is.True, $"CLI artifact not found: {cliPath}");
         var start = new ProcessStartInfo
         {
-            FileName = cliPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? "dotnet" : cliPath,
+            FileName = cliPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet" : cliPath,
             WorkingDirectory = workingDirectory,
             UseShellExecute = false,
             RedirectStandardInput = true,

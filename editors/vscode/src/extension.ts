@@ -50,6 +50,26 @@ class PoeFilterXExtension {
                 const entrypoint = await this.buildEntrypoint();
                 return entrypoint ? vscode.tasks.executeTask(builds.createTask(entrypoint)) : undefined;
             }),
+            vscode.commands.registerCommand('poefilterx.restorePackages', async () => {
+                const entrypoint = await this.buildEntrypoint();
+                if (!entrypoint || !this.client?.isRunning()) {
+                    return;
+                }
+
+                await vscode.workspace.saveAll(false);
+                return vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: 'Restoring PoeFilterX packages'
+                }, async () => {
+                    try {
+                        await this.client!.sendRequest('workspace/executeCommand', {
+                            command: 'poefilterx.restore', arguments: [entrypoint.toString()]
+                        });
+                    } catch (error) {
+                        void vscode.window.showErrorMessage(`Unable to restore packages: ${String(error)}`);
+                    }
+                });
+            }),
             vscode.commands.registerCommand('poefilterx.selectEntrypoint', selectEntrypoint),
             vscode.commands.registerCommand('poefilterx.restartLanguageServer', () => this.restart()),
             vscode.window.onDidChangeActiveTextEditor(() => { void this.refreshStatus(); }),

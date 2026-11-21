@@ -1,12 +1,16 @@
 grammar FilterX;
 
 document: statement* EOF;
-statement: importStatement | block | command;
+statement: packageStatement | importStatement | block | command;
+packageStatement: IMPORT argument FROM argument (AT argument)? SEMICOLON;
 importStatement: USING argument SEMICOLON;
 block: OPEN_BRACE statement* CLOSE_BRACE | OPEN_BRACKET statement* CLOSE_BRACKET;
 command: ATOM argument* SEMICOLON;
-argument: ATOM | STRING | USING | OPERATOR;
+argument: ATOM | STRING | USING | IMPORT | FROM | AT | OPERATOR;
 
+IMPORT: [iI][mM][pP][oO][rR][tT];
+FROM: [fF][rR][oO][mM];
+AT: [aA][tT];
 USING: [uU][sS][iI][nN][gG];
 OPEN_BRACE: '{';
 CLOSE_BRACE: '}';

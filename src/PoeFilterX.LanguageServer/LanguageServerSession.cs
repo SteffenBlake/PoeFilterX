@@ -1,7 +1,10 @@
 using System.Diagnostics;
+using Microsoft.VisualStudio.Threading;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PoeFilterX.Engine.Syntax;
+using PoeFilterX.Engine.Packages;
+using PoeFilterX.Engine.Results;
 using StreamJsonRpc;
 
 namespace PoeFilterX.LanguageServer;
@@ -11,7 +14,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
     private enum Lifecycle { Created, Initializing, Ready, Shutdown }
 
     private readonly EditorWorkspace workspace = new();
-    private readonly CodeActionFeatures codeActions = new([]);
+    private readonly CodeActionFeatures codeActions = new([new RestorePackageCodeActionProvider()]);
     private readonly HashSet<string> published = [with(EditorProjectSource.PathComparer)];
     private readonly HashSet<string> discoveryWarnings = [with(StringComparer.Ordinal)];
     private readonly TaskCompletionSource<int> exit = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -26,6 +29,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
     private Lifecycle state;
     private Process? parent;
     private bool watchFiles;
+    private SynchronizationContext? dispatcher;
 
     public Task<int> Exit => exit.Task;
 
@@ -75,6 +79,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
         Request("textDocument/codeAction", Actions);
         Request("workspace/symbol", WorkspaceSymbols);
         Request("poefilterx/projectContext", ProjectContext);
+        Add("workspace/executeCommand", (Func<JsonElement, CancellationToken, Task<JsonNode?>>)ExecuteAsync);
     }
 
     private void Add(string name, Delegate handler)
@@ -113,6 +118,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
             throw ProtocolJson.InvalidParameters("The server has already been initialized.");
         }
 
+        dispatcher = rpc.SynchronizationContext;
         workspace.Configure(parameters);
         watchFiles = parameters.Property("capabilities").Property("workspace")
             .Property("didChangeWatchedFiles").Property("dynamicRegistration").ValueKind == JsonValueKind.True;
@@ -126,7 +132,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
             {
                 ["positionEncoding"] = "utf-16",
                 ["textDocumentSync"] = new JsonObject { ["openClose"] = true, ["change"] = 2, ["save"] = true },
-                ["completionProvider"] = new JsonObject { ["triggerCharacters"] = new JsonArray(" ", "%", "/", "\"") },
+                ["completionProvider"] = new JsonObject { ["triggerCharacters"] = new JsonArray(" ", "%", "/", "\"", "@") },
                 ["hoverProvider"] = true,
                 ["signatureHelpProvider"] = new JsonObject { ["triggerCharacters"] = new JsonArray(" ", ":") },
                 ["definitionProvider"] = true,
@@ -141,6 +147,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
                 ["documentFormattingProvider"] = true,
                 ["colorProvider"] = true,
                 ["codeActionProvider"] = true,
+                ["executeCommandProvider"] = new JsonObject { ["commands"] = new JsonArray("poefilterx.restore") },
                 ["semanticTokensProvider"] = new JsonObject
                 {
                     ["legend"] = new JsonObject { ["tokenTypes"] = SemanticFeatures.TokenTypes(), ["tokenModifiers"] = new JsonArray() },
@@ -186,7 +193,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
         }
     }
 
-    private async Task InitializedAsync(JsonElement _)
+    private async Task InitializedAsync(JsonElement parameters)
     {
         if (state != Lifecycle.Initializing)
         {
@@ -194,10 +201,73 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
         }
 
         state = Lifecycle.Ready;
+        _ = WatchPackagesAsync();
         if (watchFiles)
         {
             await RegisterWatchersAsync().ConfigureAwait(false);
         }
+    }
+
+    private async Task WatchPackagesAsync()
+    {
+        var cancellationToken = lifetime.Token;
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await dispatcher!;
+                if (state == Lifecycle.Ready && !cancellationToken.IsCancellationRequested && workspace.PackagesChanged())
+                {
+                    await RefreshAsync().ConfigureAwait(false);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (ConnectionLostException)
+        {
+        }
+    }
+
+    private async Task<JsonNode?> ExecuteAsync(JsonElement parameters, CancellationToken cancellationToken)
+    {
+        EnsureReady();
+        if (parameters.Property("command").Text() != "poefilterx.restore")
+        {
+            throw ProtocolJson.InvalidParameters("Unknown command.");
+        }
+
+        var arguments = parameters.Property("arguments");
+        if (arguments.ValueKind != JsonValueKind.Array || arguments.GetArrayLength() != 1)
+        {
+            throw ProtocolJson.InvalidParameters("Restore requires an entrypoint URI.");
+        }
+
+        var entrypoint = ProtocolJson.FilePath(arguments[0].Text());
+        var context = workspace.Context(entrypoint, cancellationToken);
+        if (!context.HasEntrypoint || !EditorProjectSource.PathComparer.Equals(context.Project.EntryPoint, entrypoint))
+        {
+            throw ProtocolJson.InvalidParameters("Restore requires the selected project entrypoint.");
+        }
+
+        // Explicit user command only. The network operation does not block document dispatch.
+        var restored = await PackageRestorer.RestoreAsync(context.Tree, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await dispatcher!;
+        cancellationToken.ThrowIfCancellationRequested();
+        EnsureReady();
+        workspace.Invalidate(PackageCatalogReader.LockPath(entrypoint));
+        await RefreshAsync();
+        if (restored is ParseError error)
+        {
+            throw new LocalRpcException(string.Join(Environment.NewLine, error.Diagnostics.Select(diagnostic => diagnostic.Message)))
+            {
+                ErrorCode = -32001
+            };
+        }
+
+        return null;
     }
 
     private async Task RegisterWatchersAsync()
@@ -505,7 +575,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
             items.Add((JsonNode)new JsonObject
             {
                 ["range"] = ProtocolJson.Range(source, diagnostic.Span),
-                ["severity"] = 1,
+                ["severity"] = (int)diagnostic.Severity,
                 ["code"] = diagnostic.Code,
                 ["source"] = "poefilterx",
                 ["message"] = diagnostic.Message,
@@ -548,6 +618,7 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
 
     public void Dispose()
     {
+        state = Lifecycle.Shutdown;
         lifetime.Cancel();
         lifetime.Dispose();
         parent?.Dispose();

@@ -11,6 +11,8 @@
 using data/items.json;
 using "data/more items.json";
 UsInG "styles/main.fss";
+using Popular-Streamer-Base-Filter.filterx;
+using My-Filter-Style.fss;
 
 # Commands at file scope belong to the implicit root block.
 # This fallback hides anything not matched by a more specific child block.

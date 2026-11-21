@@ -7,7 +7,7 @@ using PoeFilterX.IntegrationTests.Infrastructure;
 namespace PoeFilterX.IntegrationTests.LanguageServer;
 
 [Parallelizable(ParallelScope.All)]
-public class LanguageServerTests
+public partial class LanguageServerTests
 {
     private static JsonObject Document(string path) => new() { ["uri"] = new Uri(path).AbsoluteUri };
 

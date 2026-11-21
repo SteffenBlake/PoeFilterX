@@ -65,6 +65,17 @@ public static class FilterXParserService
 
     private static SyntaxNode BuildStatement(FilterXParser.StatementContext statement, SyntaxTreeBuilder builder)
     {
+        if (statement.packageStatement() is { } package)
+        {
+            var arguments = package.argument();
+            return new PackageImportSyntax(
+                builder.Span(package),
+                arguments.Length > 0 ? builder.Argument(arguments[0]) : new ArgumentSyntax(builder.Span(package), string.Empty, false),
+                arguments.Length > 1 ? builder.Argument(arguments[1]) : new ArgumentSyntax(builder.Span(package), string.Empty, false),
+                arguments.Length > 2 ? builder.Argument(arguments[2]) : null
+            );
+        }
+
         if (statement.importStatement() is { } import)
         {
             return new ImportSyntax(builder.Span(import), builder.Argument(import.argument()));

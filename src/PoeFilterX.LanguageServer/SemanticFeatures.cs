@@ -90,7 +90,7 @@ internal static class SemanticFeatures
 
         return token.Kind switch
         {
-            "USING" => SemanticKind.Keyword,
+            "USING" or "IMPORT" or "FROM" or "AT" => SemanticKind.Keyword,
             "STRING" or "INVALID_STRING" or "UNTERMINATED_STRING" => SemanticKind.String,
             "COMMENT" => SemanticKind.Comment,
             _ => SemanticKind.Operator

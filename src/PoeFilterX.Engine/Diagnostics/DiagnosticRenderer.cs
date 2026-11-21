@@ -30,7 +30,8 @@ public static class DiagnosticRenderer
         project.SyntaxTrees.TryGetValue(diagnostic.Path, out var tree);
         var location = tree is null ? diagnostic.Path
             : Location(diagnostic.Path, tree.Source.GetPosition(diagnostic.Span.Start));
-        writer.WriteLine($"{location}: error {diagnostic.Code}: {diagnostic.Message}");
+        var severity = diagnostic.Severity.ToString().ToLowerInvariant();
+        writer.WriteLine($"{location}: {severity} {diagnostic.Code}: {diagnostic.Message}");
         if (tree is not null)
         {
             WriteExcerpt(tree.Source, diagnostic.Span, writer);

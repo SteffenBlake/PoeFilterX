@@ -1,0 +1,8 @@
+{
+    ItemLevel >= 60;
+    Class
+        "Daggers" "One Hand Axes" "One Hand Maces" "One Hand Swords"
+        "Rune Daggers" "Sceptres" "Thrusting One Hand Swords" "Wands";
+    HasInfluence Shaper Elder;
+    Style gear med-value;
+}

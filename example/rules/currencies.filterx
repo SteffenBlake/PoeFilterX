@@ -1,0 +1,6 @@
+{
+    Class Currency;
+    StackSize > 5;
+    BaseType == %HighValueCurrencies%;
+    Style currency high-value;
+}

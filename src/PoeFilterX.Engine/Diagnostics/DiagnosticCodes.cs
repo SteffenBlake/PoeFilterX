@@ -19,5 +19,11 @@ public static class DiagnosticCodes
     public const string InvalidArgument = "PFX3003";
     public const string VariableExpansion = "PFX3004";
     public const string UndeclaredStyle = "PFX3005";
+    public const string InvalidPackage = "PFX4001";
+    public const string PackageLock = "PFX4002";
+    public const string RestoreRequired = "PFX4003";
+    public const string RestoreFailure = "PFX4004";
+    public const string PackagePath = "PFX4005";
+    public const string PackageScope = "PFX4006";
     public const string BuildFailure = "PFX0001";
 }

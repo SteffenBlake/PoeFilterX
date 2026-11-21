@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using PoeFilterX.Engine.Compilation;
 using PoeFilterX.Engine.Syntax;
+using PoeFilterX.Engine.Packages;
 
 namespace PoeFilterX.LanguageServer;
 
@@ -34,7 +35,10 @@ internal static class CompletionFeatures
         }
         else if (head.Equals("using", StringComparison.OrdinalIgnoreCase))
         {
-            AddImportPaths(items, tree, word);
+            var import = tree.Root.Statements.OfType<ImportSyntax>().FirstOrDefault(node =>
+                node.Path.IsQuoted && SyntaxFacts.Contains(node.Path.Span, offset));
+            var pathSpan = import is null ? word : new SourceSpan(import.Path.Span.Start + 1, import.Path.Span.Length - 2);
+            AddImportPaths(items, context, pathSpan);
         }
         else
         {
@@ -80,6 +84,12 @@ internal static class CompletionFeatures
         }
 
         items.Add((JsonNode)Item("using", CompletionKind.Keyword, "Import a file", tree.Source, word));
+        if (!styles && EditorProjectSource.PathComparer.Equals(tree.Source.Path, context.Project.EntryPoint))
+        {
+            items.Add((JsonNode)Item(
+                "import", CompletionKind.Keyword, "Declare a Git package: import alias from \"URL\";", tree.Source, word
+            ));
+        }
     }
 
     private static void AddValues(
@@ -121,28 +131,67 @@ internal static class CompletionFeatures
         }
     }
 
-    private static void AddImportPaths(JsonArray items, SyntaxTree tree, SourceSpan word)
+    private static void AddImportPaths(
+        JsonArray items,
+        EditorContext context,
+        SourceSpan word
+    )
     {
+        var tree = context.Tree;
         var raw = tree.Source.Slice(word).ToString();
-        var directory = Path.GetDirectoryName(tree.Source.Path)!;
-        var relative = Path.GetDirectoryName(raw);
-        var target = string.IsNullOrEmpty(relative) ? directory : Path.GetFullPath(relative, directory);
+        var slash = raw.LastIndexOf('/');
+        var prefix = slash < 0 ? "" : raw[..(slash + 1)];
+        if ((raw.StartsWith('@') && slash < 0) || raw.Length == 0)
+        {
+            foreach (var package in context.Project.Packages.References)
+            {
+                items.Add((JsonNode)Item("@" + package.Alias + "/", CompletionKind.Folder,
+                    package.Root is null ? "Package (restore required)" : "Imported package", tree.Source, word));
+            }
+        }
+
+        if (raw.StartsWith('@') && slash < 0)
+        {
+            return;
+        }
+
+        var resolution = PackagePaths.Resolve(prefix + "_", tree.Source.Path, context.Project.Packages);
+        if (resolution is not string targetFile)
+        {
+            return;
+        }
+
+        var target = Path.GetDirectoryName(targetFile)!;
         if (!Directory.Exists(target))
         {
             return;
         }
 
         var styles = Path.GetExtension(tree.Source.Path).Equals(".fss", StringComparison.OrdinalIgnoreCase);
-        foreach (var path in Directory.EnumerateFiles(target).Order(StringComparer.Ordinal))
+        foreach (var path in Directory.EnumerateFileSystemEntries(target).Order(StringComparer.Ordinal))
         {
-            var extension = Path.GetExtension(path).ToLowerInvariant();
-            if (extension != ".fss" && (styles || extension is not (".filterx" or ".json")))
+            if (File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint))
             {
                 continue;
             }
 
-            var label = Path.GetRelativePath(directory, path).Replace(Path.DirectorySeparatorChar, '/');
-            items.Add((JsonNode)Item(label, CompletionKind.File, "Import", tree.Source, word));
+            var folder = Directory.Exists(path);
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+            if (!folder && extension != ".fss" && (styles || extension is not (".filterx" or ".json")))
+            {
+                continue;
+            }
+
+            var label = prefix + Path.GetFileName(path) + (folder ? "/" : "");
+            var item = Item(label, folder ? CompletionKind.Folder : CompletionKind.File, "Import", tree.Source, word);
+            var quoted = word.Start > 0 && tree.Source.Text[word.Start - 1] == '"';
+            if (!quoted && label.Any(character => char.IsWhiteSpace(character) || character is '#' or ';' or '"'))
+            {
+                var escaped = label.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
+                item["textEdit"] = ProtocolJson.Edit(tree.Source, word, "\"" + escaped + "\"");
+            }
+
+            items.Add((JsonNode)item);
         }
     }
 
@@ -216,4 +265,4 @@ internal static class CompletionFeatures
     }
 }
 
-internal enum CompletionKind { Class = 7, Property = 10, Value = 12, Keyword = 14, File = 17, Variable = 6 }
+internal enum CompletionKind { Class = 7, Property = 10, Value = 12, Keyword = 14, File = 17, Folder = 19, Variable = 6 }

@@ -2,6 +2,8 @@ using System.Collections.Immutable;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PoeFilterX.Engine.Logging;
+using PoeFilterX.Engine.Packages;
+using PoeFilterX.Engine.Diagnostics;
 using PoeFilterX.Engine.Parsing;
 using PoeFilterX.Engine.Syntax;
 using PoeFilterX.Engine.Results;
@@ -25,8 +27,12 @@ internal sealed class ProjectLoadSession(
     private readonly List<ProjectImport> imports = [];
     private readonly List<SyntaxDiagnostic> diagnostics = [];
 
+    private PackageCatalog packages = PackageCatalog.Empty;
+    private string entrypoint = string.Empty;
+
     public ProjectSnapshot Load(string entryPoint)
     {
+        entrypoint = entryPoint;
         Visit(entryPoint, entryPoint, default);
 
         return new ProjectSnapshot(
@@ -35,7 +41,8 @@ internal sealed class ProjectLoadSession(
             variables.ToImmutableDictionary(PathComparer),
             [.. imports],
             [.. diagnostics]
-        );
+        )
+        { Packages = packages };
     }
 
     private void Visit(
@@ -110,6 +117,21 @@ internal sealed class ProjectLoadSession(
         CompilerLog.ParsedFile(logger, path, tree.Root.Statements.Length, tree.Diagnostics.Length);
         trees.Add(path, tree);
         diagnostics.AddRange(tree.Diagnostics);
+        if (PathComparer.Equals(path, entrypoint))
+        {
+            packages = PackageCatalogReader.Read(tree);
+            diagnostics.AddRange(packages.Diagnostics);
+        }
+        else
+        {
+            var declarations = tree.Root.Statements.OfType<PackageImportSyntax>()
+                .Concat(tree.Root.Statements.OfType<FilterBlockSyntax>().SelectMany(PackageManifest.NestedImports));
+            foreach (var declaration in declarations)
+            {
+                Report(DiagnosticCodes.PackageScope, "Package imports are only allowed in the selected entrypoint; dependencies cannot import packages.", path, declaration.Span);
+            }
+        }
+
         VisitImports(tree);
     }
 
@@ -163,7 +185,17 @@ internal sealed class ProjectLoadSession(
 
         try
         {
-            var target = Path.GetFullPath(raw, Path.GetDirectoryName(from)!);
+            var resolved = PackagePaths.Resolve(raw, from, packages);
+            if (resolved is ParseError error)
+            {
+                diagnostics.AddRange(error.At(from, import.Path.Span).Diagnostics);
+                return;
+            }
+
+            if (resolved is not string target)
+            {
+                return;
+            }
             if (!AllowedImport(from, target))
             {
                 var expected = Path.GetExtension(from).Equals(".fss", StringComparison.OrdinalIgnoreCase)

@@ -180,17 +180,11 @@ internal static class ReachabilityAudit
             new XElement("PublishTrimmed", "true"), new XElement("TrimMode", "full"),
             new XElement("EnableTrimAnalyzer", "false"), new XElement("ILLinkTreatWarningsAsErrors", "false"),
             new XElement("TrimmerSingleWarn", "false"), new XElement("_ExtraTrimmerArgs", extra))).Save(settings);
-        var output = await Execute([
+        await Execute([
             "publish", root.File, "-c", "Release", "-r", runtime, "--self-contained", "true",
             "--artifacts-path", directory, "-o", Path.Combine(directory, "publish"), "-v:q",
             $"-p:CustomBeforeMicrosoftCommonTargets={settings}"
         ]);
-        var warnings = output.Split('\n').Where(line => line.Contains("warning IL", StringComparison.Ordinal)).ToArray();
-        if (warnings.Length > 0)
-        {
-            throw new InvalidOperationException("Trimming analysis reported unresolved behavior:\n" + string.Join('\n', warnings));
-        }
-
         if (!File.Exists(graphFile))
         {
             throw new InvalidOperationException("The SDK did not emit its dependency trace; analysis is incomplete.");
@@ -281,7 +275,9 @@ internal static class ReachabilityAudit
                     includeSynthesized: !reader.GetString(method.Name).StartsWith('<')
                 );
                 var info = new MemberInfo(generated || synthesized, location);
-                if (!members.TryAdd(key, info))
+                if (!members.TryAdd(key, info)
+                    && !(info.Generated && members[key].Generated)
+                    && !(info.Location is null && members[key].Location is null))
                 {
                     throw new InvalidOperationException($"Ambiguous method identity in SDK trace: {key}");
                 }

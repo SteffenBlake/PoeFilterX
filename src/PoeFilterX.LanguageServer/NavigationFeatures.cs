@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using PoeFilterX.Engine.Compilation;
 using PoeFilterX.Engine.Parsing;
 using PoeFilterX.Engine.Syntax;
+using PoeFilterX.Engine.Packages;
 
 namespace PoeFilterX.LanguageServer;
 
@@ -102,7 +103,7 @@ internal static class NavigationFeatures
     public static JsonNode? PrepareRename(EditorContext context, int offset)
     {
         var symbol = StyleIndex.At(context, offset);
-        return symbol is null ? null : new JsonObject
+        return symbol is null || IsPackageStyle(context, symbol.Name) ? null : new JsonObject
         {
             ["range"] = ProtocolJson.Range(symbol.Source, symbol.Span),
             ["placeholder"] = symbol.Name
@@ -128,8 +129,13 @@ internal static class NavigationFeatures
             return null;
         }
 
+        if (IsPackageStyle(context, symbol.Name))
+        {
+            throw ProtocolJson.InvalidParameters("Styles declared in restored packages cannot be renamed. Change the source repository and update the package instead.");
+        }
+
         var index = StyleIndex.Create(context.Project);
-        if (name != symbol.Name && index.Any(item => item.Declaration && item.Name == name))
+        if (name != symbol.Name && index.Any(item => item.Name == name))
         {
             throw ProtocolJson.InvalidParameters("A style with that name already exists in this project.");
         }
@@ -147,6 +153,12 @@ internal static class NavigationFeatures
         }
 
         return new JsonObject { ["changes"] = changes };
+    }
+
+    private static bool IsPackageStyle(EditorContext context, string name)
+    {
+        return StyleIndex.Create(context.Project).Any(item => item.Name == name
+            && context.Project.Packages.References.Any(package => package.Root is { } root && PackagePaths.IsWithin(item.Source.Path, root)));
     }
 
     public static JsonArray DocumentHighlights(EditorContext context, int offset)

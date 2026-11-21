@@ -4,6 +4,7 @@ using PoeFilterX.Engine.Compilation;
 using PoeFilterX.Engine.Projects;
 using PoeFilterX.Engine.Results;
 using PoeFilterX.Engine.Syntax;
+using PoeFilterX.Engine.Packages;
 
 namespace PoeFilterX.LanguageServer;
 
@@ -11,7 +12,8 @@ internal sealed class EditorWorkspace
 {
     private sealed record CachedProject(
         ProjectSnapshot Project,
-        ImmutableDictionary<string, (long Ticks, long Length)> Files
+        ImmutableDictionary<string, (long Ticks, long Length)> Files,
+        ImmutableArray<string> PackageFiles
     );
 
     private readonly EditorProjectSource source = new();
@@ -162,6 +164,7 @@ internal sealed class EditorWorkspace
     {
         source.Invalidate(path);
         var affected = projects.Where(pair => EditorProjectSource.PathComparer.Equals(pair.Key, path)
+            || EditorProjectSource.PathComparer.Equals(PackageCatalogReader.LockPath(pair.Key), path)
             || pair.Value.Project.SyntaxTrees.ContainsKey(path) || pair.Value.Project.VariableFiles.ContainsKey(path)
             || pair.Value.Project.Imports.Any(import => EditorProjectSource.PathComparer.Equals(import.TargetPath, path)))
             .Select(pair => pair.Key).ToArray();
@@ -173,7 +176,9 @@ internal sealed class EditorWorkspace
 
     public EditorContext Context(string path, CancellationToken cancellationToken)
     {
-        var candidates = Candidates(path);
+        var owner = projects.Values.FirstOrDefault(cached => cached.Project.Packages.References.Any(package =>
+            package.Root is { } root && PackagePaths.IsWithin(path, root)));
+        var candidates = owner is null ? Candidates(path) : [owner.Project.EntryPoint];
         var ambiguous = entrypoints.Count == 0 && candidates.Length > 1;
         var warning = ambiguous
             ? $"Multiple PoeFilterX entrypoints were found in '{Path.GetDirectoryName(candidates[0])}': "
@@ -261,11 +266,19 @@ internal sealed class EditorWorkspace
         }
 
         var project = new ProjectLoader(source).Load(path, cancellationToken);
-        var files = ProjectFiles(project).Where(file => !source.Documents.ContainsKey(file))
+        var packageFiles = PackageFiles(project).ToImmutableArray();
+        var files = ProjectFiles(project).Concat(packageFiles).Distinct(EditorProjectSource.PathComparer)
+            .Where(file => !source.Documents.ContainsKey(file))
             .ToImmutableDictionary(file => file, Stamp, EditorProjectSource.PathComparer);
-        projects[path] = new(project, files);
+        projects[path] = new(project, files, packageFiles);
 
         return project;
+    }
+
+    public bool PackagesChanged()
+    {
+        return projects.Values.Any(cached => cached.PackageFiles.Any(file =>
+            cached.Files.TryGetValue(file, out var stamp) && stamp != Stamp(file)));
     }
 
     private bool FilesChanged(CachedProject project)
@@ -286,7 +299,22 @@ internal sealed class EditorWorkspace
     private static IEnumerable<string> ProjectFiles(ProjectSnapshot project)
     {
         return project.SyntaxTrees.Keys.Concat(project.VariableFiles.Keys)
-            .Concat(project.Imports.Select(import => import.TargetPath)).Distinct(EditorProjectSource.PathComparer);
+            .Concat(project.Imports.Select(import => import.TargetPath))
+            .Distinct(EditorProjectSource.PathComparer);
+    }
+
+    private static IEnumerable<string> PackageFiles(ProjectSnapshot project)
+    {
+        if (project.Packages.References.IsEmpty)
+        {
+            return [];
+        }
+
+        return project.Packages.References.Where(package => package.Commit is not null)
+            .Select(package => Path.Combine(
+                PackageIdentity.SnapshotDirectory(PackageIdentity.CacheRoot, package.Repository, package.Commit!),
+                "complete"
+            )).Prepend(PackageCatalogReader.LockPath(project.EntryPoint)).Distinct(EditorProjectSource.PathComparer);
     }
 
     private static (long Ticks, long Length) Stamp(string path)
@@ -330,15 +358,11 @@ internal sealed class EditorWorkspace
             return project.Diagnostics;
         }
 
-        var prepared = ProjectCompiler.Prepare(project);
-        if (prepared is ParseError error)
+        var compiled = ProjectCompiler.Prepare(project).FlatMap(static prepared =>
+            ProjectCompiler.Write(prepared, TextWriter.Null));
+        if (compiled is ParseError error)
         {
             return error.Diagnostics;
-        }
-
-        if (prepared is PreparedProject value && ProjectCompiler.Write(value, TextWriter.Null) is ParseError writeError)
-        {
-            return writeError.Diagnostics;
         }
 
         return [];

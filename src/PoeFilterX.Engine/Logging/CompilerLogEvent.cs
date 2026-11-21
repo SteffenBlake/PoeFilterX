@@ -16,5 +16,9 @@ public enum CompilerLogEvent
     VariableLoaded,
     ConfigurationVariable,
     DeprecatedSyntax,
-    Diagnostic
+    Diagnostic,
+    PackageCached,
+    PackageResolving,
+    PackageRestoring,
+    PackagesRestored
 }

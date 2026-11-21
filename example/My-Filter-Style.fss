@@ -1,0 +1,26 @@
+hidden {
+    show: false;
+    bg-color: 150 200 200 200;
+}
+med-value {
+    show: true;
+    bg-color: 255 255 119 255;
+    icon-size: 1;
+    icon-color: Yellow;
+}
+high-value {
+    show: true;
+    bg-color: 255 255 255 255;
+    icon-size: 0;
+    icon-color: Red;
+}
+gear {
+    icon-shape: Diamond;
+}
+
+low-value {
+    show: true;
+    bg-color: 80 80 80 255;
+    icon-size: 2;
+    icon-color: Grey;
+}

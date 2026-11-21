@@ -136,4 +136,24 @@ internal static partial class CompilerLog
         "{Diagnostics}"
     )]
     public static partial void Diagnostic(ILogger logger, string diagnostics);
+    [LoggerMessage((int)CompilerLogEvent.PackageCached, LogLevel.Debug, "Using cached package {Alias} at {Commit}")]
+    public static partial void PackageCached(
+        ILogger logger,
+        string alias,
+        string commit
+    );
+
+    [LoggerMessage((int)CompilerLogEvent.PackageResolving, LogLevel.Information, "Resolving package {Alias}")]
+    public static partial void PackageResolving(ILogger logger, string alias);
+
+    [LoggerMessage((int)CompilerLogEvent.PackageRestoring, LogLevel.Information, "Restoring package {Alias} at {Commit}")]
+    public static partial void PackageRestoring(
+        ILogger logger,
+        string alias,
+        string commit
+    );
+
+    [LoggerMessage((int)CompilerLogEvent.PackagesRestored, LogLevel.Information, "Packages are restored for {Entrypoint}")]
+    public static partial void PackagesRestored(ILogger logger, string entrypoint);
+
 }

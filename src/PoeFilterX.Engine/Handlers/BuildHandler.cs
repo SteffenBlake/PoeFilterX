@@ -6,6 +6,7 @@ using PoeFilterX.Engine.Logging;
 using PoeFilterX.Engine.Compilation;
 using PoeFilterX.Engine.Diagnostics;
 using PoeFilterX.Engine.Projects;
+using PoeFilterX.Engine.Packages;
 using PoeFilterX.Engine.Requests;
 using PoeFilterX.Engine.Results;
 
@@ -13,7 +14,11 @@ namespace PoeFilterX.Engine.Handlers;
 
 public static class BuildHandler
 {
-    public static int Handle(BuildRequest request, ILogger? logger = null)
+    public static async Task<int> HandleAsync(
+        BuildRequest request,
+        ILogger? logger = null,
+        CancellationToken cancellationToken = default
+    )
     {
         logger ??= NullLogger.Instance;
         var started = Stopwatch.GetTimestamp();
@@ -25,7 +30,7 @@ public static class BuildHandler
                 CompilerLog.ExecutionDirectory(logger, Directory.GetCurrentDirectory());
             }
 
-            var input = ResolveInput(request.Path);
+            var input = EntrypointResolver.Resolve(request.Path);
             if (input is ParseError inputError)
             {
                 return ReportError(logger, inputError);
@@ -67,7 +72,28 @@ public static class BuildHandler
                 }
             }
 
-            var snapshot = new ProjectLoader(new FileProjectSource(), logger).Load(path);
+            var loader = new ProjectLoader(new FileProjectSource(), logger);
+            var snapshot = loader.Load(path, cancellationToken);
+            if (snapshot.SyntaxTrees.TryGetValue(path, out var entrypoint)
+                && (!snapshot.Packages.References.IsEmpty || File.Exists(PackageCatalogReader.LockPath(path))))
+            {
+                var restored = await PackageRestorer.RestoreAsync(
+                    entrypoint,
+                    new(Locked: request.Locked, NoRestore: request.NoRestore),
+                    logger,
+                    cancellationToken
+                ).ConfigureAwait(false);
+                if (restored is ParseError restoreError)
+                {
+                    return ReportError(logger, restoreError, snapshot);
+                }
+
+                if (snapshot.Packages.NeedsRestore)
+                {
+                    snapshot = loader.Load(path, cancellationToken);
+                }
+            }
+
             CompilerLog.ProjectLoaded(
                 logger,
                 snapshot.SyntaxTrees.Count,
@@ -116,34 +142,6 @@ public static class BuildHandler
         }
     }
 
-    private static Result<string> ResolveInput(string? path)
-    {
-        if (path is null)
-        {
-            var candidates = EntrypointDiscovery.Find(Directory.GetCurrentDirectory());
-            if (candidates.Length != 1)
-            {
-                var detail = candidates.IsEmpty
-                    ? "No entrypoint.filterx or *.entrypoint.filterx file was found in the current directory."
-                    : $"Multiple entrypoints were found: {string.Join(", ", candidates)}.";
-
-                return new ParseError(
-                    DiagnosticCodes.BuildFailure,
-                    $"Unable to automatically detect a single entrypoint. {detail} Specify an input file: poefilterx <path>."
-                );
-            }
-
-            return candidates[0];
-        }
-
-        if (!Path.GetExtension(path).Equals(".filterx", StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
-        {
-            return new ParseError(DiagnosticCodes.BuildFailure, $"File not found or invalid .filterx path: '{path}'");
-        }
-
-        return NormalizePath(path);
-    }
-
     private static Result<string> NormalizePath(string path)
     {
         try
@@ -156,7 +154,7 @@ public static class BuildHandler
         }
     }
 
-    private static int ReportError(
+    internal static int ReportError(
         ILogger logger,
         ParseError error,
         ProjectSnapshot? snapshot = null
@@ -198,7 +196,8 @@ public static class BuildHandler
         foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
         {
             var key = (string)item.Key;
-            if (key.StartsWith("POEFILTERX_", StringComparison.OrdinalIgnoreCase))
+            if (key.StartsWith("POEFILTERX_", StringComparison.OrdinalIgnoreCase)
+                && !key.Equals("POEFILTERX_PACKAGE_CACHE", StringComparison.OrdinalIgnoreCase))
             {
                 values[key[11..]] = (string)item.Value!;
             }

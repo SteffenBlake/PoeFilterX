@@ -11,9 +11,10 @@ internal static class Program
         BuildCmd.Configure(root, variables);
         root.Subcommands.Add(BuildCmd.Create(variables));
         root.Subcommands.Add(InitCmd.Create());
+        root.Subcommands.Add(RestoreCmd.Create());
         root.Subcommands.Add(LanguageServerCmd.Create());
         var parsed = root.Parse(args);
-        if (parsed.Errors.Count == 0 || parsed.CommandResult.Command.Name is "init" or "language-server")
+        if (parsed.Errors.Count == 0 || parsed.CommandResult.Command.Name is "init" or "language-server" or "restore")
         {
             return await parsed.InvokeAsync();
         }
@@ -30,7 +31,7 @@ internal static class Program
 
             var name = argument.Split('=', 2)[0];
             if (argument.StartsWith("--", StringComparison.Ordinal)
-                && name is not ("--path" or "--p" or "--output" or "--o" or "--verbosity" or "--verbose" or "--v" or "--help" or "--version")
+                && name is not ("--no-restore" or "--locked" or "--path" or "--p" or "--output" or "--o" or "--verbosity" or "--verbose" or "--v" or "--help" or "--version")
                 && index + 1 < args.Length && !args[index + 1].StartsWith("--", StringComparison.Ordinal))
             {
                 variables[argument[2..]] = args[++index];

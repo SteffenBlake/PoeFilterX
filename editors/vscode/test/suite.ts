@@ -50,6 +50,10 @@ export async function run(): Promise<void> {
 }
 
 async function verifyCompilerCommands(root: vscode.Uri, document: vscode.TextDocument): Promise<void> {
+    const commands = await vscode.commands.getCommands();
+    assert.ok(commands.includes('poefilterx.restorePackages'));
+    assert.ok(commands.includes('poefilterx.restore'), 'The LSP restore code action must be connected to executeCommand.');
+    await vscode.commands.executeCommand('poefilterx.restorePackages');
     const tasks = await vscode.tasks.fetchTasks({ type: 'poefilterx' });
     const build = tasks.find(task => task.definition.entrypoint === 'entrypoint.filterx');
     assert.ok(build, 'The compiler must contribute a build task without requiring tasks.json.');

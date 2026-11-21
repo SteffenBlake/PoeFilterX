@@ -72,6 +72,11 @@
     ],
     "commands": [
       {
+        "command": "poefilterx.restorePackages",
+        "title": "Restore Packages",
+        "category": "PoeFilterX"
+      },
+      {
         "command": "poefilterx.selectEntrypoint",
         "title": "Select Entrypoint",
         "category": "PoeFilterX"

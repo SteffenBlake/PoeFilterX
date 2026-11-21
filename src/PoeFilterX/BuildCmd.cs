@@ -32,11 +32,15 @@ internal static class BuildCmd
             Description = "Path to the output .filter file.",
             Arity = ArgumentArity.ExactlyOne
         };
+        var noRestore = new Option<bool>("--no-restore") { Description = "Build using only already restored packages." };
+        var locked = new Option<bool>("--locked") { Description = "Require an up-to-date package lockfile." };
         var verbosity = CommandLogging.CreateVerbosityOption();
         command.Arguments.Add(path);
         command.Options.Add(pathOption);
         command.Options.Add(output);
         command.Options.Add(verbosity);
+        command.Options.Add(noRestore);
+        command.Options.Add(locked);
         command.Validators.Add(result =>
         {
             if (result.GetValue(path) is not null && result.GetValue(pathOption) is not null)
@@ -44,16 +48,18 @@ internal static class BuildCmd
                 result.AddError("Specify the input path only once.");
             }
         });
-        command.SetAction(result =>
+        command.SetAction(async (result, cancellationToken) =>
         {
             using var logging = CommandLogging.CreateFactory(result.GetValue(verbosity));
             var logger = logging.CreateLogger(nameof(BuildHandler));
 
-            return BuildHandler.Handle(new BuildRequest(
+            return await BuildHandler.HandleAsync(new BuildRequest(
                 result.GetValue(path) ?? result.GetValue(pathOption),
                 result.GetValue(output),
-                variables
-            ), logger);
+                variables,
+                result.GetValue(noRestore),
+                result.GetValue(locked)
+            ), logger, cancellationToken);
         });
     }
 }

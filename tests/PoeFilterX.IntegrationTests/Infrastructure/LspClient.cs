@@ -36,6 +36,15 @@ internal sealed class LspClient : IAsyncDisposable
 
     public static Process StartProcess(string directory, params string[] options)
     {
+        return StartProcess(directory, new Dictionary<string, string>(), options);
+    }
+
+    public static Process StartProcess(
+        string directory,
+        IReadOnlyDictionary<string, string> environment,
+        params string[] options
+    )
+    {
         var cliPath = Environment.GetEnvironmentVariable("PFX_INTEGRATION_CLI_PATH")
             ?? File.ReadAllText(Path.Combine(TestContext.CurrentContext.TestDirectory, "cli-path.txt")).Trim();
         var info = new ProcessStartInfo("dotnet")
@@ -51,6 +60,11 @@ internal sealed class LspClient : IAsyncDisposable
         foreach (var option in options)
         {
             info.ArgumentList.Add(option);
+        }
+
+        foreach (var (key, value) in environment)
+        {
+            info.Environment[key] = value;
         }
 
         return Process.Start(info) ?? throw new InvalidOperationException("Could not start language server.");
