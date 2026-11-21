@@ -1,7 +1,5 @@
 using System.CommandLine;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using PoeFilterX.Engine.Handlers;
 using PoeFilterX.Engine.Requests;
 
@@ -21,7 +19,7 @@ internal static class BuildCmd
     {
         var path = new Argument<string?>("path")
         {
-            Description = "Input .filterx file. Omit to discover a single file in the current directory.",
+            Description = "Input .filterx file. Omit to discover entrypoint.filterx or *.entrypoint.filterx in the current directory.",
             Arity = ArgumentArity.ZeroOrOne
         };
         var pathOption = new Option<string?>("--path", "--p")
@@ -34,19 +32,7 @@ internal static class BuildCmd
             Description = "Path to the output .filter file.",
             Arity = ArgumentArity.ExactlyOne
         };
-        var verbosity = new Option<LogLevel>("--verbosity", "-v", "--v")
-        {
-            Description = "Minimum log level: Trace, Debug, Information, Warning, Error, Critical, or None.",
-            Arity = ArgumentArity.ExactlyOne,
-            DefaultValueFactory = _ => LogLevel.Information
-        };
-        verbosity.Validators.Add(result =>
-        {
-            if (!Enum.IsDefined(result.GetValueOrDefault<LogLevel>()))
-            {
-                result.AddError("Verbosity must be a defined log level.");
-            }
-        });
+        var verbosity = CommandLogging.CreateVerbosityOption();
         command.Arguments.Add(path);
         command.Options.Add(pathOption);
         command.Options.Add(output);
@@ -60,16 +46,7 @@ internal static class BuildCmd
         });
         command.SetAction(result =>
         {
-            using var logging = LoggerFactory.Create(builder =>
-            {
-                builder.SetMinimumLevel(result.GetValue(verbosity));
-                builder.Services.AddSingleton<ConsoleFormatter, CompilerConsoleFormatter>();
-                builder.AddConsole(options =>
-                {
-                    options.FormatterName = nameof(CompilerConsoleFormatter);
-                    options.LogToStandardErrorThreshold = LogLevel.Warning;
-                });
-            });
+            using var logging = CommandLogging.CreateFactory(result.GetValue(verbosity));
             var logger = logging.CreateLogger(nameof(BuildHandler));
 
             return BuildHandler.Handle(new BuildRequest(

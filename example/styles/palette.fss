@@ -1,4 +1,3 @@
-/* A tiny bundled dependency demonstrating @ imports. No npm install needed. */
 accent {
     border-color: 0x00FFFF;
     icon-color: Cyan;

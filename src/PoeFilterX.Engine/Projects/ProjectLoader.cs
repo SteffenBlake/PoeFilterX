@@ -8,16 +8,12 @@ public sealed class ProjectLoader(IProjectSource source, ILogger? logger = null)
 {
     public ProjectSnapshot Load(
         string entryPoint,
-        string? projectRoot = null,
         CancellationToken cancellationToken = default
     )
     {
         var path = Path.GetFullPath(entryPoint);
-        var root = Path.GetFullPath(projectRoot ?? Path.GetDirectoryName(path)!);
-
         return new ProjectLoadSession(
             source,
-            root,
             logger ?? NullLogger.Instance,
             cancellationToken
         ).Load(path);

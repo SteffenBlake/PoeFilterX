@@ -26,8 +26,9 @@ public class PositionalBuildTests
             arguments.Add("main.filterx");
         }
 
+        workspace.Write("entrypoint.filterx", workspace.Read("main.filterx"));
         var result = await CliRunner.RunAsync(workspace.Root, [.. arguments]);
-        AssertOutput(workspace, result, "main.filter");
+        AssertOutput(workspace, result, explicitPath ? "main.filter" : "entrypoint.filter");
     }
 
     [TestCase(false)]

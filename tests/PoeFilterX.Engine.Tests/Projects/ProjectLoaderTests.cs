@@ -91,18 +91,17 @@ public class ProjectLoaderTests
     }
 
     [Test]
-    public void Imports_resolve_from_the_importing_directory_and_packages_from_project_root()
+    public void Imports_resolve_from_the_importing_directory()
     {
         var source = new MemoryProjectSource();
         source.Add(FilePath("main.filterx"), "using sub/child.filterx;");
-        source.Add(FilePath("sub/child.filterx"), "using ../shared.fss; using @pack/styles.fss;");
+        source.Add(FilePath("sub/child.filterx"), "using ../shared.fss;");
         source.Add(FilePath("shared.fss"), "");
-        source.Add(FilePath("node_modules/pack/styles.fss"), "");
         var snapshot = new ProjectLoader(source).Load(FilePath("main.filterx"));
         using (Assert.EnterMultipleScope())
         {
             Assert.That(snapshot.Diagnostics, Is.Empty);
-            Assert.That(snapshot.SyntaxTrees, Has.Count.EqualTo(4));
+            Assert.That(snapshot.SyntaxTrees, Has.Count.EqualTo(3));
         }
     }
 

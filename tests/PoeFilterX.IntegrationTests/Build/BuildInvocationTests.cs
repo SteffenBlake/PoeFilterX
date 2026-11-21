@@ -43,7 +43,7 @@ public class BuildInvocationTests
         Directory.CreateDirectory(workspace.PathFor("output ü"));
         foreach (var path in new[] { "output ü/result.filter", workspace.PathFor("output ü/result.filter") })
         {
-            var result = await CliRunner.RunAsync(workspace.Root, ["build", option, path]);
+            var result = await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx", option, path]);
             AssertSuccess(result);
             using (Assert.EnterMultipleScope())
             {
@@ -77,7 +77,7 @@ public class BuildInvocationTests
     public async Task Verbosity_alias_preserves_output(string option)
     {
         using var workspace = SimpleProject();
-        var result = await CliRunner.RunAsync(workspace.Root, ["build", option, "Debug"]);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx", option, "Debug"]);
         AssertSuccess(result);
         Assert.That(TestWorkspace.Normalize(workspace.Read("main.filter")), Is.EqualTo(Expected));
     }
@@ -125,13 +125,13 @@ public class BuildInvocationTests
         using var workspace = new TestWorkspace();
         if (scenario == "Multiple")
         {
-            workspace.Write("one.filterx", "");
-            workspace.Write("two.filterx", "");
+            workspace.Write("one.entrypoint.filterx", "");
+            workspace.Write("entrypoint.filterx", "");
         }
 
         if (scenario == "NestedOnly")
         {
-            workspace.Write("nested/main.filterx", "");
+            workspace.Write("nested/entrypoint.filterx", "");
         }
 
         var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
@@ -198,7 +198,7 @@ public class BuildInvocationTests
         Directory.CreateDirectory(workspace.PathFor("output-folder"));
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            ["build", "--output", output]
+            ["build", "main.filterx", "--output", output]
         );
         using (Assert.EnterMultipleScope())
         {
@@ -215,7 +215,7 @@ public class BuildInvocationTests
         workspace.Write("main.filter", new string('x', 2000));
         for (var iteration = 0; iteration < 2; iteration++)
         {
-            AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build"]));
+            AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx"]));
             Assert.That(
                 TestWorkspace.Normalize(workspace.Read("main.filter")),
                 Is.EqualTo(Expected)
@@ -223,7 +223,7 @@ public class BuildInvocationTests
         }
 
         workspace.Write("main.filterx", "using main.fss; { Style test; Identified False; }");
-        AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build"]));
+        AssertSuccess(await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx"]));
         Assert.That(
             TestWorkspace.Normalize(workspace.Read("main.filter")),
             Is.EqualTo(Expected.Replace("True", "False"))
@@ -236,7 +236,7 @@ public class BuildInvocationTests
         using var workspace = SimpleProject();
         workspace.Write("main.filter", "existing output\n");
         workspace.Write("main.filterx", "using main.fss;\n{\nUnknownCommand 1;\n}");
-        var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx"]);
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ExitCode, Is.EqualTo(1));
@@ -251,7 +251,7 @@ public class BuildInvocationTests
         using var workspace = SimpleProject();
         workspace.Write("main.filter", "existing output\n");
         workspace.Write("main.filterx", "using main.fss; { Style missing; Identified True; }");
-        var result = await CliRunner.RunAsync(workspace.Root, ["build"]);
+        var result = await CliRunner.RunAsync(workspace.Root, ["build", "main.filterx"]);
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ExitCode, Is.EqualTo(1));
@@ -276,7 +276,7 @@ public class BuildInvocationTests
             "main.filterx",
             "using values.json; using main.fss; {Style test; BaseType %" + VariableKey + "%;}"
         );
-        var args = new List<string> { "build" };
+        var args = new List<string> { "build", "main.filterx" };
         if (useCommandLine)
         {
             args.Add("--" + VariableKey);
@@ -308,7 +308,7 @@ public class BuildInvocationTests
         };
         var result = await CliRunner.RunAsync(
             workspace.Root,
-            ["build", "--PFX_IT_8C71_Final", "\"Iron Ring\" \"Gold Ring\""],
+            ["build", "main.filterx", "--PFX_IT_8C71_Final", "\"Iron Ring\" \"Gold Ring\""],
             environment: env
         );
         AssertSuccess(result);

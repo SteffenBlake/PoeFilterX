@@ -2,9 +2,8 @@
    Imports are root statements; FSS can import other FSS files only. */
 using "base.fss";
 
-/* @ imports resolve under the project root's node_modules directory,
-   even from this nested stylesheet. This sample dependency is bundled. */
-UsInG @example-palette/palette.fss;
+/* Imports resolve relative to the stylesheet that contains them. */
+UsInG palette.fss;
 
 /* Empty style blocks are valid and can be composed with other classes. */
 empty {}

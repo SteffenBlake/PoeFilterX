@@ -17,7 +17,7 @@ public class CommandLineTests
         {
             Assert.That(result.ExitCode, Is.Zero);
             Assert.That(result.StandardError, Is.Empty);
-            Assert.That(result.StandardOutput, Does.Contain("build").And.Contain("--help").And.Contain("--version"));
+            Assert.That(result.StandardOutput, Does.Contain("build").And.Contain("init").And.Contain("--help").And.Contain("--version"));
         }
     }
 

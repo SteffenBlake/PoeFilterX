@@ -1,10 +1,10 @@
 # One complete syntax showcase. Start reading here, then follow the imports.
 # This demonstrates the language; it is not a league-ready loot filter.
-# From this directory, run poefilterx with no arguments to build main.filterx.
+# From this directory, run poefilterx with no arguments to build entrypoint.filterx.
 # Or run from the repository root with a positional input path:
-# dotnet run --project src/PoeFilterX -- example/main.filterx
+# dotnet run --project src/PoeFilterX -- example/entrypoint.filterx
 # Add --verbosity Debug for file activity, Trace for imports, or None for silence.
-# The result is example/main.filter. Later blocks appear first in the output.
+# The result is example/entrypoint.filter. Later blocks appear first in the output.
 
 # Imports are root statements. Paths are relative to the importing file.
 # The using keyword is case-insensitive; quoted paths can contain spaces.

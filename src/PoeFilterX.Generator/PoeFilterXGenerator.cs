@@ -125,7 +125,15 @@ public sealed class PoeFilterXGenerator : IIncrementalGenerator
                 .Append("\", model.").Append(property.Target).Append(");\n");
         }
 
-        return code.Append("}\n}\n").ToString();
+        code.Append("}\npublic static ImmutableArray<OperationDescriptor> Operations { get; } = [\n");
+        foreach (var property in model.Properties)
+        {
+            code.Append("new(\"").Append(property.Input).Append("\", \"").Append(property.Type)
+                .Append("\", \"").Append(property.Reader).Append("\", ").Append(property.Minimum)
+                .Append(", ").Append(property.Maximum).Append("),\n");
+        }
+
+        return code.Append("];\n}\n").ToString();
     }
 
 }

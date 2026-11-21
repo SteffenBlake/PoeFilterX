@@ -8,7 +8,7 @@
 }
 
 # Command-line variables override imported JSON values. For example:
-# dotnet run --project src/PoeFilterX -- example/main.filterx --EnableEquipment false
+# dotnet run --project src/PoeFilterX -- example/entrypoint.filterx --EnableEquipment false
 # Environment variables use the POEFILTERX_ prefix, e.g. POEFILTERX_EnableEquipment.
 {
     IsTrue %EnableEquipment%;

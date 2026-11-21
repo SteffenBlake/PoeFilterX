@@ -42,6 +42,7 @@ public class VerbosityTests
     public async Task Default_level_restores_build_progress_without_debug_details()
     {
         using var workspace = CreateProject();
+        workspace.Write("entrypoint.filterx", workspace.Read("main.filterx"));
         var result = await CliRunner.RunAsync(workspace.Root, []);
         using (Assert.EnterMultipleScope())
         {

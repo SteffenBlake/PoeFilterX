@@ -96,12 +96,12 @@ public class ParserTests
     [Test]
     public void Styles_preserve_comments_paths_and_declarations()
     {
-        const string input = "using @pack/common.fss; /* ; } */ rare/*name*/{font-size:40; alert-path: \"a;😀.wav\";}";
+        const string input = "using styles/common.fss; /* ; } */ rare/*name*/{font-size:40; alert-path: \"a;😀.wav\";}";
         var tree = Styles(input);
         using (Assert.EnterMultipleScope())
         {
             Assert.That(tree.Diagnostics, Is.Empty);
-            Assert.That(((ImportSyntax)tree.Root.Statements[0]).Path.Value, Is.EqualTo("@pack/common.fss"));
+            Assert.That(((ImportSyntax)tree.Root.Statements[0]).Path.Value, Is.EqualTo("styles/common.fss"));
         }
         var style = (StyleSyntax)tree.Root.Statements[1];
         using (Assert.EnterMultipleScope())

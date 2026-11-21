@@ -10,7 +10,6 @@ namespace PoeFilterX.Engine.Projects;
 
 internal sealed class ProjectLoadSession(
     IProjectSource source,
-    string projectRoot,
     ILogger logger,
     CancellationToken cancellationToken
 )
@@ -86,19 +85,14 @@ internal sealed class ProjectLoadSession(
     private void ReadFile(string path)
     {
         CompilerLog.OpeningFile(logger, path);
-        using var stream = source.OpenRead(path);
         if (Path.GetExtension(path).Equals(".json", StringComparison.OrdinalIgnoreCase))
         {
+            using var stream = source.OpenRead(path);
             ReadVariables(path, stream);
             return;
         }
 
-        var parsed = Path.GetExtension(path).ToLowerInvariant() switch
-        {
-            ".filterx" => FilterXParserService.Parse(stream, path, cancellationToken),
-            ".fss" => FssParserService.Parse(stream, path, cancellationToken),
-            _ => new ParseError("PFX2004", "Expected a .filterx, .fss, or .json file.")
-        };
+        var parsed = ReadSyntax(path);
         if (parsed is ParseError { PartialTree: null } error)
         {
             diagnostics.AddRange(error.At(path, default).Diagnostics);
@@ -117,6 +111,18 @@ internal sealed class ProjectLoadSession(
         trees.Add(path, tree);
         diagnostics.AddRange(tree.Diagnostics);
         VisitImports(tree);
+    }
+
+    private Result<SyntaxTree> ReadSyntax(string path)
+    {
+        if (source is IProjectSyntaxSource cached)
+        {
+            return cached.Parse(path, cancellationToken);
+        }
+
+        using var stream = source.OpenRead(path);
+
+        return ProjectSyntaxParser.Parse(stream, path, cancellationToken);
     }
 
     private void VisitImports(SyntaxTree tree)
@@ -157,7 +163,7 @@ internal sealed class ProjectLoadSession(
 
         try
         {
-            var target = ResolvePath(from, raw);
+            var target = Path.GetFullPath(raw, Path.GetDirectoryName(from)!);
             if (!AllowedImport(from, target))
             {
                 var expected = Path.GetExtension(from).Equals(".fss", StringComparison.OrdinalIgnoreCase)
@@ -180,18 +186,6 @@ internal sealed class ProjectLoadSession(
         {
             Report("PFX2004", exception.Message, from, import.Path.Span);
         }
-    }
-
-    private string ResolvePath(string from, string raw)
-    {
-        if (raw.StartsWith('@'))
-        {
-            var relative = raw[1..].TrimStart('/', '\\');
-
-            return Path.GetFullPath(Path.Combine(projectRoot, "node_modules", relative));
-        }
-
-        return Path.GetFullPath(raw, Path.GetDirectoryName(from)!);
     }
 
     private static bool AllowedImport(string from, string target)
