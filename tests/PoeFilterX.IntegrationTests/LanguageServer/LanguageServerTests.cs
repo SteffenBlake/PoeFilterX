@@ -251,7 +251,7 @@ public partial class LanguageServerTests
         presentation["color"] = JsonNode.Parse(colors[0].GetProperty("color").GetRawText());
         presentation["range"] = JsonNode.Parse(colors[0].GetProperty("range").GetRawText());
         var presentations = Result(await client.RequestAsync("textDocument/colorPresentation", presentation));
-        Assert.That(presentations[0].GetProperty("label").GetString(), Is.EqualTo("255 0 0 255"));
+        Assert.That(presentations[0].GetProperty("label").GetString(), Is.EqualTo("red"));
         var signature = Result(await client.RequestAsync("textDocument/signatureHelp",
             At(workspace.PathFor("main.fss"), 0, text.IndexOf("40", StringComparison.Ordinal))));
         Assert.That(signature.GetProperty("signatures")[0].GetProperty("label").GetString(),

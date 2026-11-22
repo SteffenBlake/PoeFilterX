@@ -118,6 +118,11 @@ public static partial class StyleOperationsCodec
         {
             return error;
         }
+        if (args.Length == 1 && NamedColors.Values.TryGetValue(args[0], out var namedColor))
+        {
+            return namedColor;
+        }
+
         if (args.Length == 1 && args[0].StartsWith("0x", StringComparison.OrdinalIgnoreCase))
         {
             var hex = args[0].AsSpan(2);

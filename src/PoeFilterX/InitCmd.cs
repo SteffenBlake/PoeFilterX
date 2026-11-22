@@ -75,10 +75,55 @@ internal static partial class InitCmd
             Directory.CreateDirectory(directory);
             WriteFile(
                 Path.Combine(directory, EntrypointDiscovery.DefaultFileName),
-                $"using {normalized}.fss;",
+                $$"""
+                using {{normalized}}.fss;
+
+                # Highlight items not covered by a rule.
+                Style missed;
+
+                # Show all currency with the base style.
+                {
+                    Class Currency;
+                    Style base;
+                }
+
+                """,
                 logger
             );
-            WriteFile(Path.Combine(directory, normalized + ".fss"), string.Empty, logger);
+            WriteFile(
+                Path.Combine(directory, normalized + ".fss"),
+                """
+                /* Loud styling makes unmatched items easy to spot. */
+                missed {
+                    show: true;
+                    bg-color: 0xFF1493;
+                    font-color: 0xFFFF00;
+                    border-color: 0x00FFFF;
+                    font-size: 45;
+                    icon: disabled;
+                    pillar: disabled;
+                }
+
+                /* A simple starting style for items you want to show. */
+                base {
+                    show: true;
+                    bg-color: 0x302015;
+                    border-color: 0x000000;
+                    font-color: 0xFFFFFF;
+                }
+
+                /* Hide items without the diagnostic colors. */
+                hidden {
+                    show: false;
+                    bg-color: 0x00000000;
+                    border-color: 0x000000;
+                    icon: disabled;
+                    pillar: disabled;
+                }
+
+                """,
+                logger
+            );
             ProjectCreated(logger, directory);
 
             return 0;

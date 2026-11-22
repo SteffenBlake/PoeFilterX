@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PoeFilterX.Engine.Compilation;
@@ -61,15 +60,22 @@ internal static class ColorFeatures
     {
         var color = parameters.Property("color");
         var channels = sourceArray.Select(name => Channel(color.Property(name))).ToArray();
-        var label = string.Join(' ', channels.Select(value => value.ToString(CultureInfo.InvariantCulture)));
         var range = parameters.Property("range");
         var start = ProtocolJson.Offset(tree.Source, range.Property("start"));
         var end = ProtocolJson.Offset(tree.Source, range.Property("end"));
+        var value = new ColorValue(channels[0], channels[1], channels[2], channels[3]);
+        var span = new SourceSpan(start, Math.Max(0, end - start));
+        var original = tree.Source.Slice(span).ToString();
+        var label = NamedColors.Values.TryGetValue(original, out var named) && named == value
+            ? original
+            : NamedColors.GetName(value) ?? (channels[3] == 255
+                ? $"0x{channels[0]:X2}{channels[1]:X2}{channels[2]:X2}"
+                : $"0x{channels[3]:X2}{channels[0]:X2}{channels[1]:X2}{channels[2]:X2}");
 
         return [with(new JsonObject
         {
             ["label"] = label,
-            ["textEdit"] = ProtocolJson.Edit(tree.Source, new(start, Math.Max(0, end - start)), label)
+            ["textEdit"] = ProtocolJson.Edit(tree.Source, span, label)
         })];
     }
 

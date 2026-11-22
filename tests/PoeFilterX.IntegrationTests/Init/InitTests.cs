@@ -25,8 +25,8 @@ public class InitTests
             Assert.That(Directory.GetDirectories(workspace.Root).Select(Path.GetFileName), Is.EqualTo([name]));
             Assert.That(Directory.GetFiles(workspace.PathFor(name)).Select(Path.GetFileName),
                 Is.EquivalentTo(["entrypoint.filterx", name + ".fss"]));
-            Assert.That(workspace.Read($"{name}/entrypoint.filterx"), Is.EqualTo($"using {name}.fss;"));
-            Assert.That(workspace.Read($"{name}/{name}.fss"), Is.Empty);
+            Assert.That(workspace.Read($"{name}/entrypoint.filterx"), Does.StartWith($"using {name}.fss;"));
+            Assert.That(workspace.Read($"{name}/{name}.fss"), Does.Contain("missed {").And.Contain("base {").And.Contain("hidden {"));
         }
     }
 
@@ -64,11 +64,27 @@ public class InitTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(build.ExitCode, Is.Zero, build.StandardError);
-            Assert.That(workspace.Read("example-project/entrypoint.filter"), Is.Empty);
+            Assert.That(TestWorkspace.Normalize(workspace.Read("example-project/entrypoint.filter")),
+                Is.EqualTo("""
+                    Show
+                        Class = "Currency"
+                        SetBorderColor 0 0 0 255
+                        SetTextColor 255 255 255 255
+                        SetBackgroundColor 48 32 21 255
+                        SetFontSize 45
+
+                    Show
+                        SetBorderColor 0 255 255 255
+                        SetTextColor 255 255 0 255
+                        SetBackgroundColor 255 20 147 255
+                        SetFontSize 45
+
+
+                    """.Replace("    ", "\t")));
         }
 
-        File.AppendAllText(workspace.PathFor("example-project/entrypoint.filterx"),
-            "\n{ Style test; Identified True; }");
+        workspace.Write("example-project/entrypoint.filterx",
+            "using example-project.fss;\n{ Style test; Identified True; }");
         workspace.Write("example-project/example-project.fss", "test { font-size: 40; }");
         var styledBuild = await CliRunner.RunAsync(workspace.PathFor("example-project"), []);
         using (Assert.EnterMultipleScope())
@@ -90,8 +106,8 @@ public class InitTests
         {
             Assert.That(result.ExitCode, Is.Zero, result.StandardError);
             Assert.That(result.StandardOutput, Does.Not.Contain("Project Name:"));
-            Assert.That(workspace.Read("foo/bar/phi/baz/entrypoint.filterx"), Is.EqualTo("using baz.fss;"));
-            Assert.That(workspace.Read("foo/bar/phi/baz/baz.fss"), Is.Empty);
+            Assert.That(workspace.Read("foo/bar/phi/baz/entrypoint.filterx"), Does.StartWith("using baz.fss;"));
+            Assert.That(workspace.Read("foo/bar/phi/baz/baz.fss"), Does.Contain("missed {"));
             Assert.That(Directory.Exists(workspace.PathFor("baz")), Is.False);
         }
     }
@@ -105,7 +121,7 @@ public class InitTests
         {
             Assert.That(result.ExitCode, Is.Zero, result.StandardError);
             Assert.That(workspace.Read("parent/example-project/entrypoint.filterx"),
-                Is.EqualTo("using example-project.fss;"));
+                Does.StartWith("using example-project.fss;"));
         }
     }
 
@@ -211,7 +227,7 @@ public class InitTests
         {
             Assert.That(result.ExitCode, Is.Zero, result.StandardError);
             Assert.That(result.StandardOutput, Is.Empty);
-            Assert.That(workspace.Read("parent/baz/entrypoint.filterx"), Is.EqualTo("using baz.fss;"));
+            Assert.That(workspace.Read("parent/baz/entrypoint.filterx"), Does.StartWith("using baz.fss;"));
         }
     }
 
@@ -239,7 +255,7 @@ public class InitTests
             Assert.That(result.ExitCode, Is.Zero, result.StandardError);
             Assert.That(result.StandardOutput, Is.Empty);
             Assert.That(result.StandardError, Is.Empty);
-            Assert.That(workspace.Read("baz/entrypoint.filterx"), Is.EqualTo("using baz.fss;"));
+            Assert.That(workspace.Read("baz/entrypoint.filterx"), Does.StartWith("using baz.fss;"));
         }
     }
 }

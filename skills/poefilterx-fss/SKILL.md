@@ -12,9 +12,11 @@ Partial properties preserve other fields. Omitted shorthand args preserve inheri
 show: true|false; → Show|Hide. font-size: 1–45;
 font-color/border-color/bg-color: R G B [A]; channels 0–255. Numeric default alpha: font/border 255, bg 240.
 Hex: 0xRRGGBB or 0xAARRGGBB; six-digit alpha 255.
+Named colors: all 148 CSS names and aliases, bare and case-insensitive (black, rebeccapurple, grey). Alpha 255, including bg-color; transparent is 0 0 0 0. currentColor/system colors unsupported.
+VS Code offers named-color completions and color swatches/picker. Picker uses an exact CSS name when available, otherwise 0xRRGGBB or 0xAARRGGBB; preserves matching name spelling.
 Component setters: <color-property>-red/-green/-blue/-alpha: 0–255;
 icon: size color shape; size 0–2 (0 largest). Components icon-size/icon-color/icon-shape. Output needs all three.
-Colors: Red Green Blue Brown White Yellow Cyan Grey Orange Pink Purple.
+Icon/pillar colors only: Red Green Blue Brown White Yellow Cyan Grey Orange Pink Purple.
 Shapes: Circle Diamond Hexagon Square Star Triangle Cross Moon Raindrop Kite Pentagon UpsideDownHouse.
 pillar: color [Permanent|Temporary]; components pillar-color/pillar-duration. Output needs color; initial duration Permanent.
 alert: id [volume] [global|positional]; id 1–16, volume 0–300. Components alert-id/alert-volume/alert-style. Output needs id; initial style global.

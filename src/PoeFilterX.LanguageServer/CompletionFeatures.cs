@@ -185,6 +185,11 @@ internal static class CompletionFeatures
             values = values.Concat(Enum.GetNames<FilterColor>());
         }
 
+        if (operation.Reader == "ReadColor")
+        {
+            values = values.Concat(NamedColors.Values.Keys.Order(StringComparer.Ordinal));
+        }
+
         if (operation.Name is "Rarity")
         {
             values = ["Normal", "Magic", "Rare", "Unique"];
@@ -274,7 +279,7 @@ internal static class CompletionFeatures
     {
         var expected = operation.Reader switch
         {
-            "ReadColor" => "RGB, RGBA, 0xRRGGBB, or 0xAARRGGBB",
+            "ReadColor" => "CSS color name, RGB, RGBA, 0xRRGGBB, or 0xAARRGGBB",
             "ReadColorAlpha" or "ReadColorRed" or "ReadColorGreen" or "ReadColorBlue" => "integer from 0 through 255",
             "ReadToggle" => "enabled or disabled",
             "ReadAlert" => "sound ID, volume, and optional positional; or enabled/disabled",

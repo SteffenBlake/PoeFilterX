@@ -1,5 +1,5 @@
 accent {
-    border-color: 0x00FFFF;
+    border-color: black;
     icon-color: Cyan;
     pillar-color: Cyan;
 }
