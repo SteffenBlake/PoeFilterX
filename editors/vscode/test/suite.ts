@@ -97,8 +97,15 @@ async function verifyCompilerCommands(root: vscode.Uri, document: vscode.TextDoc
         name: 'VS Code Demo', path: parent.fsPath
     })), 0);
     const entrypoint = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(parent, 'vs-code-demo/entrypoint.filterx'));
-    assert.equal(Buffer.from(entrypoint).toString('utf8'), 'using vs-code-demo.fss;');
-    await vscode.workspace.fs.stat(vscode.Uri.joinPath(parent, 'vs-code-demo/vs-code-demo.fss'));
+    const filter = Buffer.from(entrypoint).toString('utf8');
+    assert.match(filter, /^using vs-code-demo\.fss;/);
+    assert.match(filter, /^Style missed;$/m);
+    assert.match(filter, /\{\s*Class Currency;\s*Style base;\s*\}/);
+    const stylesheet = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(parent, 'vs-code-demo/vs-code-demo.fss'));
+    const styles = Buffer.from(stylesheet).toString('utf8');
+    assert.match(styles, /missed\s*\{\s*show: true;/);
+    assert.match(styles, /base\s*\{\s*show: true;/);
+    assert.match(styles, /hidden\s*\{\s*show: false;/);
     console.log('PoeFilterX compiler commands: build task, selected entrypoint, Problems diagnostics, and init passed.');
 }
 
