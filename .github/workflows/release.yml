@@ -177,7 +177,7 @@ jobs:
   publish-marketplace:
     needs: [prepare, test, package]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     environment: release
     permissions:
       contents: read
@@ -205,35 +205,53 @@ jobs:
           PFX_EXTENSION_VERSION: ${{ needs.prepare.outputs.extension-version }}
           PFX_PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
         run: |
-          for package in ../../artifacts/*.vsix; do
-            target="${package##*/poefilterx-${PFX_RELEASE_VERSION}-}"
-            export PFX_TARGET="${target%.vsix}"
-            published=false
-            for attempt in {1..10}; do
+          listing="$(mktemp)"
+          missing="$(mktemp)"
+          trap 'rm -f "$listing" "$missing"' EXIT
+          packages=(../../artifacts/*.vsix)
+          pending=("${packages[@]}")
+          for attempt in {1..20}; do
+            for package in "${pending[@]}"; do
               npx --no-install vsce publish --oidc --skip-duplicate --packagePath "$package"
-              if npx --no-install vsce show SteffenBlake.poefilterx --json | node --input-type=module -e '
-                import { readFileSync } from "node:fs";
-                const extension = JSON.parse(readFileSync(0, "utf8"));
-                const available = extension.versions?.some(version =>
+            done
+            npx --no-install vsce show SteffenBlake.poefilterx --json > "$listing"
+            node --input-type=module -e '
+              import { readFileSync } from "node:fs";
+              import { basename } from "node:path";
+              const [listing, ...packages] = process.argv.slice(1);
+              const extension = JSON.parse(readFileSync(listing, "utf8"));
+              const versions = extension.versions ?? [];
+              console.error("Marketplace currently lists:", versions.map(version =>
+                `${version.version}/${version.targetPlatform}`
+              ).join(", ") || "no versions");
+              const prefix = `poefilterx-${process.env.PFX_RELEASE_VERSION}-`;
+              for (const packagePath of packages) {
+                const filename = basename(packagePath);
+                if (!filename.startsWith(prefix) || !filename.endsWith(".vsix")) {
+                  throw new Error(`Unexpected extension package: ${filename}`);
+                }
+                const target = filename.slice(prefix.length, -5);
+                const available = versions.some(version =>
                   version.version === process.env.PFX_EXTENSION_VERSION &&
-                  version.targetPlatform === process.env.PFX_TARGET &&
+                  version.targetPlatform === target &&
                   (version.properties?.some(property =>
                     property.key === "Microsoft.VisualStudio.Code.PreRelease" && property.value === "true"
                   ) ?? false) === (process.env.PFX_PRERELEASE === "true")
                 );
-                process.exit(available ? 0 : 1);
-              '; then
-                published=true
-                break
-              fi
-              echo "Waiting for Marketplace availability: $PFX_TARGET (attempt $attempt/10)"
-              if [[ "$attempt" -lt 10 ]]; then sleep 15; fi
-            done
-            if [[ "$published" != true ]]; then
-              echo "::error::Marketplace is missing $PFX_TARGET version $PFX_EXTENSION_VERSION."
-              exit 1
+                if (!available) console.log(packagePath);
+              }
+            ' "$listing" "${packages[@]}" > "$missing"
+            mapfile -t pending < "$missing"
+            if [[ "${#pending[@]}" -eq 0 ]]; then
+              echo "All platform packages are available on the Marketplace."
+              exit 0
             fi
+            echo "Waiting for Marketplace validation or availability (attempt $attempt/20):"
+            printf '%s\n' "${pending[@]}"
+            if [[ "$attempt" -lt 20 ]]; then sleep 30; fi
           done
+          echo "::error::Marketplace has not made every platform available. Check validation status in the publisher hub."
+          exit 1
         working-directory: editors/vscode
 
   github-release:
