@@ -1,98 +1,128 @@
-﻿using System.Text.Json;
+using System.CommandLine;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using PoeFilterX.Engine.Projects;
 
-namespace PoeFilterX
+namespace PoeFilterX;
+
+internal static partial class InitCmd
 {
-    internal static class InitCmd
+    internal static Command Create()
     {
-        internal static string HelpText =
-@"Through a series of prompts, initializes a poefilterx template NPM project ready to use in the current directory
-    Usage: poefilterx init
-";
-        internal static Task Run(string[] args)
+        var command = new Command("init", "Create a .filterx project and stylesheet.");
+        var name = new Option<string?>("--name", "--project-name")
         {
-            Console.WriteLine();
+            Description = "Project name. Omit to enter it at a prompt.",
+            Arity = ArgumentArity.ExactlyOne
+        };
+        var path = new Option<string?>("--path")
+        {
+            Description = "Parent directory for the new project. Defaults to the current directory.",
+            Arity = ArgumentArity.ExactlyOne
+        };
+        var verbosity = CommandLogging.CreateVerbosityOption();
+        command.Options.Add(name);
+        command.Options.Add(path);
+        command.Options.Add(verbosity);
+        command.SetAction(result =>
+        {
+            using var logging = CommandLogging.CreateFactory(result.GetValue(verbosity));
+
+            return Run(
+                result.GetValue(name),
+                result.GetValue(path),
+                logging.CreateLogger(nameof(InitCmd))
+            );
+        });
+
+        return command;
+    }
+
+    private static int Run(
+        string? name,
+        string? parent,
+        ILogger logger
+    )
+    {
+        if (name is null)
+        {
             Console.Write("Project Name: ");
-            var projectName = Console.ReadLine();
-
-            var projectNameKebab = ToKebabCase(projectName);
-            if (string.IsNullOrEmpty(projectNameKebab))
-            {
-                Console.Error.WriteLine($"Invalid project name");
-                Environment.Exit(1);
-            }
-
-            var currentDir = Environment.CurrentDirectory;
-            var projectDir = Path.Combine(currentDir, projectNameKebab);
-
-            if (Directory.Exists(projectDir))
-            {
-                Console.Error.WriteLine($"Directory '{projectDir}' already exists, cannot overwrite");
-                Environment.Exit(1);
-            }
-
-            _ = Directory.CreateDirectory(projectDir);
-
-            var packagePath = Path.Combine(projectDir, "package.json");
-
-            Console.WriteLine($"Creating '{packagePath}'");
-
-            var packageData = new
-            {
-                name = projectNameKebab,
-                version = "1.0.0",
-                description = "",
-                main = $"{projectNameKebab}.filterx",
-                author = new
-                {
-                    name = ""
-                },
-                scripts = new
-                {
-                    build = "poefilterx build"
-                }
-            };
-            File.WriteAllText(packagePath, JsonSerializer.Serialize(packageData, new JsonSerializerOptions { WriteIndented = true }));
-
-            var filterXPath = Path.Combine(projectDir, $"{projectNameKebab}.filterx");
-            Console.WriteLine($"Creating '{filterXPath}'");
-            File.WriteAllText(filterXPath, $"using {projectNameKebab}.fss;");
-
-            var stylePath = Path.Combine(projectDir, $"{projectNameKebab}.fss");
-            Console.WriteLine($"Creating '{stylePath}'");
-            _ = File.Create(stylePath);
-
-            Console.WriteLine();
-
-            Console.WriteLine("Project created, you can test it out by executing `npm run build` inside the project now!");
-
-            return Task.CompletedTask;
+            name = Console.ReadLine();
         }
 
-        public static string? ToKebabCase(string? value)
+        var normalized = NameSeparators().Replace(name ?? string.Empty, "-").Trim('-').ToLowerInvariant();
+        if (normalized.Length == 0)
         {
-            if (string.IsNullOrEmpty(value))
+            InitializationFailed(logger, "Invalid project name");
+            return 1;
+        }
+
+        try
+        {
+            var directory = Path.GetFullPath(Path.Combine(
+                parent ?? Directory.GetCurrentDirectory(),
+                normalized
+            ));
+            if (Path.Exists(directory))
             {
-                return value;
+                InitializationFailed(
+                    logger,
+                    $"Directory '{directory}' already exists, cannot overwrite"
+                );
+                return 1;
             }
 
-            // Replace all non-alphanumeric characters with a dash
-            value = Regex.Replace(value, @"[^0-9a-zA-Z]", "-");
+            Directory.CreateDirectory(directory);
+            WriteFile(
+                Path.Combine(directory, EntrypointDiscovery.DefaultFileName),
+                $"using {normalized}.fss;",
+                logger
+            );
+            WriteFile(Path.Combine(directory, normalized + ".fss"), string.Empty, logger);
+            ProjectCreated(logger, directory);
 
-            // Replace all subsequent dashes with a single dash
-            value = Regex.Replace(value, @"[-]{2,}", "-");
-
-            // Remove any trailing dashes
-            value = Regex.Replace(value, @"-+$", string.Empty);
-
-            // Remove any dashes in position zero
-            if (value.StartsWith("-"))
-            {
-                value = value[1..];
-            }
-
-            // Lowercase and return
-            return value.ToLower();
+            return 0;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            InitializationFailed(logger, exception.Message);
+            return 1;
         }
     }
+
+    private static void WriteFile(
+        string path,
+        string contents,
+        ILogger logger
+    )
+    {
+        CreatingFile(logger, path);
+        using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        using var writer = new StreamWriter(stream);
+        writer.Write(contents);
+    }
+
+    [GeneratedRegex("[^0-9a-zA-Z]+", RegexOptions.CultureInvariant)]
+    private static partial Regex NameSeparators();
+
+    [LoggerMessage(
+        2000,
+        LogLevel.Information,
+        "Creating '{Path}'"
+    )]
+    private static partial void CreatingFile(ILogger logger, string path);
+
+    [LoggerMessage(
+        2001,
+        LogLevel.Information,
+        "Project created in '{Path}'. Run `poefilterx` inside that directory to build it."
+    )]
+    private static partial void ProjectCreated(ILogger logger, string path);
+
+    [LoggerMessage(
+        2002,
+        LogLevel.Error,
+        "PFX4001: {Message}"
+    )]
+    private static partial void InitializationFailed(ILogger logger, string message);
 }

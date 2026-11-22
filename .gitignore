@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+.generated/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -349,3 +350,6 @@ MigrationBackup/
 .ionide/
 
 .vscode
+
+!src/PoeFilterX.Engine/Packages/*.cs
+!tests/PoeFilterX.IntegrationTests/Packages/*.cs

@@ -1,0 +1,13 @@
+{
+    BaseType == %LowTierSplinters%;
+    StackSize > 1;
+    Style currency low-value;
+    {
+        StackSize > 5;
+        Style med-value;
+        {
+            StackSize > 10;
+            Style high-value;
+        }
+    }
+}

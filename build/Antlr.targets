@@ -1,0 +1,41 @@
+<Project>
+  <PropertyGroup>
+    <AntlrVersion>4.13.1</AntlrVersion>
+    <AntlrToolHash>BC13A9C57A8DD7D5196888211E5EDE657CB64A3CE968608697E4F668251A8487</AntlrToolHash>
+    <AntlrToolPath>$(MSBuildThisFileDirectory)obj/antlr-$(AntlrVersion)-complete.jar</AntlrToolPath>
+    <AntlrJavaExecutable Condition="'$(AntlrJavaExecutable)' == ''">java</AntlrJavaExecutable>
+  </PropertyGroup>
+
+  <Target Name="PrepareAntlr" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <AntlrOutputDirectory>$(IntermediateOutputPath)antlr/</AntlrOutputDirectory>
+    </PropertyGroup>
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(AntlrToolPath)'));$(AntlrOutputDirectory)" />
+    <DownloadFile SourceUrl="https://www.antlr.org/download/antlr-$(AntlrVersion)-complete.jar"
+                  DestinationFileName="antlr-$(AntlrVersion)-complete.jar"
+                  DestinationFolder="$([System.IO.Path]::GetDirectoryName('$(AntlrToolPath)'))"
+                  Condition="!Exists('$(AntlrToolPath)')" />
+    <GetFileHash Files="$(AntlrToolPath)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="ActualAntlrToolHash" />
+    </GetFileHash>
+    <Error Condition="'$(ActualAntlrToolHash)' != '$(AntlrToolHash)'"
+           Text="ANTLR generator checksum mismatch. Delete $(AntlrToolPath) and rebuild." />
+  </Target>
+
+  <Target Name="GenerateAntlr" DependsOnTargets="PrepareAntlr"
+          Condition="'$(DesignTimeBuild)' != 'true'"
+          Inputs="@(AntlrGrammar);$(MSBuildThisFileFullPath);$(AntlrToolPath)"
+          Outputs="@(AntlrGrammar->'$(AntlrOutputDirectory)%(Filename)Lexer.cs');@(AntlrGrammar->'$(AntlrOutputDirectory)%(Filename)Parser.cs');$(AntlrOutputDirectory)generation.stamp">
+    <Exec Command="&quot;$(AntlrJavaExecutable)&quot; -jar &quot;$(AntlrToolPath)&quot; -Dlanguage=CSharp -package PoeFilterX.Engine.Parsing.Generated -visitor -no-listener -Werror -Xexact-output-dir -o &quot;$(AntlrOutputDirectory)&quot; @(AntlrGrammar->'&quot;%(FullPath)&quot;', ' ')" />
+    <Touch Files="$(AntlrOutputDirectory)generation.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(AntlrOutputDirectory)**/*" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeAntlrSources" BeforeTargets="CoreCompile" DependsOnTargets="GenerateAntlr">
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)antlr/*.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

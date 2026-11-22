@@ -1,0 +1,213 @@
+{
+  "name": "poefilterx",
+  "displayName": "PoeFilterX",
+  "icon": "resources/icon.png",
+  "description": "PoeFilterX language support and entrypoint selection.",
+  "version": "0.1.4",
+  "publisher": "SteffenBlake",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SteffenBlake/PoeFilterX.git",
+    "directory": "editors/vscode"
+  },
+  "engines": {
+    "vscode": "^1.91.0",
+    "node": ">=22"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "PoeFilterX runs its bundled language server executable."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "The PoeFilterX compiler requires files on disk."
+    }
+  },
+  "activationEvents": [
+    "workspaceContains:**/entrypoint.filterx",
+    "workspaceContains:**/*.entrypoint.filterx",
+    "onTaskType:poefilterx"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "filterx",
+        "aliases": [
+          "PoeFilterX",
+          "filterx"
+        ],
+        "extensions": [
+          ".filterx"
+        ],
+        "configuration": "./language-configuration.filterx.json",
+        "icon": {
+          "light": "./resources/file-icons/filter-light.svg",
+          "dark": "./resources/file-icons/filter-dark.svg"
+        }
+      },
+      {
+        "id": "fss",
+        "aliases": [
+          "Filter Style Sheet",
+          "fss"
+        ],
+        "extensions": [
+          ".fss"
+        ],
+        "configuration": "./language-configuration.fss.json",
+        "icon": {
+          "light": "./resources/file-icons/style-light.svg",
+          "dark": "./resources/file-icons/style-dark.svg"
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "poefilterx.restorePackages",
+        "title": "Restore Packages",
+        "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.selectEntrypoint",
+        "title": "Select Entrypoint",
+        "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.restartLanguageServer",
+        "title": "Restart Language Server",
+        "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.init",
+        "title": "Initialize Project",
+        "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.build",
+        "title": "Build",
+        "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.checkItem",
+        "title": "Inspect Item",
+        "category": "PoeFilterX"
+      }
+    ],
+    "configuration": {
+      "title": "PoeFilterX",
+      "properties": {
+        "poefilterx.entrypoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "default": [],
+          "scope": "window",
+          "markdownDescription": "Selected compiler entrypoints. An empty list enables automatic discovery. Paths are relative to a single workspace folder; use absolute paths or file URIs in multi-root workspaces. Use **PoeFilterX: Select Entrypoint** to choose one."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[filterx]": {
+        "editor.semanticHighlighting.enabled": true
+      },
+      "[fss]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
+    "semanticTokenScopes": [
+      {
+        "language": "filterx",
+        "scopes": {
+          "property": [
+            "support.type.property-name.json"
+          ]
+        }
+      },
+      {
+        "language": "fss",
+        "scopes": {
+          "property": [
+            "support.type.property-name.json"
+          ]
+        }
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "poefilterx",
+        "required": [
+          "entrypoint"
+        ],
+        "when": "processExecutionSupported",
+        "properties": {
+          "entrypoint": {
+            "type": "string",
+            "description": "Input .filterx file, relative to this workspace folder or an absolute path or file URI."
+          },
+          "output": {
+            "type": "string",
+            "description": "Optional output .filter path, relative to this workspace folder or absolute."
+          }
+        }
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "poefilterx",
+        "label": "PoeFilterX compiler",
+        "owner": "poefilterx-build",
+        "source": "PoeFilterX build",
+        "applyTo": "allDocuments",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) (PFX\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc --noEmit && node build.mjs",
+    "watch": "node build.mjs --watch",
+    "vscode:prepublish": "npm run compile",
+    "test": "node --test test/itemInspector.test.cjs && npm run compile && tsc -p tsconfig.test.json && node out/test/run.js",
+    "build:server": "node build-server.mjs",
+    "package": "node package.mjs"
+  },
+  "dependencies": {
+    "vscode-languageclient": "11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "@types/vscode": "1.91.0",
+    "@vscode/test-electron": "2.5.2",
+    "@vscode/vsce": "4.1.1",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  },
+  "overrides": {
+    "vscode-languageclient": {
+      "minimatch": "11.0.1"
+    },
+    "@vscode/vsce": {
+      "minimatch": "11.0.1"
+    }
+  }
+}

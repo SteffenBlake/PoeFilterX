@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "PoeFilterX": {
-      "commandName": "Project",
-      "commandLineArgs": "build --p \"../Test-Filter/Test.filterx\"",
-      "hotReloadEnabled": false
-    }
-  }
-}

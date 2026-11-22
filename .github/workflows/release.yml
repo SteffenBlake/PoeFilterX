@@ -1,0 +1,234 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.metadata.outputs.commit }}
+      version: ${{ steps.metadata.outputs.version }}
+      extension-version: ${{ steps.metadata.outputs.extension-version }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+      tag: ${{ steps.metadata.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.release.tag_name || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: node --test .github/scripts/release-metadata.test.mjs
+      - name: Validate release and resolve versions
+        id: metadata
+        run: node .github/scripts/release-metadata.mjs
+
+  test:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PFX_RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 11.0.x
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+      - name: Build and test compiler
+        env:
+          VSTEST_ARTIFACTS_DIRECTORY: ${{ runner.temp }}
+        run: dotnet test PoeFilterX.slnx --configuration Release -p:ContinuousIntegrationBuild=true -p:Version="$PFX_RELEASE_VERSION" --logger trx --results-directory artifacts/test-results
+      - run: npm ci
+        working-directory: editors/vscode
+      - name: Test extension in VS Code
+        run: xvfb-run -a npm test
+        working-directory: editors/vscode
+      - name: Package .NET tool
+        run: dotnet pack src/PoeFilterX/PoeFilterX.csproj --configuration Release --no-build -p:ContinuousIntegrationBuild=true -p:Version="$PFX_RELEASE_VERSION" --output artifacts/packages
+      - name: Verify tool installation
+        run: |
+          dotnet tool install PoeFilterX --tool-path "$RUNNER_TEMP/poefilterx" --source "$PWD/artifacts/packages" --version "$PFX_RELEASE_VERSION"
+          "$RUNNER_TEMP/poefilterx/poefilterx" --version
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-nuget
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-results
+          path: artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 7
+
+  package:
+    needs: [prepare, test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [win32-x64, win32-arm64, linux-x64, linux-arm64, alpine-x64, alpine-arm64, darwin-x64, darwin-arm64]
+    env:
+      PFX_RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      PFX_EXTENSION_VERSION: ${{ needs.prepare.outputs.extension-version }}
+      PFX_PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+      PFX_RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
+      PFX_TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 11.0.x
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+      - run: npm ci
+        working-directory: editors/vscode
+      - name: Set extension release metadata
+        working-directory: editors/vscode
+        run: |
+          npm version "$PFX_EXTENSION_VERSION" --no-git-tag-version --allow-same-version
+          npm pkg set "description=PoeFilterX language support and entrypoint selection. Commit $PFX_RELEASE_COMMIT."
+      - name: Package extension and bundled CLI
+        run: npm run package -- "$PFX_TARGET"
+        working-directory: editors/vscode
+      - name: Archive standalone CLI
+        working-directory: editors/vscode/server
+        run: |
+          mkdir -p ../../../artifacts/release
+          cp ../dist/*.vsix ../../../artifacts/release/
+          if [[ "$PFX_TARGET" == win32-* ]]; then
+            zip -qr "../../../artifacts/release/poefilterx-${PFX_RELEASE_VERSION}-${PFX_TARGET}.zip" .
+          else
+            tar -czf "../../../artifacts/release/poefilterx-${PFX_RELEASE_VERSION}-${PFX_TARGET}.tar.gz" .
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.target }}
+          path: artifacts/release/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  publish-nuget:
+    needs: [prepare, test, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 11.0.x
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-nuget
+          path: packages
+      - name: Authenticate to NuGet with GitHub OIDC
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: nuget
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish .NET tool
+        env:
+          NUGET_API_KEY: ${{ steps.nuget.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push 'packages/*.nupkg' --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+
+  publish-marketplace:
+    needs: [prepare, test, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+      - run: npm ci
+        working-directory: editors/vscode
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: artifacts
+          merge-multiple: true
+      - name: Publish tested extension packages with GitHub OIDC
+        run: npx --no-install vsce publish --oidc --skip-duplicate --packagePath ../../artifacts/*.vsix
+        working-directory: editors/vscode
+
+  github-release:
+    needs: [prepare, test, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: artifacts
+          merge-multiple: true
+      - name: Create manual prerelease
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --target "$RELEASE_COMMIT" --prerelease --title "$RELEASE_VERSION" --notes "Prerelease built from commit $RELEASE_COMMIT."
+          fi
+      - name: Attach release artifacts and checksums
+        run: |
+          find artifacts -type f \( -name '*.nupkg' -o -name '*.vsix' -o -name '*.zip' -o -name '*.tar.gz' \) -exec cp '{}' . \;
+          sha256sum -- *.nupkg *.vsix *.zip *.tar.gz > SHA256SUMS
+          gh release upload "$RELEASE_TAG" --clobber -- *.nupkg *.vsix *.zip *.tar.gz SHA256SUMS

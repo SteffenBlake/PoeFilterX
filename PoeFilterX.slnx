@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PoeFilterX.Common/PoeFilterX.Common.csproj" />
+    <Project Path="src/PoeFilterX.Engine/PoeFilterX.Engine.csproj" />
+    <Project Path="src/PoeFilterX.Generator/PoeFilterX.Generator.csproj" />
+    <Project Path="src/PoeFilterX.LanguageServer/PoeFilterX.LanguageServer.csproj" />
+    <Project Path="src/PoeFilterX/PoeFilterX.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PoeFilterX.Engine.Tests/PoeFilterX.Engine.Tests.csproj" />
+    <Project Path="tests/PoeFilterX.IntegrationTests/PoeFilterX.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

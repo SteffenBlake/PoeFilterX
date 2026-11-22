@@ -1,0 +1,5 @@
+accent {
+    border-color: 0x00FFFF;
+    icon-color: Cyan;
+    pillar-color: Cyan;
+}

@@ -1,0 +1,94 @@
+/* FSS uses block comments, including comments across multiple lines.
+   Imports are root statements; FSS can import other FSS files only. */
+using "base.fss";
+
+/* Imports resolve relative to the stylesheet that contains them. */
+UsInG palette.fss;
+
+/* Empty style blocks are valid and can be composed with other classes. */
+empty {}
+
+/* Styles apply in declaration/import order, regardless of their order in
+   a FilterX Style list. Styles added to child filter blocks compose with
+   their inherited styles. Repeated class names add declarations, too. */
+visible {
+    show: true;
+}
+
+/* Colors accept RGB, RGBA, 0xRRGGBB, or 0xAARRGGBB. Omitted components
+   use the command's defaults. Component declarations override one channel. */
+gear {
+    border-color: 220 180 100;
+    bg-color: 20 20 30 240;
+    font-color: 0xFFFFFF;
+    font-size: /* Inline block comments also work. */ 36;
+    icon: 1 Yellow Diamond;
+    pillar: Yellow Permanent;
+}
+
+currency {
+    border-color: 0xFFFFAA00;
+    font-color: 255 220 100 255;
+    bg-color: 24; /* Red alone; green and blue default to zero. */
+    icon-size: 1;
+    icon-color: Orange;
+    icon-shape: Circle;
+    pillar-color: Orange;
+    pillar-duration: Temporary;
+}
+
+gem {
+    bg-color: 10 40; /* Two components are also accepted. */
+    icon: 1 Cyan Triangle;
+    pillar: Cyan Temporary;
+}
+
+map {
+    icon: 0 Red Star;
+    alert: 6 250 positional;
+}
+
+high-value {
+    font-size: 45;
+    border-color-alpha: 255;
+    border-color-red: 255;
+    border-color-green: 220;
+    border-color-blue: 100;
+    font-color-alpha: 255;
+    font-color-red: 255;
+    font-color-green: 255;
+    font-color-blue: 255;
+    bg-color-alpha: 240;
+    bg-color-red: 30;
+    bg-color-green: 20;
+    bg-color-blue: 0;
+    alert-id: 6;
+    alert-volume: 250;
+    alert-style: global;
+}
+
+/* Toggle forms preserve the other composed sound/icon/pillar components. */
+quiet {
+    alert: disabled;
+    drop-sound: disabled;
+    icon: disabled;
+    pillar: disabled;
+}
+
+loud {
+    alert: enabled;
+    drop-sound: enabled;
+    icon: enabled;
+    pillar: enabled;
+}
+
+custom-sound {
+    alert-path: using; /* A keyword can also be an unquoted string argument. */
+    /* Repeating a scalar property replaces its previous value. */
+    alert-path: "sounds\\example.ogg"; /* Quoted strings support escapes. */
+}
+
+/* A second declaration of the same class adds another ranked patch. */
+visible {
+    border-color-alpha: 255;
+}

@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <GameDataRoot>$(MSBuildThisFileDirectory)../external/</GameDataRoot>
+    <GameDataOutput>$(MSBuildProjectDirectory)/Checking/Generated/</GameDataOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)GAME-DATA-NOTICE.txt" Link="THIRD-PARTY-LICENSES/GAME-DATA.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <GameDataInput Include="$(GameDataRoot)poe1-data/data/base_items.json;$(GameDataRoot)poe1-data/data/item_classes.json;$(GameDataRoot)poe1-data/data/mods.json;$(GameDataRoot)poe1-data/data/gems_minimal.json;$(GameDataRoot)poe1-data/exported-version.txt;$(GameDataRoot)poe2-data/data/base_items.json;$(GameDataRoot)poe2-data/data/item_classes.json;$(GameDataRoot)poe2-data/data/mods.json;$(GameDataRoot)poe2-data/exported-version.txt;$(MSBuildThisFileDirectory)ImportGameData.cs;$(MSBuildThisFileDirectory)GAME-DATA-NOTICE.txt;$(MSBuildThisFileFullPath)" />
+    <GameDataOutputFile Include="$(GameDataOutput)Poe1.ItemBase.g.cs;$(GameDataOutput)Poe1.ItemModifier.g.cs;$(GameDataOutput)Poe2.ItemBase.g.cs;$(GameDataOutput)Poe2.ItemModifier.g.cs;$(GameDataOutput)ItemCompletionData.g.cs;$(MSBuildThisFileDirectory)../skills/poefilterx-basetypes/SKILL.md;$(MSBuildThisFileDirectory)../skills/poefilterx-basetypes/references/poe1.json;$(MSBuildThisFileDirectory)../skills/poefilterx-basetypes/references/poe2.json;$(MSBuildThisFileDirectory)../skills/poefilterx-item-classes/SKILL.md" />
+  </ItemGroup>
+  <Target Name="ImportGameData" BeforeTargets="BeforeCompile"
+          Condition="'$(DesignTimeBuild)' != 'true' And ('$(ImportGameData)' == 'true' Or (Exists('$(GameDataRoot)poe1-data/data/base_items.json') And Exists('$(GameDataRoot)poe2-data/data/base_items.json')))"
+          Inputs="@(GameDataInput);@(GameDataOutputFile)" Outputs="$(IntermediateOutputPath)game-data.stamp">
+    <Exec Command="dotnet run --file &quot;$(MSBuildThisFileDirectory)ImportGameData.cs&quot; -- &quot;$(MSBuildThisFileDirectory)..&quot;" />
+    <Touch Files="$(IntermediateOutputPath)game-data.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)game-data.stamp" />
+      <Compile Remove="Checking/Generated/*.g.cs" />
+      <Compile Include="Checking/Generated/*.g.cs" />
+    </ItemGroup>
+  </Target>
+</Project>
