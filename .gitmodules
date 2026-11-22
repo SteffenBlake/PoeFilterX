@@ -1,3 +1,19 @@
 [submodule "wiki"]
 	path = wiki
 	url = git@github.com:SteffenBlake/PoeFilterX.wiki.git
+[submodule "external/poe1-data"]
+	path = external/poe1-data
+	url = https://github.com/repoe-fork/repoe-fork.github.io.git
+	shallow = true
+[submodule "external/poe2-data"]
+	path = external/poe2-data
+	url = https://github.com/repoe-fork/poe2.git
+	shallow = true
+[submodule "external/libertinus"]
+	path = external/libertinus
+	url = https://github.com/googlefonts/libertinus.git
+	shallow = true
+[submodule "external/poe-minimap-icons"]
+	path = external/poe-minimap-icons
+	url = https://github.com/HiMarioLopez/PoEMinimapIcons.git
+	shallow = true

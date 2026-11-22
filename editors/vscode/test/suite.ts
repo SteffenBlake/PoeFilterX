@@ -46,6 +46,7 @@ export async function run(): Promise<void> {
     const stylesheet = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(root, 'primary.fss'));
     assert.equal(stylesheet.languageId, 'fss');
     await verifyCompilerCommands(root, document);
+    await verifyItemInspector(root, document);
     console.log('PoeFilterX extension: native entrypoint picker, persistence, LSP completion, highlighting, and discovery passed.');
 }
 
@@ -163,5 +164,34 @@ async function eventually(assertion: () => Promise<void>): Promise<void> {
             }
             await setTimeout(100);
         }
+    }
+}
+
+async function verifyItemInspector(root: vscode.Uri, document: vscode.TextDocument): Promise<void> {
+    await replace(document, '{ Style primary; Identified True; }');
+    await vscode.window.showTextDocument(document);
+    const stylesheet = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(root, 'primary.fss'));
+    const original = stylesheet.getText();
+    try {
+        await replace(stylesheet, 'primary { font-color: 12 34 56; font-size: 45; show: false; }');
+        const response = await vscode.commands.executeCommand<{
+            schemaVersion: number;
+            result: { preview: { hidden: boolean; opacity: number; foreground: string; fontSize: number }; styles: unknown[] };
+            diagnostics: unknown[];
+        }>('poefilterx.checkItem', {
+            item: 'Item Class: Stackable Currency\nRarity: Currency\nChaos Orb\n--------\nStack Size: 1/20\n',
+            game: 'Poe2', areaLevel: 80
+        });
+        assert.ok(response, 'The inspect command must open the panel and return the shared checker response.');
+        assert.equal(response.schemaVersion, 1);
+        assert.deepEqual(response.diagnostics, []);
+        assert.equal(response.result.preview.fontSize, 45, 'The inspector must read unsaved styles from the LSP.');
+        assert.equal(response.result.preview.foreground, '#0c2238ff');
+        assert.equal(response.result.preview.hidden, true);
+        assert.equal(response.result.preview.opacity, 1);
+        assert.ok(response.result.styles.length > 0);
+    } finally {
+        await replace(stylesheet, original);
+        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using PoeFilterX.Engine.Checking;
 using PoeFilterX.Engine.Compilation;
 using PoeFilterX.Engine.Syntax;
 using PoeFilterX.Engine.Packages;
@@ -42,7 +43,7 @@ internal static class CompletionFeatures
         }
         else
         {
-            AddOperations(items, context, head, word);
+            AddOperations(items, context, head, word, offset);
         }
 
         return new JsonObject { ["isIncomplete"] = false, ["items"] = items };
@@ -57,7 +58,8 @@ internal static class CompletionFeatures
         JsonArray items,
         EditorContext context,
         string head,
-        SourceSpan word
+        SourceSpan word,
+        int offset
     )
     {
         var tree = context.Tree;
@@ -67,7 +69,15 @@ internal static class CompletionFeatures
             ? item.Name.Equals(head, StringComparison.OrdinalIgnoreCase) : item.Name == head);
         if (operation is not null && word.Start > FindHeadStart(tree, word.Start))
         {
-            AddValues(items, operation, tree.Source, word);
+            if (!styles && operation.Name is "Class" or "BaseType")
+            {
+                AddItemNames(items, context, operation.Name, offset);
+            }
+            else
+            {
+                AddValues(items, operation, tree.Source, word);
+            }
+
             foreach (var name in context.Project.VariableFiles.Values.SelectMany(values => values.Keys).Distinct())
             {
                 items.Add((JsonNode)Item(
@@ -90,6 +100,71 @@ internal static class CompletionFeatures
                 "import", CompletionKind.Keyword, "Declare a Git package: import alias from \"URL\";", tree.Source, word
             ));
         }
+    }
+
+    private static void AddItemNames(
+        JsonArray items,
+        EditorContext context,
+        string operation,
+        int offset
+    )
+    {
+        var span = ItemValueSpan(context.Tree, offset);
+        var prefix = span.Start < context.Tree.Source.Text.Length && context.Tree.Source.Text[span.Start] == '"' ? "\"" : "";
+        var values = operation == "Class"
+            ? ItemCompletionData.ItemClassSuggestions
+            : ItemCompletionData.BaseTypes;
+        foreach (var value in values)
+        {
+            var item = Item(value.Name, CompletionKind.Value, value.SearchTags, context.Tree.Source, span);
+            item["labelDetails"] = new JsonObject { ["description"] = value.SearchTags };
+            item["filterText"] = prefix + value.Name + " " + value.SearchTags;
+            item["textEdit"] = ProtocolJson.Edit(context.Tree.Source, span, QuoteItemName(value.Name));
+            items.Add((JsonNode)item);
+        }
+    }
+
+    private static SourceSpan ItemValueSpan(SyntaxTree tree, int offset)
+    {
+        var head = FindHeadStart(tree, offset);
+        var tokens = tree.Tokens.Where(token => !token.IsTrivia && token.Span.Start > head && token.Span.Start <= offset);
+        var start = SyntaxFacts.Word(tree.Source, offset).Start;
+        foreach (var token in tokens)
+        {
+            if (token.Kind is "STRING" or "UNTERMINATED_STRING" or "INVALID_STRING")
+            {
+                if (SyntaxFacts.Contains(token.Span, offset))
+                {
+                    return token.Span;
+                }
+
+                start = token.Span.End;
+            }
+            else if (token.Kind == "OPERATOR" || tree.Source.Slice(token.Span).ToString().Contains('%'))
+            {
+                start = token.Span.End;
+            }
+            else
+            {
+                start = Math.Min(start, token.Span.Start);
+            }
+        }
+
+        while (start < offset && char.IsWhiteSpace(tree.Source.Text[start]))
+        {
+            start++;
+        }
+
+        var end = SyntaxFacts.Word(tree.Source, offset).End;
+        return new SourceSpan(start, end - start);
+    }
+
+    private static string QuoteItemName(string name)
+    {
+        return "\"" + name.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "\\\"", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal)
+            .Replace("\t", "\\t", StringComparison.Ordinal) + "\"";
     }
 
     private static void AddValues(

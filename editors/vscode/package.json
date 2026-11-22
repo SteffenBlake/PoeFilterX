@@ -95,6 +95,11 @@
         "command": "poefilterx.build",
         "title": "Build",
         "category": "PoeFilterX"
+      },
+      {
+        "command": "poefilterx.checkItem",
+        "title": "Inspect Item",
+        "category": "PoeFilterX"
       }
     ],
     "configuration": {
@@ -182,7 +187,7 @@
     "compile": "tsc --noEmit && node build.mjs",
     "watch": "node build.mjs --watch",
     "vscode:prepublish": "npm run compile",
-    "test": "npm run compile && tsc -p tsconfig.test.json && node out/test/run.js",
+    "test": "node --test test/itemInspector.test.cjs && npm run compile && tsc -p tsconfig.test.json && node out/test/run.js",
     "build:server": "node build-server.mjs",
     "package": "node package.mjs"
   },

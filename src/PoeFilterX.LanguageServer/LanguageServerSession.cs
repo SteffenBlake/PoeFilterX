@@ -79,6 +79,8 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
         Request("textDocument/codeAction", Actions);
         Request("workspace/symbol", WorkspaceSymbols);
         Request("poefilterx/projectContext", ProjectContext);
+        Request("poefilterx/checkInputs", (_, _) => CheckFeatures.Inputs());
+        Request("poefilterx/check", (parameters, token) => CheckFeatures.Check(Context(parameters, token), parameters, token));
         Add("workspace/executeCommand", (Func<JsonElement, CancellationToken, Task<JsonNode?>>)ExecuteAsync);
     }
 

@@ -1,1 +1,1 @@
-using styles/base.fss; later { font-size: 60; }
+using styles/base.fss; later { font-size: 40; }

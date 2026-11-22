@@ -12,9 +12,10 @@ internal static class Program
         root.Subcommands.Add(BuildCmd.Create(variables));
         root.Subcommands.Add(InitCmd.Create());
         root.Subcommands.Add(RestoreCmd.Create());
+        root.Subcommands.Add(CheckCmd.Create());
         root.Subcommands.Add(LanguageServerCmd.Create());
         var parsed = root.Parse(args);
-        if (parsed.Errors.Count == 0 || parsed.CommandResult.Command.Name is "init" or "language-server" or "restore")
+        if (parsed.Errors.Count == 0 || parsed.CommandResult.Command.Name is "init" or "language-server" or "restore" or "check")
         {
             return await parsed.InvokeAsync();
         }

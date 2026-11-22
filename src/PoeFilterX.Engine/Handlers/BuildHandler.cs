@@ -62,7 +62,7 @@ public static class BuildHandler
             };
             using var scope = logger.BeginScope("Build {Input}", path);
             CompilerLog.BuildInput(logger, path);
-            var variables = ReadConfiguration(request.Variables);
+            var variables = ProjectConfiguration.Read(request.Variables);
             CompilerLog.ConfigurationLoaded(logger, variables.Count);
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -72,28 +72,9 @@ public static class BuildHandler
                 }
             }
 
-            var loader = new ProjectLoader(new FileProjectSource(), logger);
-            var snapshot = loader.Load(path, cancellationToken);
-            if (snapshot.SyntaxTrees.TryGetValue(path, out var entrypoint)
-                && (!snapshot.Packages.References.IsEmpty || File.Exists(PackageCatalogReader.LockPath(path))))
-            {
-                var restored = await PackageRestorer.RestoreAsync(
-                    entrypoint,
-                    new(Locked: request.Locked, NoRestore: request.NoRestore),
-                    logger,
-                    cancellationToken
-                ).ConfigureAwait(false);
-                if (restored is ParseError restoreError)
-                {
-                    return ReportError(logger, restoreError, snapshot);
-                }
-
-                if (snapshot.Packages.NeedsRestore)
-                {
-                    snapshot = loader.Load(path, cancellationToken);
-                }
-            }
-
+            var snapshot = await CompilerProjectLoader.LoadAsync(
+                path, new(Locked: request.Locked, NoRestore: request.NoRestore), logger, cancellationToken
+            ).ConfigureAwait(false);
             CompilerLog.ProjectLoaded(
                 logger,
                 snapshot.SyntaxTrees.Count,
@@ -190,27 +171,5 @@ public static class BuildHandler
         return value.Value;
     }
 
-    private static Dictionary<string, string> ReadConfiguration(IReadOnlyDictionary<string, string>? commandLine)
-    {
-        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
-        {
-            var key = (string)item.Key;
-            if (key.StartsWith("POEFILTERX_", StringComparison.OrdinalIgnoreCase)
-                && !key.Equals("POEFILTERX_PACKAGE_CACHE", StringComparison.OrdinalIgnoreCase))
-            {
-                values[key[11..]] = (string)item.Value!;
-            }
-        }
 
-        if (commandLine is not null)
-        {
-            foreach (var item in commandLine)
-            {
-                values[item.Key] = item.Value;
-            }
-        }
-
-        return values;
-    }
 }

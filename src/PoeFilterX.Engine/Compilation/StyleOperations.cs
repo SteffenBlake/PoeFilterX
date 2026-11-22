@@ -53,7 +53,7 @@ public sealed record StyleOperations
     [Operation(Name = "bg-color-blue", Reader = "ReadColorBlue", Target = "BackgroundColor", SkipOutput = true)]
     public ColorValue? BackgroundColorBlue { get; init; }
 
-    [Operation(Name = "font-size", OutputName = "SetFontSize", Minimum = 18, Maximum = 100)]
+    [Operation(Name = "font-size", OutputName = "SetFontSize", Minimum = 1, Maximum = 45)]
     public int? FontSize { get; init; }
 
     [Operation(Name = "alert", Reader = "ReadAlert", Writer = "WriteSound")]

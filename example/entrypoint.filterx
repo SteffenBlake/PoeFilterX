@@ -107,3 +107,13 @@ Style hidden;
 using rules/equipment.filterx;
 using rules/maps-and-gems.filterx;
 using rules/variables.filterx;
+
+# Preview calibration: smallest and largest supported label sizes.
+{
+    BaseType == "Gold Amulet";
+    Style calibration-small;
+}
+{
+    BaseType == "Gold Ring";
+    Style calibration-large;
+}

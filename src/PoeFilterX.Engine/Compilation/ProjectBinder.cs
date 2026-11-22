@@ -14,7 +14,10 @@ internal static class ProjectBinder
         FilterOperations Local,
         string Path,
         SourceSpan Span
-    );
+    )
+    {
+        public SourceReference? Import { get; init; }
+    }
 
     // Mutable builders are scoped to a single bind. Neither snapshots nor caller configuration are modified.
     private sealed record BindingState(
@@ -69,10 +72,22 @@ internal static class ProjectBinder
                 block.IsAbstract,
                 block.Path,
                 block.Span
-            ));
+            )
+            { Trace = Trace(block, prepared), Local = block.Local, Parent = block.Parent < 0 ? null : prepared[block.Parent] });
         }
 
         return new PreparedProject(prepared.MoveToImmutable(), [.. state.Styles]);
+    }
+
+    private static ImmutableArray<SourceReference> Trace(
+        BoundBlock block,
+        ImmutableArray<PreparedBlock>.Builder prepared
+    )
+    {
+        var trace = block.Parent < 0 ? []
+            : prepared[block.Parent].Trace.Add(new(prepared[block.Parent].Path, prepared[block.Parent].Span));
+
+        return block.Import is { } import ? trace.Add(import) : trace;
     }
 
     private static void BindFile(
@@ -178,7 +193,12 @@ internal static class ProjectBinder
     )
     {
         var target = state.Imports[(tree.Source.Path, import.Span.Start)].TargetPath;
+        var first = state.Blocks.Count;
         BindFile(state, target, parent);
+        if (state.Blocks.Count > first)
+        {
+            state.Blocks[first] = state.Blocks[first] with { Import = new(tree.Source.Path, import.Span) };
+        }
     }
 
     private static Result<FilterOperations> BindFilter(BindingState state, CommandSyntax command)
@@ -231,7 +251,13 @@ internal static class ProjectBinder
                 Deprecated<StyleOperations> value => value.Value,
                 _ => throw new InvalidOperationException("A validated style has no value.")
             };
-            state.Styles.Add(new(style.Name, patch));
+            state.Styles.Add(new(style.Name, patch)
+            {
+                Path = tree.Source.Path,
+                Span = command.Span,
+                StyleSpan = style.Span,
+                Declaration = tree.Source.Slice(command.Span).ToString()
+            });
         }
     }
 }

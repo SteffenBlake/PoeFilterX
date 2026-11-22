@@ -255,7 +255,7 @@ public partial class LanguageServerTests
         var signature = Result(await client.RequestAsync("textDocument/signatureHelp",
             At(workspace.PathFor("main.fss"), 0, text.IndexOf("40", StringComparison.Ordinal))));
         Assert.That(signature.GetProperty("signatures")[0].GetProperty("label").GetString(),
-            Does.Contain("font-size").And.Contain("18").And.Contain("100"));
+            Does.Contain("font-size").And.Contain("1").And.Contain("45"));
         var format = Doc();
         format["options"] = new JsonObject { ["tabSize"] = 2, ["insertSpaces"] = true };
         var edits = Result(await client.RequestAsync("textDocument/formatting", format));

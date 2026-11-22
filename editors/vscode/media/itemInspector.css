@@ -1,0 +1,39 @@
+/* Libertinus Sans Regular. SIL OFL 1.1: fonts/OFL.txt.
+   Source: https://github.com/googlefonts/libertinus/blob/63b24ea7904a0ae69b38732b50dc6ebc277f9b68/fonts/ttf/LibertinusSans-Regular.ttf */
+@font-face { font-family: "Libertinus Sans"; src: url("fonts/LibertinusSans-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+body { max-width: 950px; padding: 16px 24px; color: var(--vscode-foreground); font-family: var(--vscode-font-family); }
+h1 { font-size: 22px; margin-bottom: 6px; }
+h2 { margin-top: 24px; font-size: 17px; }
+h3 { margin: 0 0 8px; font-size: 15px; }
+.project { color: var(--vscode-descriptionForeground); }
+form { display: grid; grid-template-columns: max-content 1fr; align-items: center; gap: 10px; }
+textarea, details, #status, label[for=item] { grid-column: 1 / -1; }
+input, select, textarea { color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, transparent); padding: 6px; font: inherit; }
+textarea { width: 100%; box-sizing: border-box; font-family: var(--vscode-editor-font-family); resize: vertical; }
+button { cursor: pointer; padding: 6px 12px; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: 0; }
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:disabled { opacity: .5; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, article:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+.source, .override-link { background: none; color: var(--vscode-textLink-foreground); padding: 2px; text-align: left; }
+.source:hover, .override-link:hover { background: none; text-decoration: underline; }
+#errors { color: var(--vscode-errorForeground); }
+.ground { min-height: 110px; display: flex; align-items: center; justify-content: center; background: #1e211b url("item-preview-background.png") center / cover no-repeat; padding: 30px; overflow: auto; }
+#preview { border: 2px solid transparent; padding: 2px 9px; font-family: "Libertinus Sans", sans-serif; line-height: 1.1; white-space: pre; text-align: center; }
+.style { border: 1px solid var(--vscode-panel-border); padding: 14px; margin: 12px 0; scroll-margin-block: 20px; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 5px 16px; margin-bottom: 0; }
+dd { margin: 0; overflow-wrap: anywhere; }
+.overridden { color: var(--vscode-disabledForeground); text-decoration: line-through; }
+
+.game-switch { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 6px 0; border: 0; }
+.game-switch label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.game-switch input { margin: 0; accent-color: var(--vscode-focusBorder); }
+.facts { display: grid; grid-template-columns: minmax(120px, max-content) minmax(100px, 1fr); gap: 8px 16px; margin-top: 12px; align-items: center; }
+.actions { grid-column: 1 / -1; display: flex; gap: 10px; }
+#clear { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+.color-value { display: flex; align-items: center; font-family: var(--vscode-editor-font-family); }
+.color-swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--vscode-foreground); margin-right: 8px; flex-shrink: 0; }
+
+.inherited { color: var(--vscode-descriptionForeground); }
+
+#preview-group { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+#preview-icon { flex-shrink: 0; width: 32px; height: 32px; object-fit: contain; }

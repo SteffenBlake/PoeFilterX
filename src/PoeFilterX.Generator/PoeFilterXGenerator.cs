@@ -86,7 +86,8 @@ public sealed class PoeFilterXGenerator : IIncrementalGenerator
             .AppendLine("using System.Collections.Immutable;")
             .AppendLine("using System.Text;")
             .AppendLine("using PoeFilterX.Engine.Diagnostics;")
-            .AppendLine("using PoeFilterX.Engine.Results;");
+            .AppendLine("using PoeFilterX.Engine.Results;")
+            .AppendLine("using PoeFilterX.Engine.Checking;");
         code.Append("namespace ").Append(model.Namespace).Append(";\npublic static partial class ")
             .Append(model.Codec).Append("\n{\npublic static ").Append("Result<").Append(model.Name).Append(">")
             .Append(" Parse(string name, ReadOnlySpan<string> args)\n{\nreturn name switch\n{\n");
@@ -133,7 +134,50 @@ public sealed class PoeFilterXGenerator : IIncrementalGenerator
                 .Append(", ").Append(property.Maximum).Append("),\n");
         }
 
-        return code.Append("];\n}\n").ToString();
+        code.Append("];\n");
+        if (model.Kind == OperationLanguage.Style)
+        {
+            code.Append("public static void Inspect(").Append(model.Name)
+                .Append(" model, StyleContributionCollector collector)\n{\n");
+            foreach (var target in model.Properties.Select(property => property.Target).Distinct())
+            {
+                code.Append("collector.Add(\"").Append(target).Append("\", model.").Append(target).Append(");\n");
+            }
+
+            code.Append("}\n}\n");
+        }
+        else
+        {
+            var properties = model.Properties.Where(property => !property.SkipOutput).ToArray();
+            code.Append("public static void Evaluate(").Append(model.Name)
+                .Append(" model, ConditionEvaluator evaluator)\n{\n");
+            foreach (var property in properties)
+            {
+                code.Append("evaluator.Add(FilterFact.").Append(property.Name)
+                    .Append(", model.").Append(property.Name).Append(");\n");
+            }
+
+            code.Append("}\npublic static Result<ItemFacts> Override(ItemFacts item, FilterFact fact, string text) => fact switch\n{\n");
+            foreach (var property in properties)
+            {
+                code.Append("FilterFact.").Append(property.Name).Append(" => ItemFactOverrides.Set(item, fact, text, default(")
+                    .Append(property.Type).Append(")),\n");
+            }
+
+            code.Append("_ => new ParseError(DiagnosticCodes.InvalidItem, $\"Invalid item fact '{fact}'.\")\n};\npublic static bool HasConditions(")
+                .Append(model.Name).Append(" model) => ")
+                .Append(string.Join(" || ", properties.Select(property => "model." + property.Name
+                    + (property.Type.StartsWith("ImmutableArray", StringComparison.Ordinal) ? ".Length > 0" : " is not null"))))
+                .Append(";\n}\npublic enum FilterFact\n{\n");
+            foreach (var property in properties)
+            {
+                code.Append(property.Name).Append(",\n");
+            }
+
+            code.Append("}\n");
+        }
+
+        return code.ToString();
     }
 
 }

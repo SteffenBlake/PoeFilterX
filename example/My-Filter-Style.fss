@@ -24,3 +24,20 @@ low-value {
     icon-size: 2;
     icon-color: Grey;
 }
+
+calibration-small {
+    show: false;
+    font-size: 1;
+    font-color: 255 255 255;
+    border-color: 255 210 90;
+    bg-color: 15 15 15 240;
+    icon: 1 Yellow Diamond;
+}
+calibration-large {
+    show: true;
+    font-size: 45;
+    font-color: 255 255 255;
+    border-color: 255 210 90;
+    bg-color: 15 15 15 240;
+    icon: 1 Yellow Diamond;
+}

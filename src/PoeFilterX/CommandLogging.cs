@@ -26,7 +26,7 @@ internal static class CommandLogging
         return option;
     }
 
-    public static ILoggerFactory CreateFactory(LogLevel minimumLevel)
+    public static ILoggerFactory CreateFactory(LogLevel minimumLevel, bool standardErrorOnly = false)
     {
         return LoggerFactory.Create(builder =>
         {
@@ -35,7 +35,7 @@ internal static class CommandLogging
             builder.AddConsole(options =>
             {
                 options.FormatterName = nameof(CompilerConsoleFormatter);
-                options.LogToStandardErrorThreshold = LogLevel.Warning;
+                options.LogToStandardErrorThreshold = standardErrorOnly ? LogLevel.Trace : LogLevel.Warning;
             });
         });
     }

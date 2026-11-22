@@ -1,0 +1,8 @@
+Path of Exile minimap icon artwork is owned by Grinding Gear Games.
+https://www.pathofexile.com/legal/terms-of-use-and-privacy-policy
+
+Unmodified game images extracted from Art/2DArt/Minimap/Player.png.
+Source: https://github.com/HiMarioLopez/PoEMinimapIcons
+Revision: 5d57746ddbf85d77a29d10ef0b0a0ed59bbab8b4
+Only the 396 loot-filter icons (12 shapes, 11 colors, 3 sizes) are bundled.
+The extraction repository's MIT license applies to its scripts, not this artwork.

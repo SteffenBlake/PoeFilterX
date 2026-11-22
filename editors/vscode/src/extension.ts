@@ -4,6 +4,7 @@ import { LanguageClient, State, TransportKind } from 'vscode-languageclient/node
 import { configuredEntrypoints, findEntrypoints, selectEntrypoint } from './entrypointPicker';
 import { BuildTaskProvider } from './buildTasks';
 import { initializeProject } from './initProject';
+import { CheckInput, ItemInspector } from './itemInspector';
 
 interface ProjectContext {
     readonly entrypoint: string | null;
@@ -40,7 +41,13 @@ class PoeFilterXExtension {
         this.status.show();
         const watcher = vscode.workspace.createFileSystemWatcher('**/*.{filterx,fss,json}');
         const builds = new BuildTaskProvider(this.serverPath, findEntrypoints);
+        const inspector = new ItemInspector(context.extensionUri);
         context.subscriptions.push(
+            inspector,
+            vscode.commands.registerCommand('poefilterx.checkItem', async (input?: CheckInput) => {
+                const entrypoint = await this.buildEntrypoint();
+                return entrypoint && this.client?.isRunning() ? inspector.show(entrypoint, this.client, input) : undefined;
+            }),
             this.status,
             this.output,
             watcher,

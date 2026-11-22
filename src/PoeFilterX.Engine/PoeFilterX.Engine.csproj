@@ -27,4 +27,5 @@
   </ItemGroup>
 
   <Import Project="../../build/Antlr.targets" />
+  <Import Project="../../build/GameData.targets" />
 </Project>
