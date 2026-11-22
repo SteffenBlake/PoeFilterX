@@ -200,7 +200,40 @@ jobs:
           path: artifacts
           merge-multiple: true
       - name: Publish tested extension packages with GitHub OIDC
-        run: npx --no-install vsce publish --oidc --skip-duplicate --packagePath ../../artifacts/*.vsix
+        env:
+          PFX_RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          PFX_EXTENSION_VERSION: ${{ needs.prepare.outputs.extension-version }}
+          PFX_PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+        run: |
+          for package in ../../artifacts/*.vsix; do
+            target="${package##*/poefilterx-${PFX_RELEASE_VERSION}-}"
+            export PFX_TARGET="${target%.vsix}"
+            published=false
+            for attempt in {1..10}; do
+              npx --no-install vsce publish --oidc --skip-duplicate --packagePath "$package"
+              if npx --no-install vsce show SteffenBlake.poefilterx --json | node --input-type=module -e '
+                import { readFileSync } from "node:fs";
+                const extension = JSON.parse(readFileSync(0, "utf8"));
+                const available = extension.versions?.some(version =>
+                  version.version === process.env.PFX_EXTENSION_VERSION &&
+                  version.targetPlatform === process.env.PFX_TARGET &&
+                  (version.properties?.some(property =>
+                    property.key === "Microsoft.VisualStudio.Code.PreRelease" && property.value === "true"
+                  ) ?? false) === (process.env.PFX_PRERELEASE === "true")
+                );
+                process.exit(available ? 0 : 1);
+              '; then
+                published=true
+                break
+              fi
+              echo "Waiting for Marketplace availability: $PFX_TARGET (attempt $attempt/10)"
+              if [[ "$attempt" -lt 10 ]]; then sleep 15; fi
+            done
+            if [[ "$published" != true ]]; then
+              echo "::error::Marketplace is missing $PFX_TARGET version $PFX_EXTENSION_VERSION."
+              exit 1
+            fi
+          done
         working-directory: editors/vscode
 
   github-release:

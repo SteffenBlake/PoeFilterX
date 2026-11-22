@@ -108,6 +108,14 @@ using rules/equipment.filterx;
 using rules/maps-and-gems.filterx;
 using rules/variables.filterx;
 
+# Unique bronze gauntlets: a warm forge palette and a bright minimap marker.
+{
+    Class == Gloves;
+    BaseType == "Bronze Gauntlets";
+    Rarity Unique;
+    Style giantsbane;
+}
+
 # Preview calibration: smallest and largest supported label sizes.
 {
     BaseType == "Gold Amulet";

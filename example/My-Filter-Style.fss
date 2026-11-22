@@ -25,6 +25,17 @@ low-value {
     icon-color: Grey;
 }
 
+giantsbane {
+    show: true;
+    font-size: 45;
+    font-color: 255 225 170;
+    border-color: 255 145 45;
+    bg-color: 45 18 12 245;
+    icon: 0 Orange Star;
+    pillar: Orange Permanent;
+    alert: 6 250 positional;
+}
+
 calibration-small {
     show: false;
     font-size: 1;
