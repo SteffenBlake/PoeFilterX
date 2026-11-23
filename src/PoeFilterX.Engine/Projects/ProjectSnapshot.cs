@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using PoeFilterX.Engine.Configuration;
 using PoeFilterX.Engine.Syntax;
 using PoeFilterX.Engine.Packages;
 
@@ -13,5 +14,7 @@ public sealed record ProjectSnapshot(
     ImmutableArray<SyntaxDiagnostic> Diagnostics
 )
 {
+    public ProjectSettings? Settings { get; init; }
+
     public PackageCatalog Packages { get; init; } = PackageCatalog.Empty;
 }

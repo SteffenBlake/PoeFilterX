@@ -20,5 +20,6 @@ public enum CompilerLogEvent
     PackageCached,
     PackageResolving,
     PackageRestoring,
-    PackagesRestored
+    PackagesRestored,
+    PackageOverridden
 }

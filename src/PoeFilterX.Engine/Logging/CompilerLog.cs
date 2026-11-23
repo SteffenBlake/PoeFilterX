@@ -156,4 +156,10 @@ internal static partial class CompilerLog
     [LoggerMessage((int)CompilerLogEvent.PackagesRestored, LogLevel.Information, "Packages are restored for {Entrypoint}")]
     public static partial void PackagesRestored(ILogger logger, string entrypoint);
 
+    [LoggerMessage(
+        (int)CompilerLogEvent.PackageOverridden,
+        LogLevel.Information,
+        "Using local package override {Alias} from {Path}"
+    )]
+    public static partial void PackageOverridden(ILogger logger, string alias, string path);
 }

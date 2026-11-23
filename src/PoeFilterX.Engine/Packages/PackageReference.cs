@@ -8,5 +8,6 @@ public sealed record PackageReference(
     string? RequestedCommit,
     SourceSpan Span,
     string? Commit = null,
-    string? Root = null
+    string? Root = null,
+    bool IsOverride = false
 );

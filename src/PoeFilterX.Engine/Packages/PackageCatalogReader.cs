@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using PoeFilterX.Engine.Configuration;
 using System.Text.Json;
 using PoeFilterX.Engine.Diagnostics;
 using PoeFilterX.Engine.Results;
@@ -10,12 +11,27 @@ public static class PackageCatalogReader
 {
     public static string LockPath(string entrypoint) => entrypoint + ".lock.json";
 
-    public static PackageCatalog Read(SyntaxTree tree, string? cacheRoot = null)
+    public static PackageCatalog Read(
+        SyntaxTree tree,
+        string? cacheRoot = null,
+        ProjectSettings? settings = null
+    )
     {
         var manifest = PackageManifest.Read(tree);
         if (manifest.References.IsEmpty)
         {
             return manifest;
+        }
+
+        if (settings is null)
+        {
+            var configured = ProjectSettings.Load(Path.GetDirectoryName(tree.Source.Path)!);
+            if (configured is ParseError configurationError)
+            {
+                return manifest with { Diagnostics = [.. manifest.Diagnostics, .. configurationError.Diagnostics] };
+            }
+
+            settings = (ProjectSettings)configured.Value!;
         }
 
         var read = ReadLock(tree.Source.Path);
@@ -29,8 +45,11 @@ public static class PackageCatalogReader
             PackageLock value => value,
             _ => throw new InvalidOperationException("A package lock result has no value.")
         };
-        var cache = cacheRoot ?? PackageIdentity.CacheRoot;
-        var references = manifest.References.Select(reference => Resolve(reference, locked, cache));
+        var cache = cacheRoot ?? settings.CacheRoot;
+        var overrides = settings.PackageOverrides;
+        var references = manifest.References.Select(reference => overrides.TryGetValue(reference.Repository, out var local)
+            ? reference with { Root = local, Commit = reference.RequestedCommit, IsOverride = true }
+            : Resolve(reference, locked, cache));
         var resolved = references.ToImmutableArray();
         var warnings = resolved.Where(reference => reference.Root is null).Select(reference => new SyntaxDiagnostic(
             DiagnosticCodes.RestoreRequired,

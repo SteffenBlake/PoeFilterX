@@ -21,6 +21,7 @@ internal static partial class LanguageServerCmd
             Description = "Connect to the editor's named pipe (Windows) or Unix socket path.",
             Arity = ArgumentArity.ExactlyOne
         };
+        CommandConfiguration.AddOptions(command);
         command.Options.Add(stdio);
         command.Options.Add(socket);
         command.Options.Add(pipe);
@@ -44,14 +45,20 @@ internal static partial class LanguageServerCmd
                 result.AddError("Pipe name cannot be empty.");
             }
         });
-        command.SetAction(async (result, cancellationToken) =>
+        command.SetAction((result, cancellationToken) => CommandConfiguration.InvokeAsync(result, null, async settings =>
         {
             try
             {
+                var port = settings.Get<int?>("socket");
+                var pipeName = settings.Configuration["pipe"];
+                if ((settings.Get("stdio", false) ? 1 : 0) + (port.HasValue ? 1 : 0) + (pipeName is not null ? 1 : 0) > 1)
+                {
+                    Console.Error.WriteLine("Select only one transport: --stdio, --socket, or --pipe.");
+                    return 1;
+                }
+
                 return await LanguageServerHost.RunAsync(
-                    result.GetValue(socket),
-                    result.GetValue(pipe),
-                    cancellationToken
+                    port, pipeName, settings, cancellationToken
                 );
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -65,7 +72,7 @@ internal static partial class LanguageServerCmd
                 TransportFailed(logging.CreateLogger(nameof(LanguageServerCmd)), exception.Message);
                 return 1;
             }
-        });
+        }));
 
         return command;
     }

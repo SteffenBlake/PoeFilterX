@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { LanguageClient, State, TransportKind } from 'vscode-languageclient/node';
-import { configuredEntrypoints, findEntrypoints, selectEntrypoint } from './entrypointPicker';
+import { configuredEntrypoints, findEntrypoints, isProjectConfiguration, selectEntrypoint } from './entrypointPicker';
 import { BuildTaskProvider } from './buildTasks';
 import { initializeProject } from './initProject';
 import { CheckInput, ItemInspector } from './itemInspector';
@@ -35,7 +35,7 @@ class PoeFilterXExtension {
     constructor(context: vscode.ExtensionContext) {
         this.serverPath = vscode.Uri.joinPath(context.extensionUri, 'server',
             process.platform === 'win32' ? 'PoeFilterX.exe' : 'PoeFilterX').fsPath;
-        this.status.name = 'PoeFilterX Entrypoint';
+        this.status.name = 'PoeFilterX Project';
         this.status.command = 'poefilterx.selectEntrypoint';
         this.setStatus('Starting…', 'Starting the PoeFilterX language server.');
         this.status.show();
@@ -45,7 +45,7 @@ class PoeFilterXExtension {
         context.subscriptions.push(
             inspector,
             vscode.commands.registerCommand('poefilterx.checkItem', async (input?: CheckInput) => {
-                const entrypoint = await this.buildEntrypoint();
+                const entrypoint = await this.resolvedEntrypoint();
                 return entrypoint && this.client?.isRunning() ? inspector.show(entrypoint, this.client, input) : undefined;
             }),
             this.status,
@@ -58,7 +58,7 @@ class PoeFilterXExtension {
                 return entrypoint ? vscode.tasks.executeTask(builds.createTask(entrypoint)) : undefined;
             }),
             vscode.commands.registerCommand('poefilterx.restorePackages', async () => {
-                const entrypoint = await this.buildEntrypoint();
+                const entrypoint = await this.resolvedEntrypoint();
                 if (!entrypoint || !this.client?.isRunning()) {
                     return;
                 }
@@ -144,6 +144,10 @@ class PoeFilterXExtension {
 
     private async buildEntrypoint(): Promise<vscode.Uri | undefined> {
         await this.transition;
+        const configured = configuredEntrypoints();
+        if (configured.length === 1) {
+            return configured[0];
+        }
         const document = vscode.window.activeTextEditor?.document;
         if (this.client?.isRunning() && document?.uri.scheme === 'file'
             && ['filterx', 'fss'].includes(document.languageId)) {
@@ -155,10 +159,6 @@ class PoeFilterXExtension {
             }
         }
 
-        const configured = configuredEntrypoints();
-        if (configured.length === 1) {
-            return configured[0];
-        }
         const candidates = await findEntrypoints();
         if (candidates.length === 1) {
             return candidates[0];
@@ -167,6 +167,17 @@ class PoeFilterXExtension {
         await selectEntrypoint();
         const selected = configuredEntrypoints();
         return selected.length === 1 ? selected[0] : undefined;
+    }
+
+    private async resolvedEntrypoint(): Promise<vscode.Uri | undefined> {
+        const selected = await this.buildEntrypoint();
+        if (!selected || !isProjectConfiguration(selected) || !this.client?.isRunning()) {
+            return selected;
+        }
+        const project = await this.client.sendRequest<ProjectContext>('poefilterx/projectContext', {
+            textDocument: { uri: selected.toString() }
+        });
+        return project.entrypoint ? vscode.Uri.parse(project.entrypoint) : undefined;
     }
 
     private async disposeClient(): Promise<void> {
@@ -213,7 +224,7 @@ class PoeFilterXExtension {
         if (!document || document.uri.scheme !== 'file' || !['filterx', 'fss'].includes(document.languageId)) {
             const entries = vscode.workspace.getConfiguration('poefilterx').get<string[]>('entrypoints', []);
             const label = entries.length === 1 ? path.basename(entries[0]) : entries.length > 1 ? 'Multiple selected' : 'Automatic';
-            this.setStatus(label, 'Select the PoeFilterX compiler entrypoint.');
+            this.setStatus(label, 'Select the PoeFilterX project configuration, profile, or entrypoint.');
             return;
         }
 
@@ -227,10 +238,11 @@ class PoeFilterXExtension {
 
             const entrypoint = project.entrypoint ? vscode.Uri.parse(project.entrypoint) : undefined;
             this.setStatus(
-                entrypoint ? path.basename(entrypoint.fsPath) : 'Select…',
+                configuredEntrypoints().length === 1 ? path.basename(configuredEntrypoints()[0].fsPath)
+                    : entrypoint ? path.basename(entrypoint.fsPath) : 'Select…',
                 project.warning ?? (entrypoint
-                    ? `${vscode.workspace.asRelativePath(entrypoint, true)}\nClick to select a different entrypoint.`
-                    : 'No entrypoint includes this file. Click to select an entrypoint.'),
+                    ? `${vscode.workspace.asRelativePath(entrypoint, true)}\nClick to select a different project.`
+                    : 'No entrypoint includes this file. Click to select a project.'),
                 project.warning !== null
             );
         } catch (error) {
@@ -241,8 +253,8 @@ class PoeFilterXExtension {
     }
 
     private setStatus(label: string, tooltip: string, warning = false): void {
-        this.status.text = `${warning ? '$(warning)' : '$(file-code)'} Entrypoint: ${label}`;
+        this.status.text = `${warning ? '$(warning)' : '$(file-code)'} Project: ${label}`;
         this.status.tooltip = tooltip;
-        this.status.accessibilityInformation = { label: `PoeFilterX entrypoint: ${label}`, role: 'button' };
+        this.status.accessibilityInformation = { label: `PoeFilterX project: ${label}`, role: 'button' };
     }
 }

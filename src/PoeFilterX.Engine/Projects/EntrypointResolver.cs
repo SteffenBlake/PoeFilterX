@@ -1,3 +1,4 @@
+using PoeFilterX.Engine.Configuration;
 using PoeFilterX.Engine.Diagnostics;
 using PoeFilterX.Engine.Results;
 
@@ -5,11 +6,28 @@ namespace PoeFilterX.Engine.Projects;
 
 public static class EntrypointResolver
 {
-    public static Result<string> Resolve(string? path)
+    public static Result<string> Resolve(string? path, ProjectSettings? settings = null)
     {
+        if (settings is null)
+        {
+            var configured = ProjectSettings.LoadForInput(path);
+            if (configured is ParseError error)
+            {
+                return error;
+            }
+
+            settings = (ProjectSettings)configured.Value!;
+        }
+
+        if (path is not null && ProjectSettings.IsConfigurationFile(path))
+        {
+            path = null;
+        }
+
+        path ??= settings.EntryPoint;
         if (path is null)
         {
-            var candidates = EntrypointDiscovery.Find(Directory.GetCurrentDirectory());
+            var candidates = EntrypointDiscovery.Find(settings.Root);
             if (candidates.Length != 1)
             {
                 var detail = candidates.IsEmpty

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using PoeFilterX.Engine.Configuration;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PoeFilterX.Engine.Logging;
@@ -13,6 +14,7 @@ namespace PoeFilterX.Engine.Projects;
 internal sealed class ProjectLoadSession(
     IProjectSource source,
     ILogger logger,
+    ProjectSettings settings,
     CancellationToken cancellationToken
 )
 {
@@ -42,7 +44,7 @@ internal sealed class ProjectLoadSession(
             [.. imports],
             [.. diagnostics]
         )
-        { Packages = packages };
+        { Packages = packages, Settings = settings };
     }
 
     private void Visit(
@@ -119,7 +121,7 @@ internal sealed class ProjectLoadSession(
         diagnostics.AddRange(tree.Diagnostics);
         if (PathComparer.Equals(path, entrypoint))
         {
-            packages = PackageCatalogReader.Read(tree);
+            packages = PackageCatalogReader.Read(tree, settings: settings);
             diagnostics.AddRange(packages.Diagnostics);
         }
         else

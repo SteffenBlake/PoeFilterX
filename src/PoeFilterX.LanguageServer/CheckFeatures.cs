@@ -69,7 +69,7 @@ internal static class CheckFeatures
 
         var result = context.HasEntrypoint
             ? ItemChecker.Check(context.Project, parameters.Property("item").Text(), game,
-                parameters.Property("areaLevel").Number(ItemChecker.DefaultAreaLevel(game)), ProjectConfiguration.Read(null), facts, token)
+                parameters.Property("areaLevel").Number(ItemChecker.DefaultAreaLevel(game)), ProjectConfiguration.Read(null, context.Project.Settings), facts, token)
             : new ParseError(DiagnosticCodes.InvalidItem, context.DiscoveryWarning ?? "Select a filter entrypoint first.");
         var response = new CheckResponse(1, result.Value as CheckResult,
             result is ParseError error ? error.Diagnostics : []);

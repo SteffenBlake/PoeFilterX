@@ -93,4 +93,83 @@ public partial class LanguageServerTests
         Assert.That(completion.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("label").GetString()), Is.EquivalentTo(expectedArray));
         await client.ExitAsync();
     }
+
+    [Test]
+    public async Task Local_package_overrides_refresh_external_files_and_use_unsaved_checkout_documents()
+    {
+        using var workspace = new TestWorkspace();
+        using var checkout = new TestWorkspace();
+        const string repository = "https://github.com/UserName/my-filter-style";
+        const string text = "import theme from \"https://github.com/UserName/my-filter-style\";\nusing @theme/main.fss;\n{ Class Currency; Style accent; }";
+        var path = workspace.PathFor("custom.filterx");
+        workspace.Write("custom.filterx", text);
+        workspace.Write(".poefilterx.json", """{"entrypoint":"custom.filterx"}""");
+        workspace.Write(".poefilterx.dev.json", JsonSerializer.Serialize(new
+        {
+            packageOverrides = new Dictionary<string, string> { [repository] = checkout.Root }
+        }));
+        checkout.Write("main.fss", "accent { font-size: 40; }");
+        var environment = new Dictionary<string, string> { ["PATH"] = workspace.PathFor("no-git") };
+        using var process = LspClient.StartProcess(workspace.Root, environment, "--profile", "dev");
+        await using var client = new LspClient(process, process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
+        await InitializeAsync(client, workspace);
+        await OpenAsync(client, path, text);
+        var initial = Result(await client.RequestAsync("textDocument/completion", At(path, 2, 25)));
+        Assert.That(initial.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("label").GetString()),
+            Does.Contain("accent"));
+
+        // An external save must refresh an idle editor without a client file watcher.
+        checkout.Write("main.fss", "replacement { font-size: 44; }");
+        var changed = await client.NotificationAsync("textDocument/publishDiagnostics");
+        Assert.That(changed.GetProperty("diagnostics")[0].GetProperty("message").GetString(), Does.Contain("accent"));
+
+        // The original checkout URI must supply unsaved content to the importing project.
+        await OpenAsync(client, checkout.PathFor("main.fss"), "accent { font-size: 42; }");
+        var context = Result(await client.RequestAsync("poefilterx/projectContext", new JsonObject
+        {
+            ["textDocument"] = Document(checkout.PathFor("main.fss"))
+        }));
+        Assert.That(context.GetProperty("entrypoint").GetString(), Is.EqualTo(new Uri(path).AbsoluteUri));
+        var completion = Result(await client.RequestAsync("textDocument/completion", At(path, 2, 25)));
+        Assert.That(completion.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("label").GetString()),
+            Does.Contain("accent").And.Not.Contain("replacement"));
+        await client.ExitAsync();
+    }
+
+    [Test]
+    public async Task Selected_json_profile_controls_entrypoint_and_package_override_context()
+    {
+        using var workspace = new TestWorkspace();
+        using var checkout = new TestWorkspace();
+        workspace.Write(".poefilterx.json", """{"entrypoint":"base.filterx"}""");
+        workspace.Write(".poefilterx.dev.json", JsonSerializer.Serialize(new
+        {
+            entrypoint = "profile/custom.filterx",
+            packageOverrides = new Dictionary<string, string> { ["https://github.com/u/p"] = checkout.Root }
+        }));
+        workspace.Write("base.filterx", "using base.fss; using child.filterx;");
+        workspace.Write("base.fss", "base { show: true; }");
+        workspace.Write("profile/custom.filterx", "import theme from \"https://github.com/u/p\"; using @theme/main.fss; using ../child.filterx;");
+        workspace.Write("child.filterx", "Style ");
+        checkout.Write("main.fss", "local { show: true; }");
+        workspace.Write(".poefilterx.other.json", "{}");
+        var environment = new Dictionary<string, string> { ["POEFILTERX_PROFILE"] = "other" };
+        using var process = LspClient.StartProcess(workspace.Root, environment);
+        await using var client = new LspClient(process, process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
+        await InitializeAsync(client, workspace, ".poefilterx.dev.json");
+        await OpenAsync(client, workspace.PathFor("child.filterx"), "Style ");
+        var completion = Result(await client.RequestAsync("textDocument/completion", At(workspace.PathFor("child.filterx"), 0, 6)));
+        Assert.That(completion.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("label").GetString()),
+            Does.Contain("local").And.Not.Contain("base"));
+        var context = Result(await client.RequestAsync("poefilterx/projectContext", new JsonObject
+        {
+            ["textDocument"] = Document(workspace.PathFor(".poefilterx.dev.json"))
+        }));
+        Assert.That(context.GetProperty("entrypoint").GetString(), Is.EqualTo(new Uri(workspace.PathFor("profile/custom.filterx")).AbsoluteUri));
+        await OpenAsync(client, checkout.PathFor("main.fss"), "unsaved { show: true; }");
+        var changed = Result(await client.RequestAsync("textDocument/completion", At(workspace.PathFor("child.filterx"), 0, 6)));
+        Assert.That(changed.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("label").GetString()),
+            Does.Contain("unsaved").And.Not.Contain("local"));
+        await client.ExitAsync();
+    }
 }

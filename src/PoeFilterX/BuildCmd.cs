@@ -35,6 +35,7 @@ internal static class BuildCmd
         var noRestore = new Option<bool>("--no-restore") { Description = "Build using only already restored packages." };
         var locked = new Option<bool>("--locked") { Description = "Require an up-to-date package lockfile." };
         var verbosity = CommandLogging.CreateVerbosityOption();
+        CommandConfiguration.AddOptions(command);
         command.Arguments.Add(path);
         command.Options.Add(pathOption);
         command.Options.Add(output);
@@ -48,18 +49,20 @@ internal static class BuildCmd
                 result.AddError("Specify the input path only once.");
             }
         });
-        command.SetAction(async (result, cancellationToken) =>
+        command.SetAction((result, cancellationToken) => CommandConfiguration.InvokeAsync(
+            result, result.GetValue(path) ?? result.GetValue(pathOption), async settings =>
         {
-            using var logging = CommandLogging.CreateFactory(result.GetValue(verbosity));
+            using var logging = CommandLogging.CreateFactory(settings.Get("verbosity", LogLevel.Information));
             var logger = logging.CreateLogger(nameof(BuildHandler));
 
             return await BuildHandler.HandleAsync(new BuildRequest(
-                result.GetValue(path) ?? result.GetValue(pathOption),
-                result.GetValue(output),
+                settings.EntryPoint,
+                settings.Output,
                 variables,
-                result.GetValue(noRestore),
-                result.GetValue(locked)
+                settings.Get("noRestore", false),
+                settings.Get("locked", false),
+                settings
             ), logger, cancellationToken);
-        });
+        }));
     }
 }

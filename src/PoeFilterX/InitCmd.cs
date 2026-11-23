@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using PoeFilterX.Engine.Projects;
+using PoeFilterX.Engine.Configuration;
 
 namespace PoeFilterX;
 
@@ -21,19 +22,20 @@ internal static partial class InitCmd
             Arity = ArgumentArity.ExactlyOne
         };
         var verbosity = CommandLogging.CreateVerbosityOption();
+        CommandConfiguration.AddOptions(command);
         command.Options.Add(name);
         command.Options.Add(path);
         command.Options.Add(verbosity);
-        command.SetAction(result =>
+        command.SetAction(result => CommandConfiguration.InvokeAsync(result, null, settings =>
         {
-            using var logging = CommandLogging.CreateFactory(result.GetValue(verbosity));
+            using var logging = CommandLogging.CreateFactory(settings.Get("verbosity", LogLevel.Information));
 
-            return Run(
-                result.GetValue(name),
-                result.GetValue(path),
+            return Task.FromResult(Run(
+                settings.Configuration["name"],
+                settings.ResolvePath(settings.Configuration["path"]),
                 logging.CreateLogger(nameof(InitCmd))
-            );
-        });
+            ));
+        }));
 
         return command;
     }
@@ -124,6 +126,21 @@ internal static partial class InitCmd
                 """,
                 logger
             );
+            WriteFile(Path.Combine(directory, ProjectSettings.FileName), $$"""
+                {
+                  "$schema": "{{ProjectSettings.SchemaUrl}}",
+                  "entrypoint": "entrypoint.filterx"
+                }
+
+                """, logger);
+            WriteFile(Path.Combine(directory, ProjectSettings.ProfileFileName("dev")), $$"""
+                {
+                  "$schema": "{{ProjectSettings.SchemaUrl}}",
+                  "packageOverrides": {}
+                }
+
+                """, logger);
+            WriteFile(Path.Combine(directory, ".gitignore"), ".poefilterx.dev.json\n", logger);
             ProjectCreated(logger, directory);
 
             return 0;

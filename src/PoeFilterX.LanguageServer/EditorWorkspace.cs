@@ -1,3 +1,4 @@
+using PoeFilterX.Engine.Configuration;
 using System.Collections.Immutable;
 using System.Text.Json;
 using PoeFilterX.Engine.Compilation;
@@ -8,7 +9,7 @@ using PoeFilterX.Engine.Packages;
 
 namespace PoeFilterX.LanguageServer;
 
-internal sealed class EditorWorkspace
+internal sealed class EditorWorkspace(ProjectSettings? settings = null)
 {
     private sealed record CachedProject(
         ProjectSnapshot Project,
@@ -18,6 +19,7 @@ internal sealed class EditorWorkspace
 
     private readonly EditorProjectSource source = new();
     private readonly Dictionary<string, CachedProject> projects = [with(EditorProjectSource.PathComparer)];
+    private readonly HashSet<string> invalidated = [with(EditorProjectSource.PathComparer)];
     private readonly List<string> roots = [];
     private readonly List<string> entrypoints = [];
     private long revision;
@@ -170,15 +172,26 @@ internal sealed class EditorWorkspace
             .Select(pair => pair.Key).ToArray();
         foreach (var entry in affected)
         {
-            projects.Remove(entry);
+            invalidated.Add(entry);
         }
     }
 
     public EditorContext Context(string path, CancellationToken cancellationToken)
     {
-        var owner = projects.Values.FirstOrDefault(cached => cached.Project.Packages.References.Any(package =>
+        if (ProjectSettings.IsConfigurationFile(path))
+        {
+            var selected = Load(path, cancellationToken);
+            if (selected.SyntaxTrees.TryGetValue(selected.EntryPoint, out var entryTree))
+            {
+                return new(selected, entryTree);
+            }
+
+            throw ProtocolJson.InvalidParameters(string.Join(" ", selected.Diagnostics.Select(diagnostic => diagnostic.Message)));
+        }
+
+        var owner = projects.FirstOrDefault(pair => pair.Value.Project.Packages.References.Any(package =>
             package.Root is { } root && PackagePaths.IsWithin(path, root)));
-        var candidates = owner is null ? Candidates(path) : [owner.Project.EntryPoint];
+        var candidates = owner.Key is null ? Candidates(path) : [owner.Key];
         var ambiguous = entrypoints.Count == 0 && candidates.Length > 1;
         var warning = ambiguous
             ? $"Multiple PoeFilterX entrypoints were found in '{Path.GetDirectoryName(candidates[0])}': "
@@ -227,6 +240,13 @@ internal sealed class EditorWorkspace
 
         var root = roots.Where(folder => IsWithin(path, folder)).OrderByDescending(folder => folder.Length).FirstOrDefault();
         var directory = Path.GetDirectoryName(path)!;
+        var configured = ProjectSettings.Load(directory, settings?.Profile, settings?.CommandLine);
+        if (configured is ProjectSettings projectSettings
+            && File.Exists(Path.Combine(projectSettings.Root, ProjectSettings.FileName)))
+        {
+            return [Path.Combine(projectSettings.Root, ProjectSettings.FileName)];
+        }
+
         while (true)
         {
             var candidates = EntrypointDiscovery.Find(directory, source.Documents.Keys);
@@ -260,13 +280,29 @@ internal sealed class EditorWorkspace
 
     private ProjectSnapshot Load(string path, CancellationToken cancellationToken)
     {
-        if (projects.TryGetValue(path, out var cached) && !FilesChanged(cached))
+        if (projects.TryGetValue(path, out var cached) && !invalidated.Remove(path) && !FilesChanged(cached))
         {
             return cached.Project;
         }
 
-        var project = new ProjectLoader(source).Load(path, cancellationToken);
-        var packageFiles = PackageFiles(project).ToImmutableArray();
+        var selectedProfile = ProjectSettings.IsConfigurationFile(path)
+            && Path.GetFileName(path) != ProjectSettings.FileName;
+        var configured = ProjectSettings.LoadForInput(
+            path, selectedProfile ? null : settings?.Profile, settings?.CommandLine
+        );
+        var resolved = configured is ProjectSettings selectionSettings
+            ? ProjectSettings.IsConfigurationFile(path) ? EntrypointResolver.Resolve(path, selectionSettings) : new Result<string>(path)
+            : new Result<string>((ParseError)configured.Value!);
+        var target = resolved.Value as string ?? path;
+        var project = configured is ProjectSettings projectSettings && resolved is string entrypoint
+            ? new ProjectLoader(source, settings: projectSettings).Load(entrypoint, cancellationToken)
+            : new ProjectLoader(source).Load(target, cancellationToken) with
+            {
+                Diagnostics = ((ParseError)(resolved.Value ?? configured.Value)!).Diagnostics
+            };
+        var packageFiles = PackageFiles(project).Concat(settings?.Profile is { } profile
+            ? [Path.Combine(project.Settings?.Root ?? Path.GetDirectoryName(path)!, ProjectSettings.ProfileFileName(profile))]
+            : Array.Empty<string>()).Distinct(EditorProjectSource.PathComparer).ToImmutableArray();
         var files = ProjectFiles(project).Concat(packageFiles).Distinct(EditorProjectSource.PathComparer)
             .Where(file => !source.Documents.ContainsKey(file))
             .ToImmutableDictionary(file => file, Stamp, EditorProjectSource.PathComparer);
@@ -277,7 +313,7 @@ internal sealed class EditorWorkspace
 
     public bool PackagesChanged()
     {
-        return projects.Values.Any(cached => cached.PackageFiles.Any(file =>
+        return projects.Values.Any(cached => cached.PackageFiles.Concat(OverrideFiles(cached.Project)).Any(file =>
             cached.Files.TryGetValue(file, out var stamp) && stamp != Stamp(file)));
     }
 
@@ -305,16 +341,21 @@ internal sealed class EditorWorkspace
 
     private static IEnumerable<string> PackageFiles(ProjectSnapshot project)
     {
-        if (project.Packages.References.IsEmpty)
-        {
-            return [];
-        }
-
-        return project.Packages.References.Where(package => package.Commit is not null)
+        var configurationFiles = project.Settings?.Files ?? [];
+        return project.Packages.References.Where(package => package.Commit is not null && !package.IsOverride)
             .Select(package => Path.Combine(
-                PackageIdentity.SnapshotDirectory(PackageIdentity.CacheRoot, package.Repository, package.Commit!),
+                PackageIdentity.SnapshotDirectory(
+                    project.Settings?.CacheRoot ?? PackageIdentity.CacheRoot, package.Repository, package.Commit!
+                ),
                 "complete"
-            )).Prepend(PackageCatalogReader.LockPath(project.EntryPoint)).Distinct(EditorProjectSource.PathComparer);
+            )).Prepend(PackageCatalogReader.LockPath(project.EntryPoint)).Concat(configurationFiles).Distinct(EditorProjectSource.PathComparer);
+    }
+
+    private static IEnumerable<string> OverrideFiles(ProjectSnapshot project)
+    {
+        var roots = project.Packages.References.Where(package => package.IsOverride && package.Root is not null)
+            .Select(package => package.Root!);
+        return ProjectFiles(project).Where(path => roots.Any(root => PackagePaths.IsWithin(path, root)));
     }
 
     private static (long Ticks, long Length) Stamp(string path)
@@ -332,9 +373,10 @@ internal sealed class EditorWorkspace
         var loaded = new HashSet<string>(EditorProjectSource.PathComparer);
         foreach (var entry in entries)
         {
-            if (loaded.Add(entry))
+            var project = Load(entry, cancellationToken);
+            if (loaded.Add(project.EntryPoint))
             {
-                yield return Load(entry, cancellationToken);
+                yield return project;
             }
         }
 
@@ -358,7 +400,7 @@ internal sealed class EditorWorkspace
             return project.Diagnostics;
         }
 
-        var compiled = ProjectCompiler.Prepare(project).FlatMap(static prepared =>
+        var compiled = ProjectCompiler.Prepare(project, ProjectConfiguration.Read(null, project.Settings)).FlatMap(static prepared =>
             ProjectCompiler.Write(prepared, TextWriter.Null));
         if (compiled is ParseError error)
         {

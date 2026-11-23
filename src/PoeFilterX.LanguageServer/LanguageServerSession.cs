@@ -1,3 +1,4 @@
+using PoeFilterX.Engine.Configuration;
 using System.Diagnostics;
 using Microsoft.VisualStudio.Threading;
 using System.Text.Json;
@@ -9,11 +10,11 @@ using StreamJsonRpc;
 
 namespace PoeFilterX.LanguageServer;
 
-internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
+internal sealed class LanguageServerSession(JsonRpc rpc, ProjectSettings? settings = null) : IDisposable
 {
     private enum Lifecycle { Created, Initializing, Ready, Shutdown }
 
-    private readonly EditorWorkspace workspace = new();
+    private readonly EditorWorkspace workspace = new(settings);
     private readonly CodeActionFeatures codeActions = new([new RestorePackageCodeActionProvider()]);
     private readonly HashSet<string> published = [with(EditorProjectSource.PathComparer)];
     private readonly HashSet<string> discoveryWarnings = [with(StringComparer.Ordinal)];
@@ -255,7 +256,8 @@ internal sealed class LanguageServerSession(JsonRpc rpc) : IDisposable
         }
 
         // Explicit user command only. The network operation does not block document dispatch.
-        var restored = await PackageRestorer.RestoreAsync(context.Tree, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var restored = await PackageRestorer.RestoreAsync(context.Tree,
+            new RestoreOptions(Settings: context.Project.Settings), cancellationToken: cancellationToken).ConfigureAwait(false);
         await dispatcher!;
         cancellationToken.ThrowIfCancellationRequested();
         EnsureReady();

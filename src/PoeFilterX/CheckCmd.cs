@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PoeFilterX.Engine.Checking;
+using PoeFilterX.Engine.Configuration;
 using PoeFilterX.Engine.Diagnostics;
 using PoeFilterX.Engine.Handlers;
 using PoeFilterX.Engine.Projects;
@@ -26,7 +27,8 @@ internal static class CheckCmd
         string[] Defines,
         bool NoRestore,
         bool Locked,
-        LogLevel Verbosity
+        LogLevel Verbosity,
+        ProjectSettings Settings
     );
 
     internal static Command Create()
@@ -43,6 +45,7 @@ internal static class CheckCmd
         var noRestore = new Option<bool>("--no-restore");
         var locked = new Option<bool>("--locked");
         var verbosity = CommandLogging.CreateVerbosityOption();
+        CommandConfiguration.AddOptions(command);
         command.Arguments.Add(path);
         foreach (var option in new Option[] { item, file, game, area, format, facts, defines, noRestore, locked, verbosity })
         {
@@ -56,19 +59,20 @@ internal static class CheckCmd
                 result.AddError("Supply --item or --item-file, not both.");
             }
         });
-        command.SetAction((result, token) => HandleAsync(new(
-            result.GetValue(path),
-            result.GetValue(item),
-            result.GetValue(file),
-            result.GetValue(game),
-            result.GetValue(area),
-            result.GetValue(format),
-            result.GetValue(facts) ?? [],
-            result.GetValue(defines) ?? [],
-            result.GetValue(noRestore),
-            result.GetValue(locked),
-            result.GetValue(verbosity)
-        ), token));
+        command.SetAction((result, token) => CommandConfiguration.InvokeAsync(result, result.GetValue(path), settings => HandleAsync(new(
+            settings.EntryPoint,
+            settings.Configuration["item"],
+            settings.ResolvePath(settings.Configuration["itemFile"]),
+            settings.Get("game", GameVersion.Poe1),
+            settings.Get<int?>("areaLevel"),
+            settings.Get("format", OutputFormat.Text),
+            settings.GetArray("fact"),
+            settings.GetArray("define"),
+            settings.Get("noRestore", false),
+            settings.Get("locked", false),
+            settings.Get("verbosity", LogLevel.Information),
+            settings
+        ), token)));
 
         return command;
     }
@@ -80,7 +84,12 @@ internal static class CheckCmd
         ProjectSnapshot? snapshot = null;
         try
         {
-            var entrypoint = EntrypointResolver.Resolve(request.Path);
+            if (request.Item is not null && request.ItemFile is not null)
+            {
+                return Report(new ParseError(DiagnosticCodes.InvalidItem, "Supply --item or --item-file, not both."), request.Format, snapshot);
+            }
+
+            var entrypoint = EntrypointResolver.Resolve(request.Path, request.Settings);
             if (entrypoint is ParseError entrypointError)
             {
                 return Report(entrypointError, request.Format, snapshot);
@@ -88,7 +97,7 @@ internal static class CheckCmd
 
             snapshot = await CompilerProjectLoader.LoadAsync(
                 (string)entrypoint.Value!,
-                new(Locked: request.Locked, NoRestore: request.NoRestore),
+                new(Locked: request.Locked, NoRestore: request.NoRestore, Settings: request.Settings),
                 logger,
                 token
             );
@@ -117,7 +126,7 @@ internal static class CheckCmd
             }
 
             var checkedItem = ItemChecker.Check(snapshot, (string)text.Value!, request.Game, request.AreaLevel,
-                ProjectConfiguration.Read((Dictionary<string, string>)variables.Value!),
+                ProjectConfiguration.Read((Dictionary<string, string>)variables.Value!, request.Settings),
                 (Dictionary<string, string>)overrides.Value!, token);
             return Report(checkedItem, request.Format, snapshot);
         }

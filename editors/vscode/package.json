@@ -2,7 +2,7 @@
   "name": "poefilterx",
   "displayName": "PoeFilterX",
   "icon": "resources/icon.png",
-  "description": "PoeFilterX language support and entrypoint selection.",
+  "description": "PoeFilterX language support and project selection.",
   "version": "0.1.4",
   "publisher": "SteffenBlake",
   "license": "MIT",
@@ -32,6 +32,8 @@
     }
   },
   "activationEvents": [
+    "workspaceContains:**/.poefilterx.json",
+    "workspaceContains:**/.poefilterx.*.json",
     "workspaceContains:**/entrypoint.filterx",
     "workspaceContains:**/*.entrypoint.filterx",
     "onTaskType:poefilterx"
@@ -78,7 +80,7 @@
       },
       {
         "command": "poefilterx.selectEntrypoint",
-        "title": "Select Entrypoint",
+        "title": "Select Project",
         "category": "PoeFilterX"
       },
       {
@@ -114,7 +116,7 @@
           "uniqueItems": true,
           "default": [],
           "scope": "window",
-          "markdownDescription": "Selected compiler entrypoints. An empty list enables automatic discovery. Paths are relative to a single workspace folder; use absolute paths or file URIs in multi-root workspaces. Use **PoeFilterX: Select Entrypoint** to choose one."
+          "markdownDescription": "Selected project configurations (.poefilterx.json or .poefilterx.<profile>.json), or .filterx entrypoints. An empty list enables automatic discovery. Paths are relative to a single workspace folder; use absolute paths or file URIs in multi-root workspaces. Use **PoeFilterX: Select Project** to choose one."
         }
       }
     },
@@ -154,7 +156,7 @@
         "properties": {
           "entrypoint": {
             "type": "string",
-            "description": "Input .filterx file, relative to this workspace folder or an absolute path or file URI."
+            "description": "Project .poefilterx.json, .poefilterx.<profile>.json, or input .filterx file; workspace-relative, absolute, or file URI."
           },
           "output": {
             "type": "string",

@@ -24,7 +24,7 @@ public class InitTests
             Assert.That(result.StandardOutput, Does.Contain("`poefilterx`"));
             Assert.That(Directory.GetDirectories(workspace.Root).Select(Path.GetFileName), Is.EqualTo([name]));
             Assert.That(Directory.GetFiles(workspace.PathFor(name)).Select(Path.GetFileName),
-                Is.EquivalentTo(["entrypoint.filterx", name + ".fss"]));
+                Is.EquivalentTo(["entrypoint.filterx", name + ".fss", ".poefilterx.json", ".poefilterx.dev.json", ".gitignore"]));
             Assert.That(workspace.Read($"{name}/entrypoint.filterx"), Does.StartWith($"using {name}.fss;"));
             Assert.That(workspace.Read($"{name}/{name}.fss"), Does.Contain("missed {").And.Contain("base {").And.Contain("hidden {"));
         }

@@ -47,6 +47,7 @@ export async function run(): Promise<void> {
     assert.equal(stylesheet.languageId, 'fss');
     await verifyCompilerCommands(root, document);
     await verifyItemInspector(root, document);
+    await verifyProjectSelection(root, document);
     console.log('PoeFilterX extension: native entrypoint picker, persistence, LSP completion, highlighting, and discovery passed.');
 }
 
@@ -201,4 +202,42 @@ async function verifyItemInspector(root: vscode.Uri, document: vscode.TextDocume
         await replace(stylesheet, original);
         await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     }
+}
+
+async function verifyProjectSelection(root: vscode.Uri, document: vscode.TextDocument): Promise<void> {
+    await vscode.workspace.fs.delete(vscode.Uri.joinPath(root, 'parent folder'), { recursive: true });
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'profile'));
+    await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(root, 'profile/custom.filterx'),
+        Buffer.from('using ../secondary.fss; using ../rules/child.filterx;'));
+    await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(root, '.poefilterx.json'),
+        Buffer.from(JSON.stringify({ entrypoint: 'entrypoint.filterx', output: 'base-profile.filter' })));
+    await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(root, '.poefilterx.dev.json'),
+        Buffer.from(JSON.stringify({ entrypoint: 'profile/custom.filterx', output: 'dev-profile.filter' })));
+    await replace(document, 'Style ');
+    await vscode.window.showTextDocument(document);
+    const tasks = await vscode.tasks.fetchTasks({ type: 'poefilterx' });
+    assert.deepEqual(tasks.filter(task => task.name !== 'Build filter').map(task => task.definition.entrypoint).sort(), ['.poefilterx.dev.json', '.poefilterx.json'],
+        'Project configs and profiles must replace filterx candidates when present.');
+    await choose(1);
+    assert.deepEqual(vscode.workspace.getConfiguration('poefilterx').get('entrypoints'), ['.poefilterx.dev.json']);
+    await eventually(async () => { assert.deepEqual(await completions(document.uri), ['secondary']); });
+    await vscode.commands.executeCommand('poefilterx.restartLanguageServer');
+    await eventually(async () => { assert.deepEqual(await completions(document.uri), ['secondary']); });
+    await replace(document, '{ Style secondary; Identified True; }');
+    assert.equal(await taskExit(() => vscode.commands.executeCommand('poefilterx.build')), 0);
+    const output = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(root, 'dev-profile.filter'));
+    assert.match(Buffer.from(output).toString('utf8'), /SetFontSize 40/);
+    await vscode.commands.executeCommand('poefilterx.restorePackages');
+    await choose(2);
+    assert.deepEqual(vscode.workspace.getConfiguration('poefilterx').get('entrypoints'), ['.poefilterx.json']);
+    await replace(document, 'Style ');
+    await eventually(async () => { assert.deepEqual(await completions(document.uri), ['primary']); });
+    await choose(0);
+    await vscode.workspace.fs.delete(vscode.Uri.joinPath(root, '.poefilterx.dev.json'));
+    await vscode.workspace.fs.delete(vscode.Uri.joinPath(root, '.poefilterx.json'));
+    const fallback = await vscode.tasks.fetchTasks({ type: 'poefilterx' });
+    assert.ok(fallback.some(task => task.definition.entrypoint === 'entrypoint.filterx'),
+        'Without JSON configs, filterx entrypoints must remain selectable.');
+    assert.ok(fallback.every(task => !String(task.definition.entrypoint).endsWith('.json')));
+    console.log('Project picker: JSON priority, profile persistence, LSP selection, profile build output, restore, and filterx fallback passed.');
 }

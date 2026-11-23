@@ -15,7 +15,7 @@ public static class RestoreHandler
         CancellationToken cancellationToken = default
     )
     {
-        var resolved = EntrypointResolver.Resolve(input);
+        var resolved = EntrypointResolver.Resolve(input, options.Settings);
         if (resolved is ParseError inputError)
         {
             return BuildHandler.ReportError(logger, inputError);

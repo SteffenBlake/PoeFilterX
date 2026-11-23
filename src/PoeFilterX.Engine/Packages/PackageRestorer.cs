@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using PoeFilterX.Engine.Configuration;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -69,6 +70,24 @@ public static class PackageRestorer
         }
 
         options ??= new();
+        if (options.Settings is null)
+        {
+            var configured = ProjectSettings.Load(Path.GetDirectoryName(tree.Source.Path)!);
+            if (configured is ParseError configurationError)
+            {
+                return configurationError;
+            }
+
+            var settings = (ProjectSettings)configured.Value!;
+            options = options with
+            {
+                Settings = settings,
+                CacheRoot = options.CacheRoot ?? settings.CacheRoot,
+                Locked = options.Locked || settings.Get("locked", false),
+                NoRestore = options.NoRestore || settings.Get("noRestore", false),
+                Update = options.Update || settings.Get("update", false)
+            };
+        }
         logger ??= NullLogger.Instance;
         if (options.Locked && options.Update)
         {
@@ -85,13 +104,13 @@ public static class PackageRestorer
                 return RestoreEmpty(tree.Source.Path, manifest, options);
             }
 
-            var existing = PackageCatalogReader.Read(tree, options.CacheRoot);
+            var existing = PackageCatalogReader.Read(tree, options.CacheRoot, options.Settings);
             if (options.NoRestore || !options.Update && !existing.NeedsRestore)
             {
                 return await RestoreManifestAsync(tree, manifest, options, logger, cancellationToken).ConfigureAwait(false);
             }
 
-            var cache = options.CacheRoot ?? PackageIdentity.CacheRoot;
+            var cache = options.CacheRoot ?? options.Settings!.CacheRoot;
             var locks = Path.Combine(cache, "locks");
             Directory.CreateDirectory(locks);
             var projectLock = PackageIdentity.RepositoryDirectory(locks, Path.GetFullPath(tree.Source.Path)) + ".lock";
@@ -159,6 +178,7 @@ public static class PackageRestorer
             PackageLock value => value,
             _ => throw new InvalidOperationException("A package lock result has no value.")
         };
+        var overrides = options.Settings!.PackageOverrides;
         if (options.Locked && (!File.Exists(PackageCatalogReader.LockPath(tree.Source.Path))
             || !Matches(manifest, locked)))
         {
@@ -170,17 +190,24 @@ public static class PackageRestorer
 
         if (options.NoRestore)
         {
-            var existing = PackageCatalogReader.Read(tree, options.CacheRoot);
+            var existing = PackageCatalogReader.Read(tree, options.CacheRoot, options.Settings);
             return existing.Diagnostics.IsEmpty ? existing : new ParseError(
                 [.. existing.Diagnostics.Select(diagnostic => diagnostic with { Severity = DiagnosticSeverity.Error })], tree
             );
         }
 
-        var cache = options.CacheRoot ?? PackageIdentity.CacheRoot;
+        var cache = options.CacheRoot ?? options.Settings!.CacheRoot;
         var references = ImmutableArray.CreateBuilder<PackageReference>(manifest.References.Length);
         foreach (var reference in manifest.References)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (overrides.TryGetValue(reference.Repository, out var local))
+            {
+                CompilerLog.PackageOverridden(logger, reference.Alias, local);
+                references.Add(reference with { Root = local, Commit = reference.RequestedCommit, IsOverride = true });
+                continue;
+            }
+
             var previous = locked.Packages.FirstOrDefault(entry => Matches(reference, entry));
             var commit = reference.RequestedCommit ?? (options.Update ? null : previous?.Commit);
             var resolved = await RestoreReferenceAsync(
@@ -203,11 +230,14 @@ public static class PackageRestorer
 
         cancellationToken.ThrowIfCancellationRequested();
         var result = references.MoveToImmutable();
-        if (!options.Locked)
+        if (!options.Locked && (result.Any(reference => !reference.IsOverride)
+            || File.Exists(PackageCatalogReader.LockPath(tree.Source.Path))))
         {
-            WriteLock(tree.Source.Path, new(1, [.. result.Select(reference => new PackageLock.Entry(
+            var entries = result.Where(reference => !reference.IsOverride).Select(reference => new PackageLock.Entry(
                 reference.Alias, reference.Repository, reference.RequestedCommit, reference.Commit!
-            ))]));
+            )).Concat(locked.Packages.Where(entry => manifest.References.Any(reference =>
+                overrides.ContainsKey(reference.Repository) && Matches(reference, entry))));
+            WriteLock(tree.Source.Path, new(1, [.. entries]));
         }
 
         return new PackageCatalog(result, []);

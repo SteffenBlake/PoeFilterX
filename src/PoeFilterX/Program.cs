@@ -32,7 +32,7 @@ internal static class Program
 
             var name = argument.Split('=', 2)[0];
             if (argument.StartsWith("--", StringComparison.Ordinal)
-                && name is not ("--no-restore" or "--locked" or "--path" or "--p" or "--output" or "--o" or "--verbosity" or "--verbose" or "--v" or "--help" or "--version")
+                && name is not ("--profile" or "--package-overrides" or "--package-cache" or "--no-restore" or "--locked" or "--path" or "--p" or "--output" or "--o" or "--verbosity" or "--verbose" or "--v" or "--help" or "--version")
                 && index + 1 < args.Length && !args[index + 1].StartsWith("--", StringComparison.Ordinal))
             {
                 variables[argument[2..]] = args[++index];

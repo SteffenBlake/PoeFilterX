@@ -1,4 +1,5 @@
 using System.Collections;
+using PoeFilterX.Engine.Configuration;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,7 +31,15 @@ public static class BuildHandler
                 CompilerLog.ExecutionDirectory(logger, Directory.GetCurrentDirectory());
             }
 
-            var input = EntrypointResolver.Resolve(request.Path);
+            var loaded = request.Settings is null ? ProjectSettings.LoadForInput(request.Path)
+                : new Result<ProjectSettings>(request.Settings);
+            if (loaded is ParseError settingsError)
+            {
+                return ReportError(logger, settingsError);
+            }
+
+            var settings = (ProjectSettings)loaded.Value!;
+            var input = EntrypointResolver.Resolve(request.Path, settings);
             if (input is ParseError inputError)
             {
                 return ReportError(logger, inputError);
@@ -49,7 +58,7 @@ public static class BuildHandler
                 ));
             }
 
-            var target = NormalizePath(request.Output ?? Path.ChangeExtension(path, ".filter"));
+            var target = NormalizePath(request.Output ?? settings.Output ?? Path.ChangeExtension(path, ".filter"));
             if (target is ParseError outputError)
             {
                 return ReportError(logger, outputError);
@@ -62,7 +71,7 @@ public static class BuildHandler
             };
             using var scope = logger.BeginScope("Build {Input}", path);
             CompilerLog.BuildInput(logger, path);
-            var variables = ProjectConfiguration.Read(request.Variables);
+            var variables = ProjectConfiguration.Read(request.Variables, settings);
             CompilerLog.ConfigurationLoaded(logger, variables.Count);
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -73,7 +82,8 @@ public static class BuildHandler
             }
 
             var snapshot = await CompilerProjectLoader.LoadAsync(
-                path, new(Locked: request.Locked, NoRestore: request.NoRestore), logger, cancellationToken
+                path, new(Locked: request.Locked || settings.Get("locked", false),
+                    NoRestore: request.NoRestore || settings.Get("noRestore", false), Settings: settings), logger, cancellationToken
             ).ConfigureAwait(false);
             CompilerLog.ProjectLoaded(
                 logger,

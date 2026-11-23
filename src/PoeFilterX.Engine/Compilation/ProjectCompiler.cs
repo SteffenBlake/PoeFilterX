@@ -17,7 +17,7 @@ public static class ProjectCompiler
         IReadOnlyDictionary<string, string>? configuration = null
     )
     {
-        return ProjectBinder.Bind(project, configuration);
+        return ProjectBinder.Bind(project, configuration ?? project.Settings?.Variables);
     }
 
     public static Result<int> Write(PreparedProject project, TextWriter writer)

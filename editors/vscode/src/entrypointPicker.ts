@@ -8,7 +8,7 @@ type EntrypointItem = vscode.QuickPickItem & (
 export async function selectEntrypoint(): Promise<void> {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders?.length) {
-        await vscode.window.showInformationMessage('Open a workspace folder to select a PoeFilterX entrypoint.');
+        await vscode.window.showInformationMessage('Open a workspace folder to select a PoeFilterX project.');
         return;
     }
 
@@ -16,10 +16,11 @@ export async function selectEntrypoint(): Promise<void> {
     const selected = settings.get<readonly string[]>('entrypoints', []);
     const cancellation = new vscode.CancellationTokenSource();
     try {
-        const candidates = findEntrypoints(cancellation.token).then(files => items(files, selected));
+        const discovered = findEntrypoints(cancellation.token);
+        const candidates = discovered.then(files => items(files, selected));
         const choice = await vscode.window.showQuickPick(candidates, {
-            title: 'Select PoeFilterX entrypoint',
-            placeHolder: 'Choose an entrypoint, or return to automatic discovery',
+            title: 'Select PoeFilterX project',
+            placeHolder: 'Choose a project configuration or profile, or use automatic discovery',
             matchOnDescription: true
         });
         if (!choice) {
@@ -31,7 +32,9 @@ export async function selectEntrypoint(): Promise<void> {
             return;
         }
 
-        const uri = choice.action === 'select' ? choice.uri : await browse(folders[0].uri);
+        const files = await discovered;
+        const configuration = files.find(isProjectConfiguration);
+        const uri = choice.action === 'select' ? choice.uri : await browse(configuration ?? folders[0].uri, !!configuration);
         if (uri) {
             const entry = folders.length === 1 ? vscode.workspace.asRelativePath(uri, false) : uri.toString();
             await settings.update('entrypoints', [entry], vscode.ConfigurationTarget.Workspace);
@@ -57,14 +60,15 @@ export function configuredEntrypoints(): vscode.Uri[] {
 }
 
 export async function findEntrypoints(token?: vscode.CancellationToken): Promise<vscode.Uri[]> {
-    const files = await vscode.workspace.findFiles(
-        '**/{entrypoint.filterx,*.entrypoint.filterx}',
-        '**/{.git,node_modules,bin,obj}/**',
-        undefined,
-        token
-    );
-    const all = [...files, ...configuredEntrypoints()];
-    return [...new Map(all.map(uri => [uri.toString(), uri])).values()];
+    const exclude = '**/{.git,node_modules,bin,obj}/**';
+    const configurations = await vscode.workspace.findFiles('**/{.poefilterx.json,.poefilterx.*.json}', exclude, undefined, token);
+    const configured = configuredEntrypoints();
+    const projects = configurations.concat(configured).filter(isProjectConfiguration);
+    const files = projects.length > 0 ? projects : [
+        ...await vscode.workspace.findFiles('**/{entrypoint.filterx,*.entrypoint.filterx}', exclude, undefined, token),
+        ...configured
+    ];
+    return [...new Map(files.map(uri => [uri.toString(), uri])).values()];
 }
 
 function items(files: readonly vscode.Uri[], selected: readonly string[]): EntrypointItem[] {
@@ -76,7 +80,7 @@ function items(files: readonly vscode.Uri[], selected: readonly string[]): Entry
             label: path.basename(uri.fsPath),
             description: vscode.workspace.asRelativePath(uri, true),
             detail: selected.includes(uri.toString()) || selected.includes(vscode.workspace.asRelativePath(uri, false))
-                ? 'Selected entrypoint' : undefined
+                ? 'Selected project' : undefined
         }));
 
     return [
@@ -86,18 +90,27 @@ function items(files: readonly vscode.Uri[], selected: readonly string[]): Entry
             description: selected.length === 0 ? 'Current mode' : undefined
         },
         ...candidates,
-        { action: 'browse', label: '$(folder-opened) Browse for an entrypoint…' }
+        { action: 'browse', label: '$(folder-opened) Browse for a project…' }
     ];
 }
 
-async function browse(root: vscode.Uri): Promise<vscode.Uri | undefined> {
+export function isProjectConfiguration(uri: vscode.Uri): boolean {
+    return /^\.poefilterx(?:\.[A-Za-z0-9_-]+)?\.json$/.test(path.basename(uri.fsPath));
+}
+
+async function browse(root: vscode.Uri, preferConfiguration: boolean): Promise<vscode.Uri | undefined> {
     const files = await vscode.window.showOpenDialog({
-        title: 'Select PoeFilterX entrypoint',
+        title: 'Select PoeFilterX project',
         defaultUri: root,
-        filters: { 'PoeFilterX filters': ['filterx'] },
+        filters: preferConfiguration ? { 'PoeFilterX configuration': ['json'] } : { 'PoeFilterX projects': ['filterx', 'json'] },
         canSelectMany: false,
         canSelectFolders: false,
-        openLabel: 'Select entrypoint'
+        openLabel: 'Select project'
     });
-    return files?.[0];
+    const selected = files?.[0];
+    if (selected && path.extname(selected.fsPath) === '.json' && !isProjectConfiguration(selected)) {
+        await vscode.window.showErrorMessage('Choose .poefilterx.json or .poefilterx.<profile>.json.');
+        return undefined;
+    }
+    return selected;
 }

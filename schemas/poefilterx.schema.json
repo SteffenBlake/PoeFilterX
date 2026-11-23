@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SteffenBlake/PoeFilterX/main/schemas/poefilterx.schema.json",
+  "title": "PoeFilterX project configuration",
+  "description": "Base .poefilterx.json and optional .poefilterx.<profile>.json. Profile values override base values; POEFILTERX_ environment variables and explicit CLI arguments override both. Relative paths use the project root.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "entrypoint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Input .filterx file, relative to the project root."
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Output .filter file, relative to the project root."
+    },
+    "verbosity": {
+      "type": "string",
+      "enum": [
+        "Trace",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Critical",
+        "None"
+      ]
+    },
+    "packageCache": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packageOverrides": {
+      "type": "object",
+      "description": "Use local working directories in place of Git packages. Repository URLs must match import declarations exactly. Does not change release pins. Also accepts a JSON object through POEFILTERX_PACKAGE_OVERRIDES or --package-overrides.",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Compiler variable assignments."
+    },
+    "noRestore": {
+      "type": "boolean"
+    },
+    "locked": {
+      "type": "boolean"
+    },
+    "update": {
+      "type": "boolean"
+    },
+    "item": {
+      "type": "string"
+    },
+    "itemFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "game": {
+      "enum": [
+        "Poe1",
+        "Poe2"
+      ]
+    },
+    "areaLevel": {
+      "type": "integer"
+    },
+    "format": {
+      "enum": [
+        "Text",
+        "Json"
+      ]
+    },
+    "fact": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^.+="
+      }
+    },
+    "define": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^.+="
+      }
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string",
+      "description": "Parent directory for the init command."
+    },
+    "stdio": {
+      "type": "boolean"
+    },
+    "socket": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "pipe": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
