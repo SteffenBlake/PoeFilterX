@@ -6,7 +6,6 @@ internal sealed record ItemModifier(
     string Id,
     string Name,
     ItemModifierKind Kind,
-    string Domain,
     ImmutableArray<ModifierStat> Stats
 );
 

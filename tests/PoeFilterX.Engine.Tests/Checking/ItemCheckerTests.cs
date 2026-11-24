@@ -15,7 +15,7 @@ public class ItemCheckerTests
 
     [TestCase(GameVersion.Poe1)]
     [TestCase(GameVersion.Poe2)]
-    public void Parses_currency_and_looks_up_dimensions_and_drop_level(GameVersion game)
+    public void Parses_currency_without_inventing_hidden_base_metadata(GameVersion game)
     {
         var result = CopiedItemParser.Parse(Currency, game);
         Assert.That(result.Value, Is.TypeOf<ItemFacts>());
@@ -23,9 +23,9 @@ public class ItemCheckerTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(item.Name, Is.EqualTo("Chaos Orb"));
-            Assert.That(item.Numbers[FilterFact.Width], Is.EqualTo(1));
-            Assert.That(item.Numbers[FilterFact.Height], Is.EqualTo(1));
-            Assert.That(item.Numbers[FilterFact.DropLevel], Is.EqualTo(12));
+            Assert.That(item.Numbers.ContainsKey(FilterFact.Width), Is.False);
+            Assert.That(item.Numbers.ContainsKey(FilterFact.Height), Is.False);
+            Assert.That(item.Numbers.ContainsKey(FilterFact.DropLevel), Is.False);
             Assert.That(item.Numbers[FilterFact.StackSize], Is.EqualTo(7));
         }
     }
@@ -39,9 +39,9 @@ public class ItemCheckerTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(item.Numbers[FilterFact.ItemLevel], Is.EqualTo(86));
-            Assert.That(item.Numbers[FilterFact.DropLevel], Is.EqualTo(68));
-            Assert.That(item.Numbers[FilterFact.Height], Is.EqualTo(3));
-            Assert.That(item.Numbers[FilterFact.Width], Is.EqualTo(2));
+            Assert.That(item.Numbers.ContainsKey(FilterFact.DropLevel), Is.False);
+            Assert.That(item.Numbers.ContainsKey(FilterFact.Height), Is.False);
+            Assert.That(item.Numbers.ContainsKey(FilterFact.Width), Is.False);
             Assert.That(item.Numbers[FilterFact.LinkedSockets], Is.EqualTo(3));
             Assert.That(item.Texts[FilterFact.HasExplicitMod], Is.EqualTo(["Hale"]));
             Assert.That(item.Flags[FilterFact.Corrupted], Is.True);
@@ -50,23 +50,25 @@ public class ItemCheckerTests
         }
     }
 
-    [Test]
-    public void Selected_game_separates_the_item_base_catalogs()
+    [TestCase(GameVersion.Poe1)]
+    [TestCase(GameVersion.Poe2)]
+    public void Selected_game_does_not_restrict_item_names(GameVersion game)
     {
-        const string item = "Item Class: Boots\nRarity: Magic\nHale Steeltoe Boots\n--------\nEvasion Rating: 129 (augmented)\n--------\nItem Level: 36\n";
+        const string text = "Item Class: Boots\nRarity: Normal\nSteeltoe Boots\n--------\nItem Level: 36\n";
+        var result = CopiedItemParser.Parse(text, game);
+        Assert.That(result.Value, Is.TypeOf<ItemFacts>());
+        var item = (ItemFacts)result.Value!;
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(CopiedItemParser.Parse(item, GameVersion.Poe1).Value, Is.TypeOf<ParseError>());
-            var parsed = (ItemFacts)CopiedItemParser.Parse(item, GameVersion.Poe2).Value!;
-            Assert.That(parsed.BaseType, Is.EqualTo("Steeltoe Boots"));
-            Assert.That(parsed.Numbers[FilterFact.DropLevel], Is.EqualTo(28));
+            Assert.That(item.BaseType, Is.EqualTo("Steeltoe Boots"));
+            Assert.That(item.ItemClass, Is.EqualTo("Boots"));
+            Assert.That(item.Numbers.ContainsKey(FilterFact.DropLevel), Is.False);
         }
     }
 
     [TestCase("")]
     [TestCase("hello")]
     [TestCase("Item Class: Boots\nRarity: Banana\nSteeltoe Boots\n--------\n")]
-    [TestCase("Item Class: Boots\nRarity: Normal\nMade up boots\n--------\n")]
     public void Invalid_copied_items_return_errors(string text)
     {
         Assert.That(CopiedItemParser.Parse(text, GameVersion.Poe2).Value, Is.TypeOf<ParseError>());
@@ -151,13 +153,11 @@ public class ItemCheckerTests
     [TestCase("StackSize >= 7;", true)]
     [TestCase("StackSize > 7;", false)]
     [TestCase("AreaLevel == 83;", true)]
-    [TestCase("DropLevel == 12;", true)]
     [TestCase("Class == Currency;", false)]
     [TestCase("Class Currency;", true)]
     [TestCase("BaseType != \"Chaos Orb\";", false)]
     [TestCase("BaseType == \"Chaos Orb\";", true)]
     [TestCase("Corrupted false;", true)]
-    [TestCase("Width == 1; Height == 1;", true)]
     public void Evaluates_conditions(string condition, bool matches)
     {
         var project = Project($"using styles.fss; {{ {condition} Style test; }}", "test { font-size: 32; }");
@@ -283,14 +283,15 @@ public class ItemCheckerTests
 
     [TestCase("Blighted", FilterFact.BlightedMap)]
     [TestCase("Blight-ravaged", FilterFact.UberBlightedMap)]
-    public void Recognizes_map_prefixes_without_confusing_drop_level_with_the_area_level(string prefix, FilterFact fact)
+    public void Recognizes_map_prefixes_without_inventing_drop_levels(string prefix, FilterFact fact)
     {
         var item = $"Item Class: Maps\nRarity: Normal\n{prefix} Strand Map\n--------\nMap Tier: 16\n--------\nItem Level: 85\n";
         var parsed = (ItemFacts)CopiedItemParser.Parse(item, GameVersion.Poe1).Value!;
         using (Assert.EnterMultipleScope())
         {
             Assert.That(parsed.Flags[fact], Is.True);
-            Assert.That(parsed.Numbers[FilterFact.DropLevel], Is.EqualTo(71));
+            Assert.That(parsed.Numbers.ContainsKey(FilterFact.DropLevel), Is.False);
+            Assert.That(parsed.BaseType, Is.EqualTo("Strand Map"));
             Assert.That(parsed.Numbers[FilterFact.MapTier], Is.EqualTo(16));
         }
     }
@@ -309,10 +310,10 @@ public class ItemCheckerTests
         }
     }
 
-    [TestCase("Leap Slam of Groundbreaking", true)]
-    [TestCase("Fireball of Radiation", true)]
-    [TestCase("Fireball", false)]
-    public void Gem_variants_use_exported_names_and_transfiguration_metadata(string name, bool transfigured)
+    [TestCase("Leap Slam of Groundbreaking")]
+    [TestCase("Fireball of Radiation")]
+    [TestCase("Fireball")]
+    public void Gem_names_and_levels_do_not_require_catalog_metadata(string name)
     {
         var text = $"Item Class: Skill Gems\nRarity: Gem\n{name}\n--------\nLevel: 20\n--------\nRequirements:\nLevel: 70\n";
         var parsed = CopiedItemParser.Parse(text, GameVersion.Poe1);
@@ -321,7 +322,7 @@ public class ItemCheckerTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(item.BaseType, Is.EqualTo(name));
-            Assert.That(item.Flags[FilterFact.TransfiguredGem], Is.EqualTo(transfigured));
+            Assert.That(item.Flags.ContainsKey(FilterFact.TransfiguredGem), Is.False);
             Assert.That(item.Numbers[FilterFact.GemLevel], Is.EqualTo(20));
         }
     }
@@ -330,7 +331,12 @@ public class ItemCheckerTests
     public void Unknown_gem_variants_do_not_match_a_similarly_named_base()
     {
         const string item = "Item Class: Skill Gems\nRarity: Gem\nFireball of Nonsense\n--------\nLevel: 20\n";
-        Assert.That(CopiedItemParser.Parse(item, GameVersion.Poe1).Value, Is.TypeOf<ParseError>());
+        var parsed = CopiedItemParser.Parse(item, GameVersion.Poe1);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(parsed.Value, Is.TypeOf<ItemFacts>());
+            Assert.That(((ItemFacts)parsed.Value!).BaseType, Is.EqualTo("Fireball of Nonsense"));
+        }
     }
 
     [Test]
@@ -363,6 +369,288 @@ public class ItemCheckerTests
             Assert.That(result.Preview!.Hidden, Is.True);
             Assert.That(result.Preview.Icon, Is.Null);
             Assert.That(result.EffectiveStyle!.Icon!.Shape, Is.EqualTo(MiniMapIconShape.Diamond));
+        }
+    }
+
+    [TestCase(GameVersion.Poe1, "Future Armours", "Future Vest")]
+    [TestCase(GameVersion.Poe2, "Future Armours", "Future Vest")]
+    [TestCase(GameVersion.Poe1, "Boots", "Plate Vest")]
+    [TestCase(GameVersion.Poe2, "Future Armours", "Plate Vest")]
+    public void Unfamiliar_identity_matches_filter_conditions(
+        GameVersion game,
+        string itemClass,
+        string baseType
+    )
+    {
+        var text = $"Item Class: {itemClass}\nRarity: Normal\n{baseType}\n--------\nItem Level: 80\n";
+        var project = Project(
+            $"using styles.fss; {{ Class == \"{itemClass}\"; BaseType == \"{baseType}\"; Style test; }}",
+            "test { font-size: 32; }"
+        );
+        var checkedItem = ItemChecker.Check(project, text, game);
+        Assert.That(checkedItem.Value, Is.TypeOf<CheckResult>());
+        var result = (CheckResult)checkedItem.Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Status, Is.EqualTo(CheckStatus.Matched));
+            Assert.That(result.Item.BaseType, Is.EqualTo(baseType));
+            Assert.That(result.Item.ItemClass, Is.EqualTo(itemClass));
+        }
+    }
+
+    [TestCase("Superior ")]
+    [TestCase("Blighted ")]
+    [TestCase("Blight-ravaged ")]
+    [TestCase("Synthesised ")]
+    [TestCase("Shaped ")]
+    public void Prefixed_unknown_bases_are_not_replaced_with_known_substrings(string prefix)
+    {
+        var text = $"Item Class: Body Armours\nRarity: Normal\n{prefix}Future Plate Vest\n--------\nItem Level: 80\n";
+        var project = Project(
+            "using styles.fss; { BaseType == \"Plate Vest\"; Style test; }",
+            "test { font-size: 32; }"
+        );
+        var result = (CheckResult)ItemChecker.Check(project, text, GameVersion.Poe1).Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Item.BaseType, Is.EqualTo("Future Plate Vest"));
+            Assert.That(result.Status, Is.EqualTo(CheckStatus.Unmatched));
+        }
+    }
+
+    [TestCase("Normal", "Future Quiver", "Future Quiver")]
+    [TestCase("Rare", "Doom Volley\nFuture Quiver", "Doom Volley")]
+    [TestCase("Unique", "Doom Volley\nFuture Quiver", "Doom Volley")]
+    public void Unusable_items_recover_identity_from_the_first_body_section(
+        string rarity,
+        string identity,
+        string name
+    )
+    {
+        var text = $"Item Class: Future Quivers\nRarity: {rarity}\nYou cannot use this item. Its stats will be ignored\n--------\n{identity}\n--------\nItem Level: 8\n--------\nFire Quiver\n";
+        var result = CopiedItemParser.Parse(text, GameVersion.Poe2);
+        Assert.That(result.Value, Is.TypeOf<ItemFacts>());
+        var item = (ItemFacts)result.Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(item.BaseType, Is.EqualTo("Future Quiver"));
+            Assert.That(item.Name, Is.EqualTo(name));
+            Assert.That(item.ItemClass, Is.EqualTo("Future Quivers"));
+        }
+    }
+
+    [TestCase("Width", "2")]
+    [TestCase("Height", "3")]
+    [TestCase("DropLevel", "80")]
+    [TestCase("BaseDefencePercentile", "90")]
+    [TestCase("HasImplicitMod", "false")]
+    [TestCase("AlternateQuality", "false")]
+    [TestCase("TransfiguredGem", "false")]
+    public void Unavailable_metadata_can_be_overridden_for_an_unknown_item(string fact, string value)
+    {
+        const string text = "Item Class: Future Armours\nRarity: Normal\nFuture Vest\n--------\nItem Level: 80\n";
+        var project = Project($"using styles.fss; {{ {fact} {value}; Style test; }}", "test { font-size: 32; }");
+        var missing = ItemChecker.Check(project, text, GameVersion.Poe1);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(missing.Value, Is.TypeOf<ParseError>());
+            Assert.That(((ParseError)missing.Value!).Diagnostics[0].Code, Is.EqualTo("PFX5002"));
+        }
+
+        var supplied = ItemChecker.Check(
+            project, text, GameVersion.Poe1, factOverrides: new Dictionary<string, string> { [fact] = value }
+        );
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(supplied.Value, Is.TypeOf<CheckResult>());
+            Assert.That(((CheckResult)supplied.Value!).Status, Is.EqualTo(CheckStatus.Matched));
+        }
+    }
+
+    [Test]
+    public void Magic_base_identity_stays_unknown_until_supplied_explicitly()
+    {
+        const string text = "Item Class: Future Armours\nRarity: Magic\nHale Future Plate Vest\n--------\nItem Level: 80\n";
+        var parsed = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        Assert.That(parsed.BaseType, Is.Null);
+        var project = Project(
+            "using styles.fss; { BaseType == \"Future Plate Vest\"; Style test; }", "test { font-size: 32; }"
+        );
+        var result = ItemChecker.Check(
+            project, text, GameVersion.Poe1,
+            factOverrides: new Dictionary<string, string> { ["BaseType"] = "Future Plate Vest" }
+        );
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Value, Is.TypeOf<CheckResult>());
+            Assert.That(((CheckResult)result.Value!).Status, Is.EqualTo(CheckStatus.Matched));
+        }
+    }
+
+    [Test]
+    public void Identity_overrides_update_both_conditions_and_the_reported_item()
+    {
+        var project = Project(
+            "using styles.fss; { BaseType == \"Future Base\"; Class == \"Future Class\"; Style test; }",
+            "test { font-size: 32; }"
+        );
+        var checkedItem = ItemChecker.Check(
+            project, Currency, GameVersion.Poe1,
+            factOverrides: new Dictionary<string, string> { ["BaseType"] = "Future Base", ["Class"] = "Future Class" }
+        );
+        Assert.That(checkedItem.Value, Is.TypeOf<CheckResult>());
+        var result = (CheckResult)checkedItem.Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Status, Is.EqualTo(CheckStatus.Matched));
+            Assert.That(result.Item.BaseType, Is.EqualTo("Future Base"));
+            Assert.That(result.Item.ItemClass, Is.EqualTo("Future Class"));
+        }
+    }
+
+    [TestCase("Class", "")]
+    [TestCase("Class", "Boots|Future Class")]
+    [TestCase("BaseType", "")]
+    [TestCase("BaseType", "Plate Vest|Future Base")]
+    public void Identity_overrides_describe_one_item(string fact, string value)
+    {
+        var item = (ItemFacts)CopiedItemParser.Parse(Currency, GameVersion.Poe1).Value!;
+        var result = ItemFactOverrides.Apply(item, new Dictionary<string, string> { [fact] = value });
+        Assert.That(result.Value, Is.TypeOf<ParseError>());
+    }
+
+    [Test]
+    public void Gem_level_does_not_depend_on_a_known_class_name()
+    {
+        const string text = "Item Class: Future Skills\nRarity: Gem\nFuture Skill\n--------\nLevel: 20\n--------\nRequirements:\nLevel: 70\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        Assert.That(item.Numbers[FilterFact.GemLevel], Is.EqualTo(20));
+    }
+
+    [TestCase("Armour", FilterFact.BaseArmour)]
+    [TestCase("Evasion Rating", FilterFact.BaseEvasion)]
+    [TestCase("Energy Shield", FilterFact.BaseEnergyShield)]
+    [TestCase("Ward", FilterFact.BaseWard)]
+    public void Unmodified_defences_are_read_without_base_metadata(string label, FilterFact fact)
+    {
+        var text = $"Item Class: Future Armours\nRarity: Normal\nFuture Vest\n--------\n{label}: 100\n--------\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        Assert.That(item.Numbers[fact], Is.EqualTo(100));
+    }
+
+    [TestCase("Magic", "Newfound Future Plate Vest of Tomorrow")]
+    public void Advanced_magic_copies_supply_affix_boundaries_without_known_base_names(string rarity, string label)
+    {
+        var text = $"Item Class: Future Armours\nRarity: {rarity}\n{label}\n--------\nItem Level: 80\n--------\n{{ Prefix Modifier \"Newfound\" (Tier: 1) }}\n+9 to maximum Life\n{{ Suffix Modifier \"of Tomorrow\" (Tier: 1) }}\n+10 to Intelligence\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        Assert.That(item.BaseType, Is.EqualTo("Future Plate Vest"));
+    }
+
+    [Test]
+    public void Unidentified_magic_copies_preserve_unfamiliar_base_names()
+    {
+        const string text = "Item Class: Future Armours\nRarity: Magic\nFuture Plate Vest\n--------\nUnidentified\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe2).Value!;
+        Assert.That(item.BaseType, Is.EqualTo("Future Plate Vest"));
+    }
+
+    [Test]
+    public void Unidentified_fated_wand_preserves_its_base_and_copied_properties()
+    {
+        const string text = """
+            Item Class: Wands
+            Rarity: Rare
+            Fated Faun's Horn
+            --------
+            Wand
+            Physical Damage: 21-38
+            Critical Strike Chance: 8.00%
+            Attacks per Second: 1.40
+            --------
+            Requirements:
+            Intelligence: 116 (unmet)
+            --------
+            Sockets: W-W W
+            --------
+            Item Level: 43
+            --------
+            { Implicit Modifier — Damage, Elemental, Fire, Attack, Caster }
+            Adds 7(5-10) to 13(11-13) Fire Damage to Spells and Attacks
+            --------
+            Unidentified
+            """;
+        var project = Project(
+            "using styles.fss; { BaseType == \"Faun's Horn\"; Class == Wands; Fated true; Identified false; ItemLevel == 43; Style test; }",
+            "test { font-size: 32; }"
+        );
+        var checkedItem = ItemChecker.Check(project, text, GameVersion.Poe1);
+        Assert.That(checkedItem.Value, Is.TypeOf<CheckResult>());
+        var result = (CheckResult)checkedItem.Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Item.Name, Is.EqualTo("Fated Faun's Horn"));
+            Assert.That(result.Item.BaseType, Is.EqualTo("Faun's Horn"));
+            Assert.That(result.Status, Is.EqualTo(CheckStatus.Matched));
+        }
+    }
+
+    [TestCase("Fated Superior ")]
+    [TestCase("Superior Fated ")]
+    [TestCase("Fractured Superior Fated ")]
+    [TestCase("Fated Fractured Superior ")]
+    public void Stacked_status_prefixes_are_removed_in_any_order(string prefixes)
+    {
+        var text = $"Item Class: Future Wands\nRarity: Rare\n{prefixes}Future Faun's Horn\n--------\nUnidentified\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(item.Name, Is.EqualTo(prefixes + "Future Faun's Horn"));
+            Assert.That(item.BaseType, Is.EqualTo("Future Faun's Horn"));
+            Assert.That(item.Flags[FilterFact.Fated], Is.True);
+            Assert.That(item.Flags[FilterFact.FracturedItem], Is.EqualTo(prefixes.Contains("Fractured", StringComparison.Ordinal)));
+        }
+    }
+
+    [TestCase("Superior Blighted ", FilterFact.BlightedMap)]
+    [TestCase("Superior Blight-ravaged ", FilterFact.UberBlightedMap)]
+    [TestCase("Superior Synthesised ", FilterFact.SynthesisedItem)]
+    [TestCase("Superior Shaped ", FilterFact.ShapedMap)]
+    public void Status_flags_survive_an_outer_quality_prefix(string prefixes, FilterFact fact)
+    {
+        var text = $"Item Class: Future Maps\nRarity: Normal\n{prefixes}Future Map\n--------\nMap Tier: 16\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(item.BaseType, Is.EqualTo("Future Map"));
+            Assert.That(item.Flags[fact], Is.True);
+        }
+    }
+
+    [TestCase("Normal", "Wands", "Imbued Wand")]
+    [TestCase("Currency", "Stackable Currency", "Fractured Fossil")]
+    [TestCase("Normal", "Future Wands", "Anomalous Future Wand")]
+    [TestCase("Rare", "Future Wands", "Future Faun's Horn")]
+    public void Intrinsic_base_words_are_not_mistaken_for_status_prefixes(
+        string rarity,
+        string itemClass,
+        string label
+    )
+    {
+        var text = $"Item Class: {itemClass}\nRarity: {rarity}\n{label}\n--------\nUnidentified\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        Assert.That(item.BaseType, Is.EqualTo(label));
+    }
+
+    [Test]
+    public void A_rare_display_name_does_not_supply_the_bases_status_prefixes()
+    {
+        const string text = "Item Class: Wands\nRarity: Rare\nFated Branch\nFaun's Horn\n--------\nItem Level: 43\n";
+        var item = (ItemFacts)CopiedItemParser.Parse(text, GameVersion.Poe1).Value!;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(item.Name, Is.EqualTo("Fated Branch"));
+            Assert.That(item.BaseType, Is.EqualTo("Faun's Horn"));
+            Assert.That(item.Flags[FilterFact.Fated], Is.False);
         }
     }
 

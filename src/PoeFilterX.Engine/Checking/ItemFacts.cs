@@ -15,7 +15,5 @@ public sealed record ItemFacts(
     ImmutableArray<InfluenceType> Influences
 )
 {
-    public string ModifierDomain { get; init; } = "";
-
     public string CopiedText { get; init; } = "";
 }

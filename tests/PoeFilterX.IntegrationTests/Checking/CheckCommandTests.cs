@@ -114,6 +114,37 @@ public class CheckCommandTests
         }
     }
 
+    [TestCase("Poe1", "Future Currency", "Future Orb")]
+    [TestCase("Poe2", "Future Currency", "Future Orb")]
+    [TestCase("Poe1", "Boots", "Plate Vest")]
+    [TestCase("Poe2", "Future Currency", "Chaos Orb")]
+    public async Task Unfamiliar_item_identity_is_accepted_and_matches_rules(
+        string game,
+        string itemClass,
+        string baseType
+    )
+    {
+        using var workspace = Workspace();
+        workspace.Write(
+            "entrypoint.filterx",
+            $"using styles.fss; {{ Class == \"{itemClass}\"; BaseType == \"{baseType}\"; Style base; }}"
+        );
+        var text = $"Item Class: {itemClass}\nRarity: Currency\n{baseType}\n--------\nStack Size: 1/20\n";
+        var result = await CliRunner.RunAsync(
+            workspace.Root, ["check", "--item", text, "--game", game, "--format", "json"]
+        );
+        Assert.That(result.ExitCode, Is.Zero, result.StandardError);
+        using var json = JsonDocument.Parse(result.StandardOutput);
+        var checkedItem = json.RootElement.GetProperty("result");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(json.RootElement.GetProperty("diagnostics").GetArrayLength(), Is.Zero);
+            Assert.That(checkedItem.GetProperty("status").GetString(), Is.EqualTo("Matched"));
+            Assert.That(checkedItem.GetProperty("item").GetProperty("baseType").GetString(), Is.EqualTo(baseType));
+            Assert.That(checkedItem.GetProperty("item").GetProperty("itemClass").GetString(), Is.EqualTo(itemClass));
+        }
+    }
+
     private static TestWorkspace Workspace()
     {
         var workspace = new TestWorkspace();

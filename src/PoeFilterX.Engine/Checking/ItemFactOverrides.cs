@@ -64,7 +64,18 @@ public static class ItemFactOverrides
         ImmutableArray<OperatorValue<ImmutableArray<string>>> _
     )
     {
-        return item with { Texts = item.Texts.SetItem(fact, [.. text.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)]) };
+        var values = text.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (fact is FilterFact.BaseType or FilterFact.Class && values.Length != 1)
+        {
+            return new ParseError(DiagnosticCodes.InvalidItem, $"{fact} requires one item identity value.");
+        }
+
+        return item with
+        {
+            Texts = item.Texts.SetItem(fact, [.. values]),
+            BaseType = fact == FilterFact.BaseType ? values[0] : item.BaseType,
+            ItemClass = fact == FilterFact.Class ? values[0] : item.ItemClass
+        };
     }
 
     public static Result<ItemFacts> Set(

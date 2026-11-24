@@ -33,6 +33,22 @@ public static partial class CopiedItemParser
         [FilterFact.Mirrored] = "Mirrored"
     }.ToImmutableDictionary();
 
+    private static readonly ImmutableArray<(string Text, FilterFact? Fact)> NamePrefixes =
+    [
+        ("Superior ", null),
+        ("Blight-ravaged ", FilterFact.UberBlightedMap),
+        ("Blighted ", FilterFact.BlightedMap),
+        ("Synthesised ", FilterFact.SynthesisedItem),
+        ("Shaped ", FilterFact.ShapedMap),
+        ("Fractured ", FilterFact.FracturedItem),
+        ("Fated ", FilterFact.Fated),
+        ("Foulborn ", FilterFact.Foulborn),
+        ("Replica ", FilterFact.Replica),
+        ("Anomalous ", FilterFact.AlternateQuality),
+        ("Divergent ", FilterFact.AlternateQuality),
+        ("Phantasmal ", FilterFact.AlternateQuality)
+    ];
+
     public static Result<ItemFacts> Parse(
         string text,
         GameVersion game,
@@ -72,40 +88,114 @@ public static partial class CopiedItemParser
 
         var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         var header = document.LINE().Select(line => line.GetText().Trim()).ToArray();
-        var label = header[^1];
-        var catalog = ItemBaseCatalog.For(game);
-        var affixes = rarity == FilterRarity.Magic || label.StartsWith("Superior ", StringComparison.Ordinal)
-            || label.StartsWith("Blighted ", StringComparison.Ordinal) || label.StartsWith("Blight-ravaged ", StringComparison.Ordinal)
-            || label.StartsWith("Synthesised ", StringComparison.Ordinal) || label.StartsWith("Shaped ", StringComparison.Ordinal);
-        var itemBase = catalog.Find(label, itemClass, affixes);
-        if (itemBase is null && header.Any(line => line.StartsWith("You cannot use", StringComparison.Ordinal)))
+        if (header[^1].StartsWith("You cannot use", StringComparison.Ordinal))
         {
-            itemBase = lines.Skip(2).Select(line => catalog.Find(line, itemClass, rarity == FilterRarity.Magic)).FirstOrDefault(value => value is not null);
+            header = [.. header, .. document.bodyLine().TakeWhile(line => line.SEPARATOR() is null)
+                .Select(line => line.GetText().Trim())];
         }
 
-        if (itemBase is null)
+        header = [.. header.Where(line => !line.StartsWith("You cannot use", StringComparison.Ordinal))];
+        if (header.Length == 0)
         {
-            return new ParseError(DiagnosticCodes.UnknownItemBase,
-                $"Item base '{label}' was not found for {game}. Check the game selection and the copied item text.");
+            return new ParseError(DiagnosticCodes.InvalidItem, "The copied item does not contain an item name.");
         }
 
         var name = header[0];
-        if (name.StartsWith("You cannot use", StringComparison.Ordinal))
+        var label = header[^1];
+        var baseLabel = BaseLabel(label, rarityText, out var prefixFacts);
+        var baseType = rarity == FilterRarity.Magic && header.Length == 1
+            ? MagicBaseLabel(baseLabel, lines) : baseLabel;
+
+        return ReadFacts(game, name, baseType, itemClass, rarity, prefixFacts, lines, text);
+    }
+
+    private static string BaseLabel(
+        string label,
+        string rarity,
+        out ImmutableHashSet<FilterFact> facts
+    )
+    {
+        var prefixes = ImmutableHashSet.CreateBuilder<FilterFact>();
+        while (true)
         {
-            var baseIndex = Array.IndexOf(lines, itemBase.Name);
-            name = rarity is FilterRarity.Rare or FilterRarity.Unique && baseIndex > 0 && lines[baseIndex - 1] != "--------"
-                ? lines[baseIndex - 1] : itemBase.Name;
+            var (Text, Fact) = NamePrefixes.FirstOrDefault(prefix => IsNamePrefix(prefix.Fact, rarity)
+                && label.StartsWith(prefix.Text, StringComparison.Ordinal));
+            if (Text is null || label.Length == Text.Length)
+            {
+                break;
+            }
+
+            label = label[Text.Length..];
+            if (Fact is { } fact)
+            {
+                prefixes.Add(fact);
+            }
         }
 
-        return ReadFacts(game, name, label, itemBase, rarity, lines, text);
+        facts = prefixes.ToImmutable();
+
+        return label;
+    }
+
+    private static bool IsNamePrefix(FilterFact? fact, string rarity)
+    {
+        return fact switch
+        {
+            FilterFact.AlternateQuality => rarity == "Gem",
+            FilterFact.Replica or FilterFact.Foulborn => rarity == "Unique",
+            null => rarity is "Normal" or "Magic" or "Rare" or "Unique" or "Gem",
+            _ => rarity is "Normal" or "Magic" or "Rare" or "Unique"
+        };
+    }
+
+    private static string? MagicBaseLabel(string label, string[] lines)
+    {
+        if (lines.Contains("Unidentified", StringComparer.Ordinal))
+        {
+            return label;
+        }
+
+        // Advanced copies identify affix boundaries; ordinary magic labels do not.
+        var affixes = lines.Where(line => line.StartsWith('{') && (line.Contains("Prefix Modifier", StringComparison.Ordinal)
+            || line.Contains("Suffix Modifier", StringComparison.Ordinal))).ToArray();
+        if (affixes.Length == 0)
+        {
+            return null;
+        }
+
+        foreach (var line in affixes)
+        {
+            var match = QuotedName().Match(line);
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            var affix = match.Groups[1].Value;
+            if (line.Contains("Prefix Modifier", StringComparison.Ordinal) && label.StartsWith(affix + " ", StringComparison.Ordinal))
+            {
+                label = label[(affix.Length + 1)..];
+            }
+            else if (line.Contains("Suffix Modifier", StringComparison.Ordinal) && label.EndsWith(" " + affix, StringComparison.Ordinal))
+            {
+                label = label[..^(affix.Length + 1)];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        return label;
     }
 
     private static Result<ItemFacts> ReadFacts(
         GameVersion game,
         string name,
-        string label,
-        ItemBase itemBase,
+        string? baseType,
+        string itemClass,
         FilterRarity rarity,
+        ImmutableHashSet<FilterFact> prefixFacts,
         string[] lines,
         string text
     )
@@ -119,48 +209,48 @@ public static partial class CopiedItemParser
         }
 
         flags[FilterFact.Identified] = !lines.Contains("Unidentified", StringComparer.Ordinal);
-        flags[FilterFact.Replica] = name.StartsWith("Replica ", StringComparison.Ordinal);
-        flags[FilterFact.BlightedMap] = label.StartsWith("Blighted ", StringComparison.Ordinal);
-        flags[FilterFact.UberBlightedMap] = label.StartsWith("Blight-ravaged ", StringComparison.Ordinal);
+        flags[FilterFact.Replica] = prefixFacts.Contains(FilterFact.Replica) || name.StartsWith("Replica ", StringComparison.Ordinal);
+        flags[FilterFact.BlightedMap] = prefixFacts.Contains(FilterFact.BlightedMap);
+        flags[FilterFact.UberBlightedMap] = prefixFacts.Contains(FilterFact.UberBlightedMap);
         flags[FilterFact.SynthesisedItem] = lines.Contains("Synthesised Item", StringComparer.Ordinal)
-            || label.StartsWith("Synthesised ", StringComparison.Ordinal);
+            || prefixFacts.Contains(FilterFact.SynthesisedItem);
         flags[FilterFact.FracturedItem] = text.Contains("(fractured)", StringComparison.Ordinal)
-            || text.Contains("Fractured ", StringComparison.Ordinal);
-        flags[FilterFact.HasImplicitMod] = itemBase.HasImplicit || text.Contains("(implicit)", StringComparison.Ordinal)
-            || text.Contains("Implicit Modifier", StringComparison.Ordinal);
+            || prefixFacts.Contains(FilterFact.FracturedItem);
+        if (text.Contains("(implicit)", StringComparison.Ordinal) || text.Contains("Implicit Modifier", StringComparison.Ordinal))
+        {
+            flags[FilterFact.HasImplicitMod] = true;
+        }
+
         flags[FilterFact.AnyEnchantment] = text.Contains("(enchant)", StringComparison.Ordinal)
             || text.Contains("Enchantment Modifier", StringComparison.Ordinal);
-        flags[FilterFact.AlternateQuality] = itemBase.Tags.Contains("alternate_quality");
-        flags[FilterFact.TransfiguredGem] = itemBase.Tags.Contains("transfigured_gem");
-        if (rarity != FilterRarity.Unique || game == GameVersion.Poe2 || itemBase.Tags.Contains("fated_unique"))
+        if (prefixFacts.Contains(FilterFact.Fated) || rarity != FilterRarity.Unique || game == GameVersion.Poe2)
         {
-            flags[FilterFact.Fated] = itemBase.Tags.Contains("fated_unique");
+            flags[FilterFact.Fated] = prefixFacts.Contains(FilterFact.Fated);
+        }
+
+        if (prefixFacts.Contains(FilterFact.AlternateQuality))
+        {
+            flags[FilterFact.AlternateQuality] = true;
         }
 
         var crucible = text.Contains("Crucible Passive", StringComparison.Ordinal);
-        if (crucible || game == GameVersion.Poe2 || (!itemBase.Tags.Contains("weapon") && !itemBase.Tags.Contains("shield")))
+        if (crucible || game == GameVersion.Poe2)
         {
             flags[FilterFact.HasCruciblePassiveTree] = crucible;
         }
 
         flags[FilterFact.Scourged] = text.Contains("(scourge)", StringComparison.Ordinal)
             || text.Contains("Scourge Modifier", StringComparison.Ordinal);
-        flags[FilterFact.Imbued] = text.Contains("Imbued", StringComparison.Ordinal);
-        flags[FilterFact.Foulborn] = text.Contains("Foulborn", StringComparison.Ordinal);
+        flags[FilterFact.Imbued] = lines.Contains("Imbued", StringComparer.Ordinal);
+        flags[FilterFact.Foulborn] = prefixFacts.Contains(FilterFact.Foulborn) || lines.Contains("Foulborn", StringComparer.Ordinal);
         flags[FilterFact.ZanaMemory] = text.Contains("Zana's Memory", StringComparison.Ordinal);
         flags[FilterFact.ElderItem] = lines.Contains("Elder Item", StringComparer.Ordinal);
         flags[FilterFact.ShaperItem] = lines.Contains("Shaper Item", StringComparer.Ordinal);
-        flags[FilterFact.ElderMap] = itemBase.ItemClass == "Maps" && flags[FilterFact.ElderItem];
-        flags[FilterFact.ShapedMap] = label.StartsWith("Shaped ", StringComparison.Ordinal);
-        numbers[FilterFact.Width] = itemBase.Width;
-        numbers[FilterFact.Height] = itemBase.Height;
-        numbers[FilterFact.DropLevel] = itemBase.DropLevel;
+        flags[FilterFact.ElderMap] = lines.Any(line => line.StartsWith("Map Tier: ", StringComparison.Ordinal))
+            && flags[FilterFact.ElderItem];
+        flags[FilterFact.ShapedMap] = prefixFacts.Contains(FilterFact.ShapedMap);
         numbers[FilterFact.Quality] = 0;
         numbers[FilterFact.StackSize] = 1;
-        if (itemBase.Domain != "item")
-        {
-            numbers[FilterFact.ItemLevel] = 0;
-        }
         numbers[FilterFact.LinkedSockets] = 0;
         numbers[FilterFact.GemLevel] = 0;
         numbers[FilterFact.MapTier] = 0;
@@ -168,28 +258,31 @@ public static partial class CopiedItemParser
         numbers[FilterFact.MemoryStrands] = 0;
         numbers[FilterFact.UnidentifiedItemTier] = 0;
         numbers[FilterFact.EnchantmentPassiveNum] = 0;
-        strings[FilterFact.BaseType] = [itemBase.Name];
-        strings[FilterFact.Class] = [itemBase.ItemClass];
+        if (baseType is not null)
+        {
+            strings[FilterFact.BaseType] = [baseType];
+        }
+
+        strings[FilterFact.Class] = [itemClass];
         strings[FilterFact.Sockets] = [];
         strings[FilterFact.SocketGroup] = [];
-        if (ReadProperties(lines, itemBase, numbers, strings) is { } error)
+        if (ReadProperties(lines, numbers, strings) is { } error)
         {
             return error;
         }
 
         ReadModifiers(lines, flags[FilterFact.Identified], rarity, numbers, strings);
-        ReadDefences(itemBase, lines, numbers);
+        ReadDefences(lines, numbers);
         var influences = Enum.GetValues<InfluenceType>().Where(influence => influence != InfluenceType.None
             && lines.Contains($"{influence} Item", StringComparer.Ordinal)).ToImmutableArray();
 
-        return new ItemFacts(game, name, itemBase.Name, itemBase.ItemClass, rarity, flags.ToImmutable(),
+        return new ItemFacts(game, name, baseType, itemClass, rarity, flags.ToImmutable(),
             numbers.ToImmutable(), strings.ToImmutable(), influences)
-        { CopiedText = text, ModifierDomain = itemBase.Domain };
+        { CopiedText = text };
     }
 
     private static ParseError? ReadProperties(
         string[] lines,
-        ItemBase itemBase,
         ImmutableDictionary<FilterFact, int>.Builder numbers,
         ImmutableDictionary<FilterFact, ImmutableArray<string>>.Builder strings
     )
@@ -209,7 +302,7 @@ public static partial class CopiedItemParser
 
             var field = NumericField().Match(line);
             if (!requirements && field.Success
-                && ReadNumber(field.Groups[1].Value, field.Groups[2].Value, itemBase, numbers) is { } error)
+                && ReadNumber(field.Groups[1].Value, field.Groups[2].Value, numbers) is { } error)
             {
                 return error;
             }
@@ -241,7 +334,6 @@ public static partial class CopiedItemParser
     private static ParseError? ReadNumber(
         string name,
         string text,
-        ItemBase itemBase,
         ImmutableDictionary<FilterFact, int>.Builder numbers
     )
     {
@@ -254,7 +346,7 @@ public static partial class CopiedItemParser
         {
             numbers[fact] = value;
         }
-        else if (name == "Level" && itemBase.ItemClass.Contains("Gem", StringComparison.Ordinal))
+        else if (name == "Level")
         {
             numbers[FilterFact.GemLevel] = value;
         }
@@ -263,50 +355,25 @@ public static partial class CopiedItemParser
     }
 
     private static void ReadDefences(
-        ItemBase itemBase,
         string[] lines,
         ImmutableDictionary<FilterFact, int>.Builder numbers
     )
     {
-        var types = new[] { (itemBase.Armour, "Armour", FilterFact.BaseArmour), (itemBase.Evasion, "Evasion Rating", FilterFact.BaseEvasion),
-            (itemBase.EnergyShield, "Energy Shield", FilterFact.BaseEnergyShield), (itemBase.Ward, "Ward", FilterFact.BaseWard) };
-        foreach (var (range, label, fact) in types)
+        foreach (var (label, fact) in new[] { ("Armour", FilterFact.BaseArmour), ("Evasion Rating", FilterFact.BaseEvasion),
+            ("Energy Shield", FilterFact.BaseEnergyShield), ("Ward", FilterFact.BaseWard) })
         {
-            if (range is null)
-            {
-                numbers[fact] = 0;
-                continue;
-            }
-
-            if (range.Minimum == range.Maximum)
-            {
-                numbers[fact] = range.Minimum;
-                continue;
-            }
-
             var raw = lines.FirstOrDefault(line => line.StartsWith(label + ": ", StringComparison.Ordinal));
-            if (raw is not null && !raw.Contains("augmented", StringComparison.Ordinal) && numbers[FilterFact.Quality] == 0)
+            if (raw is null || raw.Contains("augmented", StringComparison.Ordinal) || numbers[FilterFact.Quality] != 0)
             {
-                var match = NumericField().Match(raw);
-                if (match.Success && int.TryParse(match.Groups[2].Value, NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var value))
-                {
-                    numbers[fact] = value;
-                }
-            }
-        }
-
-        var percentiles = new List<double>(4);
-        foreach (var (range, _, fact) in types.Where(type => type.Item1 is not null))
-        {
-            if (!numbers.TryGetValue(fact, out var value))
-            {
-                return;
+                continue;
             }
 
-            percentiles.Add(range!.Minimum == range.Maximum ? 100 : 100.0 * (value - range.Minimum) / (range.Maximum - range.Minimum));
+            var match = NumericField().Match(raw);
+            if (match.Success && int.TryParse(match.Groups[2].Value, NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var value))
+            {
+                numbers[fact] = value;
+            }
         }
-
-        numbers[FilterFact.BaseDefencePercentile] = percentiles.Count == 0 ? itemBase.Domain == "item" ? 100 : 0 : (int)percentiles.Average();
     }
 
     private static void ReadModifiers(

@@ -53,4 +53,44 @@ public partial class LanguageServerTests
             Assert.That(response.GetProperty("result").GetProperty("preview").GetProperty("hidden").GetBoolean(), Is.True);
         }
     }
+
+    [TestCase("Poe1")]
+    [TestCase("Poe2")]
+    public async Task Inspector_accepts_unfamiliar_names_and_identity_overrides(string game)
+    {
+        using var workspace = new TestWorkspace();
+        workspace.Write(
+            "entrypoint.filterx",
+            "using main.fss; { Class == \"Future Class\"; BaseType == \"Future Base\"; Style item; }"
+        );
+        workspace.Write("main.fss", "item { font-size: 32; }");
+        await using var client = LspClient.Start(workspace.Root);
+        await InitializeAsync(client, workspace);
+        const string item = "Item Class: Future Class\nRarity: Normal\nFuture Base\n--------\nItem Level: 80\n";
+        var parameters = new JsonObject
+        {
+            ["textDocument"] = Document(workspace.PathFor("entrypoint.filterx")),
+            ["item"] = item,
+            ["game"] = game,
+            ["areaLevel"] = 80
+        };
+        var response = Result(await client.RequestAsync("poefilterx/check", parameters.DeepClone()));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.GetProperty("diagnostics").GetArrayLength(), Is.Zero, response.ToString());
+            Assert.That(response.GetProperty("result").GetProperty("status").GetString(), Is.EqualTo("Matched"));
+        }
+
+        parameters["item"] = CheckCommandTests.Item;
+        parameters["facts"] = new JsonObject { ["Class"] = "Future Class", ["BaseType"] = "Future Base" };
+        response = Result(await client.RequestAsync("poefilterx/check", parameters.DeepClone()));
+        Assert.That(response.GetProperty("diagnostics").GetArrayLength(), Is.Zero, response.ToString());
+        var result = response.GetProperty("result");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.GetProperty("status").GetString(), Is.EqualTo("Matched"));
+            Assert.That(result.GetProperty("item").GetProperty("baseType").GetString(), Is.EqualTo("Future Base"));
+            Assert.That(result.GetProperty("item").GetProperty("itemClass").GetString(), Is.EqualTo("Future Class"));
+        }
+    }
 }

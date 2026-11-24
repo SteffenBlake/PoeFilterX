@@ -81,7 +81,7 @@ public static class ItemChecker
         var style = matched?.Style ?? new StyleOperations();
         return new CheckResult(1, new(item.Game, item.Name, item.BaseType, item.ItemClass, item.Rarity), areaLevel, matched is null ? CheckStatus.Unmatched : CheckStatus.Matched,
             blocks.ToImmutable(), matched is null ? [] : TraceStyles(snapshot, matched), style, Preview(item, style))
-        { DefaultPreview = Preview(item, new()), Frames = matched is null ? [] : TraceBlocks(snapshot, matched.Block), DataVersion = item.Game == GameVersion.Poe1 ? GameData.Poe1ItemBaseVersion : GameData.Poe2ItemBaseVersion };
+        { DefaultPreview = Preview(item, new()), Frames = matched is null ? [] : TraceBlocks(snapshot, matched.Block), DataVersion = item.Game == GameVersion.Poe1 ? GameData.Poe1ItemModifierVersion : GameData.Poe2ItemModifierVersion };
     }
 
     private static ImmutableArray<CheckedFrame> TraceBlocks(ProjectSnapshot snapshot, PreparedBlock block)

@@ -36,8 +36,7 @@ internal sealed partial class ItemModifierCatalog
                 continue;
             }
 
-            var matching = candidates.Where(candidate => candidate.Domain == item.ModifierDomain
-                && MatchesLabel(candidate, item, enchantments)
+            var matching = candidates.Where(candidate => MatchesLabel(candidate, item, enchantments)
                 && (candidate.Kind == ItemModifierKind.Enchantment) == enchantments
                 && candidate.Stats.All(stat => stats[stat.Signature].Any(actual => Fits(stat.Ranges, actual.Values))))
                 .Select(candidate => enchantments ? candidate.Id : candidate.Name)

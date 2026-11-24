@@ -27,6 +27,5 @@ public static class DiagnosticCodes
     public const string PackageScope = "PFX4006";
     public const string InvalidItem = "PFX5001";
     public const string MissingItemFact = "PFX5002";
-    public const string UnknownItemBase = "PFX5003";
     public const string BuildFailure = "PFX0001";
 }

@@ -57,13 +57,6 @@ internal static partial class ImportGameData
         var baseNames = bases.RootElement.EnumerateObject()
             .Where(item => !string.IsNullOrWhiteSpace(item.Value.GetProperty("name").GetString()))
             .Select(item => CompletionBase(item.Value, classNames)).ToList();
-        // Prefer current map metadata over legacy bases with the same display name.
-        var baseRows = bases.RootElement.EnumerateObject()
-            .OrderBy(item => item.Value.GetProperty("tags").EnumerateArray().Any(tag => tag.GetString() == "old_map"))
-            .ThenBy(item => !item.Name.StartsWith("Metadata/Items/Maps/MapWorlds", StringComparison.Ordinal))
-            .ThenBy(item => item.Name, StringComparer.Ordinal)
-            .Where(item => item.Value.GetProperty("name").GetString()!.Length > 0)
-            .Select(item => BaseRow(item.Value, classNames)).ToList();
         if (game == "Poe1")
         {
             using var gems = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "data", "gems_minimal.json")));
@@ -78,13 +71,11 @@ internal static partial class ImportGameData
                 var id = gem.GetProperty("base_item").GetProperty("id").GetString()!;
                 if (bases.RootElement.TryGetProperty(id, out var item))
                 {
-                    baseRows.Add(BaseRow(item, classNames, gem.GetProperty("display_name").GetString(), true));
                     baseNames.Add(CompletionBase(item, classNames) with { Name = gem.GetProperty("display_name").GetString()! });
                 }
             }
         }
 
-        Write(output, game, "ItemBase", [.. baseRows.Distinct(StringComparer.Ordinal)], revision, version);
         using var mods = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "data", "mods.json")));
         var records = mods.RootElement.EnumerateObject().OrderBy(item => item.Name, StringComparer.Ordinal)
             .Where(item => item.Value.GetProperty("text").ValueKind == JsonValueKind.String
@@ -328,39 +319,6 @@ internal static partial class ImportGameData
         }
     }
 
-    private static string BaseRow(
-        JsonElement item,
-        Dictionary<string, string> classes,
-        string? displayName = null,
-        bool transfigured = false
-    )
-    {
-        var itemClass = item.GetProperty("item_class").GetString()!;
-        var values = new List<string>
-        {
-            Quote(displayName ?? item.GetProperty("name").GetString()!), Quote(classes.GetValueOrDefault(itemClass, itemClass)),
-            item.GetProperty("inventory_width").ToString(), item.GetProperty("inventory_height").ToString(),
-            item.GetProperty("drop_level").ToString(), Quote(item.GetProperty("domain").GetString()!),
-            item.GetProperty("implicits").GetArrayLength() > 0 ? "true" : "false"
-        };
-        var tags = item.GetProperty("tags").EnumerateArray().Select(value => value.GetString()!)
-            .Where(tag => tag is "alternate_quality" or "transfigured_gem" or "fated_unique" or "weapon" or "shield");
-        if (transfigured)
-        {
-            tags = tags.Append("transfigured_gem");
-        }
-
-        values.Add("[" + string.Join(", ", tags.Select(Quote)) + "]");
-        foreach (var name in new[] { "armour", "evasion", "energy_shield", "ward" })
-        {
-            var value = item.GetProperty("properties").GetProperty(name);
-            values.Add(value.ValueKind == JsonValueKind.Object
-                ? $"new({value.GetProperty("min")}, {value.GetProperty("max")})" : "null");
-        }
-
-        return "new(" + string.Join(", ", values) + ")";
-    }
-
     private static string ModifierRow(string id, JsonElement item)
     {
         var stats = new List<string>();
@@ -390,7 +348,7 @@ internal static partial class ImportGameData
         };
 
         return $"new({Quote(id)}, {Quote(item.GetProperty("name").GetString() ?? "")}, "
-            + $"ItemModifierKind.{kind}, {Quote(item.GetProperty("domain").GetString()!)}, [{string.Join(", ", stats)}])";
+            + $"ItemModifierKind.{kind}, [{string.Join(", ", stats)}])";
     }
 
     [GeneratedRegex(@"\[([^\[\]]+)\]", RegexOptions.CultureInvariant)]
