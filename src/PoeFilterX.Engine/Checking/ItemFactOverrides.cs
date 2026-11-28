@@ -38,6 +38,16 @@ public static class ItemFactOverrides
         ItemFacts item,
         FilterFact fact,
         string text,
+        TransfiguredGemValue? _
+    )
+    {
+        return Set(item, fact, text, default(ImmutableArray<OperatorValue<ImmutableArray<string>>>));
+    }
+
+    public static Result<ItemFacts> Set(
+        ItemFacts item,
+        FilterFact fact,
+        string text,
         bool? _
     )
     {
@@ -64,6 +74,11 @@ public static class ItemFactOverrides
         ImmutableArray<OperatorValue<ImmutableArray<string>>> _
     )
     {
+        if (fact == FilterFact.TransfiguredGem && bool.TryParse(text, out var transfigured))
+        {
+            return item with { Flags = item.Flags.SetItem(fact, transfigured) };
+        }
+
         var values = text.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (fact is FilterFact.BaseType or FilterFact.Class && values.Length != 1)
         {
@@ -73,6 +88,7 @@ public static class ItemFactOverrides
         return item with
         {
             Texts = item.Texts.SetItem(fact, [.. values]),
+            Flags = fact == FilterFact.TransfiguredGem ? item.Flags.SetItem(fact, values.Length > 0) : item.Flags,
             BaseType = fact == FilterFact.BaseType ? values[0] : item.BaseType,
             ItemClass = fact == FilterFact.Class ? values[0] : item.ItemClass
         };

@@ -32,7 +32,7 @@ public static partial class StyleOperationsCodec
         }
 
         var enabled = next.Enabled ?? previous?.Enabled;
-        if (next.UseBuiltIn && previous is { CustomEnabled: not false, Path: not null })
+        if (next.UseBuiltIn && next.Enabled is null && previous is { CustomEnabled: not false, Path: not null })
         {
             enabled = true;
         }
@@ -43,7 +43,10 @@ public static partial class StyleOperationsCodec
             next.Positional ?? previous?.Positional,
             enabled,
             next.Path ?? previous?.Path,
-            next.UseBuiltIn ? false : next.CustomEnabled ?? previous?.CustomEnabled
+            next.UseBuiltIn ? false : next.CustomEnabled ?? previous?.CustomEnabled,
+            UseBuiltIn: next.UseBuiltIn || (next.CustomEnabled is null && previous?.UseBuiltIn == true),
+            Optional: next.Optional ?? previous?.Optional,
+            CustomVolume: next.CustomVolume ?? previous?.CustomVolume
         );
     }
 
@@ -66,8 +69,8 @@ public static partial class StyleOperationsCodec
         );
     }
 
-    private static Result<bool> Read(
-        bool? _,
+    private static Result<FilterVisibility> ReadShow(
+        FilterVisibility? _,
         ReadOnlySpan<string> args,
         OperationReadOptions _1
     )
@@ -77,7 +80,9 @@ public static partial class StyleOperationsCodec
             return error;
         }
 
-        return OperationArguments.Boolean(args[0]);
+        return bool.TryParse(args[0], out var show)
+            ? show ? FilterVisibility.Show : FilterVisibility.Hide
+            : OperationArguments.Enumeration<FilterVisibility>(args[0]);
     }
 
     private static Result<bool> ReadToggle(
@@ -193,16 +198,30 @@ public static partial class StyleOperationsCodec
         OperationReadOptions _1
     )
     {
-        if (OperationArguments.Count(args, 1) is { } error)
+        if (OperationArguments.Count(args, 1, 2) is { } error)
         {
             return error;
         }
-        if (OperationArguments.TryToggle(args[0], out var toggle))
+        if (args.Length == 1 && OperationArguments.TryToggle(args[0], out var toggle))
         {
-            return new SoundValue(Enabled: !toggle, CustomEnabled: toggle);
+            return new SoundValue(CustomEnabled: toggle);
         }
 
-        return new SoundValue(Enabled: false, Path: args[0], CustomEnabled: true);
+        Result<int?> volume = args.Length == 2
+            ? OperationArguments.Integer(args[1], 0, 300).Map(static value => (int?)value)
+            : (int?)null;
+
+        return volume.Map(args[0], static (value, path) =>
+            new SoundValue(Path: path, CustomEnabled: true, CustomVolume: value));
+    }
+
+    private static Result<SoundValue> ReadAlertOptional(
+        SoundValue? _,
+        ReadOnlySpan<string> args,
+        OperationReadOptions options
+    )
+    {
+        return ReadToggle(null, args, options).Map(static optional => new SoundValue(Optional: optional));
     }
 
     private static Result<IconValue> ReadIcon(
@@ -291,7 +310,14 @@ public static partial class StyleOperationsCodec
         SoundValue? value
     )
     {
-        if (value is { Id: not null, Enabled: not false })
+        if (value is { Enabled: false })
+        {
+            output.AppendLine(value.Positional == true ? "\tPlayAlertSoundPositional None" : "\tPlayAlertSound None");
+            return;
+        }
+
+        if (value is { Id: not null, Enabled: not false }
+            && (value.CustomEnabled != true || value.Optional == true))
         {
             output.Append(value.Positional == true ? "\tPlayAlertSoundPositional " : "\tPlayAlertSound ")
                 .Append(value.Id.Value);
@@ -313,7 +339,18 @@ public static partial class StyleOperationsCodec
     {
         if (value is { Path: not null, CustomEnabled: not false })
         {
-            output.Append("\tCustomAlertSound \"").Append(value.Path).AppendLine("\"");
+            output.Append(value.Optional == true ? "\tCustomAlertSoundOptional \"" : "\tCustomAlertSound \"")
+                .Append(value.Path).Append('"');
+            if (value.CustomVolume.HasValue)
+            {
+                output.Append(' ').Append(value.CustomVolume.Value);
+            }
+
+            output.AppendLine();
+        }
+        else if (value is { CustomEnabled: false, Path: not null } or { CustomEnabled: false, UseBuiltIn: false })
+        {
+            output.AppendLine("\tCustomAlertSound \"None\"");
         }
     }
 
@@ -329,12 +366,30 @@ public static partial class StyleOperationsCodec
         }
     }
 
+    private static void WriteDropSoundIfAlert(
+        StringBuilder output,
+        string _,
+        bool? value
+    )
+    {
+        if (value.HasValue)
+        {
+            output.AppendLine(value.Value ? "\tEnableDropSoundIfAlertSound" : "\tDisableDropSoundIfAlertSound");
+        }
+    }
+
     private static void Write(
         StringBuilder output,
         string name,
         IconValue? value
     )
     {
+        if (value is { Enabled: false })
+        {
+            output.Append('\t').Append(name).AppendLine(" -1");
+            return;
+        }
+
         if (value is { Size: not null, Color: not null, Shape: not null, Enabled: not false })
         {
             output.Append('\t').Append(name).Append(' ').Append(value.Size.Value)
@@ -348,6 +403,12 @@ public static partial class StyleOperationsCodec
         EffectValue? value
     )
     {
+        if (value is { Enabled: false })
+        {
+            output.Append('\t').Append(name).AppendLine(" None");
+            return;
+        }
+
         if (value is { Color: not null, Enabled: not false })
         {
             output.Append('\t').Append(name).Append(' ').Append(value.Color.Value);

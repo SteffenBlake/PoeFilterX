@@ -5,8 +5,8 @@ namespace PoeFilterX.Engine.Compilation;
 [OperationModel(nameof(StyleOperationsCodec), OperationLanguage.Style)]
 public sealed record StyleOperations
 {
-    [Operation(Name = "show", SkipOutput = true)]
-    public bool? Show { get; init; }
+    [Operation(Name = "show", Reader = "ReadShow", SkipOutput = true)]
+    public FilterVisibility? Show { get; init; }
 
     [Operation(Name = "border-color", Reader = "ReadColor", OutputName = "SetBorderColor", DefaultAlpha = 255)]
     public ColorValue? BorderColor { get; init; }
@@ -70,6 +70,15 @@ public sealed record StyleOperations
 
     [Operation(Name = "drop-sound", Reader = "ReadToggle", Writer = "WriteDropSound")]
     public bool? DropSound { get; init; }
+
+    [Operation(Name = "drop-sound-if-alert", Reader = "ReadToggle", Writer = "WriteDropSoundIfAlert")]
+    public bool? DropSoundIfAlert { get; init; }
+
+    [Operation(Name = "alert-optional", Reader = "ReadAlertOptional", Target = "Alert", SkipOutput = true)]
+    public SoundValue? AlertOptional { get; init; }
+
+    [Operation(Name = "alert-path-volume", Reader = "ReadCustomAlertVolume", Target = "Alert", SkipOutput = true)]
+    public SoundValue? AlertPathVolume { get; init; }
 
     [Operation(Name = "alert-path", Reader = "ReadAlertPath", Target = "Alert", Writer = "WriteCustomSound")]
     public SoundValue? AlertPath { get; init; }

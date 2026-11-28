@@ -32,7 +32,7 @@ public static class ProjectCompiler
         var buffer = new StringBuilder(768);
         foreach (var rule in rules)
         {
-            writer.WriteLine(rule.Style.Show == false ? "Hide" : "Show");
+            writer.WriteLine((rule.Style.Show ?? FilterVisibility.Show).ToString());
             buffer.Clear();
             FilterOperationsCodec.Write(buffer, rule.Block.Operations);
             StyleOperationsCodec.Write(buffer, rule.Style);
@@ -90,7 +90,7 @@ public static class ProjectCompiler
             {
                 actions.Clear();
                 StyleOperationsCodec.Write(actions, selected.Operations);
-                if (actions.Length == 0)
+                if (actions.Length == 0 && selected.Operations.Show is null)
                 {
                     continue;
                 }

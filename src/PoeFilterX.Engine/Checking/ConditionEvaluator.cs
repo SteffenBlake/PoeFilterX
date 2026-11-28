@@ -56,6 +56,19 @@ public sealed class ConditionEvaluator(
 
     public void Add(FilterFact fact, ImmutableArray<OperatorValue<ImmutableArray<string>>> expected)
     {
+        if (fact is FilterFact.HasExplicitMod or FilterFact.HasEnchantment)
+        {
+            foreach (var condition in expected.Where(IsCounted))
+            {
+                var known = TryGetText(fact, out var actual);
+                var matches = known ? MatchText(fact, actual, [.. condition.Value], condition.Operator) : (bool?)null;
+                conditions.Add(new(fact.ToString(), $"{condition.Operator.ToSymbol()} {string.Join(' ', condition.Value)}",
+                    known ? string.Join(' ', actual) : null, matches));
+            }
+
+            expected = [.. expected.Where(condition => !IsCounted(condition))];
+        }
+
         // The writer joins declarations with the same operator into one alternative list.
         foreach (var group in expected.GroupBy(condition => condition.Operator))
         {
@@ -65,6 +78,23 @@ public sealed class ConditionEvaluator(
             conditions.Add(new(fact.ToString(), $"{group.Key.ToSymbol()} {string.Join(' ', alternatives)}",
                 known ? string.Join(' ', actual) : null, matches));
         }
+    }
+
+    public void Add(FilterFact fact, TransfiguredGemValue? expected)
+    {
+        if (expected?.Any is { } boolean)
+        {
+            Add(fact, boolean);
+        }
+        else if (expected is not null)
+        {
+            Add(fact, expected.Names);
+        }
+    }
+
+    private static bool IsCounted(OperatorValue<ImmutableArray<string>> condition)
+    {
+        return condition.Value.Length > 0 && int.TryParse(condition.Value[0], out _);
     }
 
     private bool TryGetText(FilterFact fact, out ImmutableArray<string> actual)

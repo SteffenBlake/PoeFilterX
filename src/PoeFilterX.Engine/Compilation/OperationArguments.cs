@@ -101,7 +101,7 @@ internal static class OperationArguments
         {
             "=" => ComparisonOperator.Equal,
             "==" => ComparisonOperator.ExactEqual,
-            "!" => ComparisonOperator.NotEqual,
+            "!" or "!=" => ComparisonOperator.NotEqual,
             ">" => ComparisonOperator.GreaterThan,
             "<" => ComparisonOperator.LessThan,
             "<=" => ComparisonOperator.LessThanOrEqual,

@@ -174,8 +174,14 @@ internal static class CompletionFeatures
         SourceSpan word
     )
     {
-        IEnumerable<string> values = operation.Type == "bool?" ? ["True", "False"] : [];
-        if (operation.Reader is "ReadToggle" or "ReadAlert" or "ReadIcon" or "ReadPillar")
+        IEnumerable<string> values = operation.Type == "bool?" || operation.Reader == "ReadTransfiguredGem"
+            ? ["True", "False"] : [];
+        if (operation.Reader == "ReadShow")
+        {
+            values = ["True", "False", "Minimal"];
+        }
+
+        if (operation.Reader is "ReadToggle" or "ReadAlert" or "ReadIcon" or "ReadPillar" or "ReadAlertOptional")
         {
             values = values.Concat(["enabled", "disabled"]);
         }
@@ -282,6 +288,12 @@ internal static class CompletionFeatures
             "ReadColor" => "CSS color name, RGB, RGBA, 0xRRGGBB, or 0xAARRGGBB",
             "ReadColorAlpha" or "ReadColorRed" or "ReadColorGreen" or "ReadColorBlue" => "integer from 0 through 255",
             "ReadToggle" => "enabled or disabled",
+            "ReadShow" => "True, False, or Minimal",
+            "ReadTransfiguredGem" => "True, False, or gem names",
+            "ReadModifiers" => "optional comparison and modifier count followed by modifier names",
+            "ReadAlertPath" => "sound file path and optional volume; or enabled/disabled",
+            "ReadCustomAlertVolume" => "integer from 0 through 300",
+            "ReadAlertOptional" => "enabled or disabled",
             "ReadAlert" => "sound ID, volume, and optional positional; or enabled/disabled",
             "ReadIcon" => "size, color, and shape; or enabled/disabled",
             "ReadPillar" => "color and optional Temporary/Permanent; or enabled/disabled",

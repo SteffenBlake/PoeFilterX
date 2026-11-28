@@ -9,4 +9,7 @@ Show
 Show
 	Identified True
 	Rarity = Rare
+	PlayAlertSound None
+	MinimapIcon -1
+	PlayEffect None
 

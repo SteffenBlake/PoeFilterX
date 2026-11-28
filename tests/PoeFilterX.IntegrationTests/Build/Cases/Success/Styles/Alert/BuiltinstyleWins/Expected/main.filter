@@ -1,4 +1,5 @@
 Show
 	Identified True
 	PlayAlertSoundPositional 3 90
+	CustomAlertSound "None"
 

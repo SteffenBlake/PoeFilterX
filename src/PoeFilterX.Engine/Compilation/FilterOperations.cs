@@ -8,6 +8,10 @@ public sealed record FilterOperations
 {
     public bool? AlternateQuality { get; init; }
 
+    public bool? AlwaysShow { get; init; }
+
+    public ImmutableArray<OperatorValue<ImmutableArray<string>>> ArchnemesisMod { get; init; } = [];
+
     public bool? AnyEnchantment { get; init; }
 
     public ImmutableArray<OperatorValue<int>> AreaLevel { get; init; } = [];
@@ -42,6 +46,8 @@ public sealed record FilterOperations
 
     public ImmutableArray<OperatorValue<int>> EnchantmentPassiveNum { get; init; } = [];
 
+    public bool? Exceptional { get; init; }
+
     public bool? Fated { get; init; }
 
     public bool? Foulborn { get; init; }
@@ -54,8 +60,10 @@ public sealed record FilterOperations
 
     public ImmutableArray<OperatorValue<int>> HasEaterOfWorldsImplicit { get; init; } = [];
 
+    [Operation(Reader = "ReadModifiers", Writer = "WriteModifiers")]
     public ImmutableArray<OperatorValue<ImmutableArray<string>>> HasEnchantment { get; init; } = [];
 
+    [Operation(Reader = "ReadModifiers", Writer = "WriteModifiers")]
     public ImmutableArray<OperatorValue<ImmutableArray<string>>> HasExplicitMod { get; init; } = [];
 
     public bool? HasImplicitMod { get; init; }
@@ -64,11 +72,15 @@ public sealed record FilterOperations
 
     public ImmutableArray<OperatorValue<int>> HasSearingExarchImplicit { get; init; } = [];
 
+    public bool? HasVaalUniqueMod { get; init; }
+
     public ImmutableArray<OperatorValue<int>> Height { get; init; } = [];
 
     public bool? Identified { get; init; }
 
     public bool? Imbued { get; init; }
+
+    public bool? IsVaalUnique { get; init; }
 
     public ImmutableArray<OperatorValue<int>> ItemLevel { get; init; } = [];
 
@@ -79,6 +91,8 @@ public sealed record FilterOperations
 
     [Operation(Maximum = 100)]
     public ImmutableArray<OperatorValue<int>> MemoryStrands { get; init; } = [];
+
+    public bool? MirageMap { get; init; }
 
     public bool? Mirrored { get; init; }
 
@@ -102,11 +116,16 @@ public sealed record FilterOperations
 
     public bool? SynthesisedItem { get; init; }
 
-    public bool? TransfiguredGem { get; init; }
+    [Operation(Reader = "ReadTransfiguredGem", Writer = "WriteTransfiguredGem")]
+    public TransfiguredGemValue? TransfiguredGem { get; init; }
+
+    public bool? TwiceCorrupted { get; init; }
 
     public bool? UberBlightedMap { get; init; }
 
     public ImmutableArray<OperatorValue<int>> UnidentifiedItemTier { get; init; } = [];
+
+    public bool? Vestigial { get; init; }
 
     public ImmutableArray<OperatorValue<int>> WaystoneTier { get; init; } = [];
 

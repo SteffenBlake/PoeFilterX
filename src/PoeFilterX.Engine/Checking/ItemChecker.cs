@@ -222,9 +222,11 @@ public static class ItemChecker
                 : item.ItemClass.Contains("Quest", StringComparison.Ordinal) ? "#4ae63aff" : "#c8c8c8ff"
         };
 
-        return new(item.Name, Color(style.FontColor, defaultText), Color(style.BackgroundColor, "#000000f0"),
-            Color(style.BorderColor, "#00000000"), style.FontSize ?? 32, style.Show == false, 1,
-            style.Show != false && style.Icon is { Enabled: not false, Color: not null, Shape: not null, Size: not null } icon
+        var minimal = style.Show == FilterVisibility.Minimal;
+
+        return new(item.Name, Color(style.FontColor, defaultText), minimal ? "#00000000" : Color(style.BackgroundColor, "#000000f0"),
+            Color(style.BorderColor, "#00000000"), minimal ? 1 : style.FontSize ?? 32, style.Show == FilterVisibility.Hide, 1,
+            style.Show != FilterVisibility.Hide && style.Icon is { Enabled: not false, Color: not null, Shape: not null, Size: not null } icon
                 ? $"{icon.Color} {icon.Shape} ({icon.Size})" : null,
             style.Pillar is { Enabled: not false, Color: not null } pillar
                 ? $"{pillar.Color} {(pillar.Temporary == true ? "temporary" : "permanent")}" : null);

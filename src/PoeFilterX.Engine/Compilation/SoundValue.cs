@@ -7,5 +7,7 @@ public sealed record SoundValue(
     bool? Enabled = null,
     string? Path = null,
     bool? CustomEnabled = null,
-    bool UseBuiltIn = false
+    bool UseBuiltIn = false,
+    bool? Optional = null,
+    int? CustomVolume = null
 );

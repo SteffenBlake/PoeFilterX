@@ -17,7 +17,7 @@ CLOSE_BRACE: '}';
 OPEN_BRACKET: '[';
 CLOSE_BRACKET: ']';
 SEMICOLON: ';';
-OPERATOR: '==' | '>=' | '<=' | '=' | '>' | '<' | '!';
+OPERATOR: '!=' | '==' | '>=' | '<=' | '=' | '>' | '<' | '!';
 STRING: '"' ('\\' ["\\nt] | ~["\\])* '"';
 // These tokens preserve malformed literals for precise diagnostics and editor recovery.
 UNTERMINATED_STRING: '"' ('\\' . | ~["\\])* '\\'? EOF;

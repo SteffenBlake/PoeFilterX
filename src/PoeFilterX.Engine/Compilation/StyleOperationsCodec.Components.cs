@@ -94,6 +94,21 @@ public static partial class StyleOperationsCodec
             .Map(static value => new SoundValue(Volume: value, UseBuiltIn: true));
     }
 
+    private static Result<SoundValue> ReadCustomAlertVolume(
+        SoundValue? _,
+        ReadOnlySpan<string> args,
+        OperationReadOptions _1
+    )
+    {
+        if (OperationArguments.Count(args, 1) is { } error)
+        {
+            return error;
+        }
+
+        return OperationArguments.Integer(args[0], 0, 300)
+            .Map(static value => new SoundValue(CustomVolume: value));
+    }
+
     private static Result<SoundValue> ReadAlertStyle(
         SoundValue? _,
         ReadOnlySpan<string> args,

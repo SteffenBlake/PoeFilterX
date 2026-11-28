@@ -40,8 +40,10 @@ public sealed class StyleContributionCollector
 
         Add(name + ".Id", value.Id);
         Add(name + ".Volume", value.Volume);
+        Add(name + ".CustomVolume", value.CustomVolume);
         Add(name + ".Positional", value.Positional);
         Add(name + ".Enabled", value.Enabled);
+        Add(name + ".Optional", value.Optional);
         Add(name + ".CustomEnabled", value.UseBuiltIn ? false : value.CustomEnabled);
         if (value.Path is not null)
         {

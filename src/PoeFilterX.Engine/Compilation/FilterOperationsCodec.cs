@@ -7,6 +7,103 @@ namespace PoeFilterX.Engine.Compilation;
 
 public static partial class FilterOperationsCodec
 {
+    private static Result<ImmutableArray<OperatorValue<ImmutableArray<string>>>> ReadModifiers(
+        ImmutableArray<OperatorValue<ImmutableArray<string>>> previous,
+        ReadOnlySpan<string> args,
+        OperationReadOptions options
+    )
+    {
+        var values = args;
+        OperationArguments.Operator(ref values);
+        if (!values.IsEmpty && values[0].Length > 0
+            && (char.IsAsciiDigit(values[0][0]) || values[0][0] == '-'))
+        {
+            var count = OperationArguments.Integer(values[0], 0, int.MaxValue, "modifier count");
+            if (count is ParseError error)
+            {
+                return error;
+            }
+
+            if (values.Length == 1)
+            {
+                return new ParseError(DiagnosticCodes.InvalidArgumentCount, "Expected modifier names after count.");
+            }
+        }
+
+        return Read(previous, args, options);
+    }
+
+    private static Result<TransfiguredGemValue> ReadTransfiguredGem(
+        TransfiguredGemValue? _1,
+        ReadOnlySpan<string> args,
+        OperationReadOptions options
+    )
+    {
+        var values = args;
+        OperationArguments.Operator(ref values);
+        if (values.IsEmpty || (bool.TryParse(values[0], out _) && args.Length != 1))
+        {
+            return new ParseError(DiagnosticCodes.InvalidArgumentCount, "Expected a boolean or gem names.");
+        }
+
+        if (args.Length == 1 && bool.TryParse(args[0], out var boolean))
+        {
+            return new TransfiguredGemValue(boolean, []);
+        }
+
+        return Read(default(ImmutableArray<OperatorValue<ImmutableArray<string>>>), args, options)
+            .Map(static names => new TransfiguredGemValue(null, names));
+    }
+
+    private static TransfiguredGemValue? Merge(TransfiguredGemValue? previous, TransfiguredGemValue? next)
+    {
+        return next is null ? previous : next.Any.HasValue || previous is null || previous.Any.HasValue
+            ? next : new(null, previous.Names.AddRange(next.Names));
+    }
+
+    private static void WriteTransfiguredGem(
+        StringBuilder output,
+        string name,
+        TransfiguredGemValue? value
+    )
+    {
+        if (value?.Any is { } boolean)
+        {
+            Write(output, name, boolean);
+        }
+        else if (value is not null)
+        {
+            Write(output, name, value.Names);
+        }
+    }
+
+    private static void WriteModifiers(
+        StringBuilder output,
+        string name,
+        ImmutableArray<OperatorValue<ImmutableArray<string>>> values
+    )
+    {
+        var uncounted = ImmutableArray.CreateBuilder<OperatorValue<ImmutableArray<string>>>();
+        foreach (var value in values)
+        {
+            if (value.Value.IsEmpty || !int.TryParse(value.Value[0], out var count))
+            {
+                uncounted.Add(value);
+                continue;
+            }
+
+            output.Append('\t').Append(name).Append(' ').Append(value.Operator.ToSymbol()).Append(' ').Append(count);
+            foreach (var modifier in value.Value.Skip(1))
+            {
+                output.Append(" \"").Append(modifier).Append('"');
+            }
+
+            output.AppendLine();
+        }
+
+        Write(output, name, uncounted.ToImmutable());
+    }
+
     private static Result<bool> Read(
         bool? _,
         ReadOnlySpan<string> args,

@@ -72,12 +72,16 @@ public class InitTests
                         SetTextColor 255 255 255 255
                         SetBackgroundColor 48 32 21 255
                         SetFontSize 45
+                        MinimapIcon -1
+                        PlayEffect None
 
                     Show
                         SetBorderColor 0 255 255 255
                         SetTextColor 255 255 0 255
                         SetBackgroundColor 255 20 147 255
                         SetFontSize 45
+                        MinimapIcon -1
+                        PlayEffect None
 
 
                     """.Replace("    ", "\t")));
